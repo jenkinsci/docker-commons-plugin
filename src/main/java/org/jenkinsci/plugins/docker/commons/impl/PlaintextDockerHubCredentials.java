@@ -1,6 +1,7 @@
 package org.jenkinsci.plugins.docker.commons.impl;
 
 import com.cloudbees.plugins.credentials.CredentialsScope;
+import com.cloudbees.plugins.credentials.common.UsernamePasswordCredentials;
 import hudson.util.Secret;
 import org.apache.commons.codec.binary.Base64;
 import org.jenkinsci.plugins.docker.commons.DockerHubCredentials;
@@ -15,7 +16,7 @@ import java.nio.charset.Charset;
  *
  * @author Kohsuke Kawaguchi
  */
-public class PlaintextDockerHubCredentials extends DockerHubCredentials {
+public class PlaintextDockerHubCredentials extends DockerHubCredentials implements UsernamePasswordCredentials {
     private final String username;
     private final Secret password;
     private final URL endpoint;
