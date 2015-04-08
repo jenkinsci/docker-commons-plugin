@@ -5,7 +5,10 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Records a container started from a known image.  
+ * Records a container started from a known image.
+ * 
+ * Key properties out of "docker inspect" limited to a subset because fingerprints are performance sensitive.
+ * We may opt to store the whole JSON but that's probably need a better data store.
  *  
  * @author Kohsuke Kawaguchi
  * @see DockerRunFingerprintFacet 
