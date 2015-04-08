@@ -16,7 +16,7 @@ public class DockerFingerprints {
      */
     public Fingerprint of(String imageId) throws IOException {
         if (imageId.length()!=64)
-            throw new IllegalArgumentException("Expecting 64char full image ID, but go "+imageId);
+            throw new IllegalArgumentException("Expecting 64char full image ID, but got "+imageId);
 
         return Jenkins.getInstance().getFingerprintMap().get(imageId.substring(0, 32));
     }
