@@ -1,13 +1,19 @@
 package org.jenkinsci.plugins.docker.commons;
 
+import com.cloudbees.plugins.credentials.CredentialsMatchers;
+import com.cloudbees.plugins.credentials.CredentialsProvider;
 import com.cloudbees.plugins.credentials.CredentialsScope;
 import com.cloudbees.plugins.credentials.common.CertificateCredentials;
+import com.cloudbees.plugins.credentials.domains.DomainRequirement;
 import com.cloudbees.plugins.credentials.impl.BaseStandardCredentials;
 import hudson.FilePath;
+import hudson.model.Item;
+import jenkins.model.Jenkins;
 import org.apache.commons.io.FileUtils;
 import org.bouncycastle.openssl.PEMReader;
 import org.jenkinsci.plugins.docker.commons.impl.KeyMaterialImpl;
 
+import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.io.File;
@@ -17,6 +23,7 @@ import java.net.URI;
 import java.security.KeyPair;
 import java.security.cert.X509Certificate;
 import java.security.interfaces.RSAPublicKey;
+import java.util.Collections;
 
 /**
  * Represents the connection details to talk to a docker host, which involves
@@ -117,5 +124,26 @@ public abstract class DockerServerCredentials extends BaseStandardCredentials {
      */
     public KeyMaterial materialize() throws IOException, InterruptedException {
         return materialize(new FilePath(new File(FileUtils.getUserDirectory(),".docker")));
+    }
+
+    /**
+     * Plugins that want to refer to a {@link DockerServerCredentials} should do so via ID string,
+     * and use this method to resolve it to {@link DockerServerCredentials}.
+     *
+     * @param context
+     *       If you are a build step trying to access DockerHub in the context of a build/job,
+     *       specify that job. Otherwise null. If you are scoped to something else, you might
+     *       have to interact with {@link CredentialsProvider} directly.
+     */
+    public static @CheckForNull
+    DockerServerCredentials get(String id, Item context) {
+        // as a build step, your access to credentials are constrained by what the build
+        // can access, hence Jenkins.getAuthentication()
+        return CredentialsMatchers.firstOrNull(
+                CredentialsProvider.lookupCredentials(
+                        DockerServerCredentials.class, context, Jenkins.getAuthentication(),
+                        Collections.<DomainRequirement>emptyList()),
+                CredentialsMatchers.withId(id)
+        );
     }
 }
