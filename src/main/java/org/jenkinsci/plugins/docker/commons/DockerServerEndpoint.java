@@ -3,6 +3,7 @@ package org.jenkinsci.plugins.docker.commons;
 import com.cloudbees.plugins.credentials.CredentialsMatchers;
 import com.cloudbees.plugins.credentials.CredentialsProvider;
 import com.cloudbees.plugins.credentials.common.IdCredentials;
+import com.cloudbees.plugins.credentials.common.StandardListBoxModel;
 import com.cloudbees.plugins.credentials.domains.DomainRequirement;
 import hudson.Extension;
 import hudson.FilePath;
@@ -21,7 +22,9 @@ import java.io.IOException;
 import java.util.Collections;
 
 import static hudson.Util.*;
+import hudson.util.ListBoxModel;
 import javax.annotation.CheckForNull;
+import org.kohsuke.stapler.AncestorInPath;
 
 /**
  * Encapsulates the endpoint of Docker daemon and how to interact with it.
@@ -129,7 +132,12 @@ public class DockerServerEndpoint extends AbstractDescribableImpl<DockerServerEn
         public String getDisplayName() {
             return "Docker Daemon";
         }
+
+        public ListBoxModel doFillCredentialsIdItems(@AncestorInPath Item item) {
+            // TODO may also need to specify a specific authentication and domain requirements
+            return new StandardListBoxModel().withEmptySelection().withAll(CredentialsProvider.lookupCredentials(DockerServerCredentials.class, item, null, Collections.<DomainRequirement>emptyList()));
+        }
+
     }
 
-    // TODO: write online config.jelly
 }

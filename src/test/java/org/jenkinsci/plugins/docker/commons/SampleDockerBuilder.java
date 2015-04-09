@@ -1,8 +1,11 @@
 package org.jenkinsci.plugins.docker.commons;
 
+import hudson.Extension;
 import hudson.Launcher;
 import hudson.model.AbstractBuild;
+import hudson.model.AbstractProject;
 import hudson.model.BuildListener;
+import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.Builder;
 import org.kohsuke.stapler.DataBoundConstructor;
 
@@ -12,10 +15,7 @@ import java.io.IOException;
  * @author Kohsuke Kawaguchi
  */
 public class SampleDockerBuilder extends Builder {
-    /**
-     * config.jelly should inline this.
-     * Not meant to be instantiated and referenced externally.
-     */
+
     private final DockerServerEndpoint server;
     private final DockerRegistryEndpoint registry;
 
@@ -45,4 +45,17 @@ public class SampleDockerBuilder extends Builder {
             key.close();
         }
     }
+
+    @Extension public static class DescriptorImpl extends BuildStepDescriptor<Builder> {
+
+        @Override public String getDisplayName() {
+            return "Sample docker-run";
+        }
+
+        @Override public boolean isApplicable(Class<? extends AbstractProject> jobType) {
+            return true;
+        }
+
+    }
+
 }

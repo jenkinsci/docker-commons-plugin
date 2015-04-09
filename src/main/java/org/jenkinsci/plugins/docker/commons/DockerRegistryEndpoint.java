@@ -25,8 +25,12 @@ import java.util.Collections;
 import java.util.List;
 
 import static com.cloudbees.plugins.credentials.CredentialsMatchers.*;
+import com.cloudbees.plugins.credentials.common.StandardCredentials;
+import com.cloudbees.plugins.credentials.common.StandardListBoxModel;
+import hudson.util.ListBoxModel;
 import javax.annotation.Nonnull;
 import org.apache.commons.io.Charsets;
+import org.kohsuke.stapler.AncestorInPath;
 
 /**
  * Encapsulates the endpoint of DockerHub and how to interact with it.
@@ -157,6 +161,12 @@ public class DockerRegistryEndpoint extends AbstractDescribableImpl<DockerRegist
         public String getDisplayName() {
             return "Docker Hub";
         }
+
+        public ListBoxModel doFillCredentialsIdItems(@AncestorInPath Item item) {
+            // TODO when credentials definition fixed, specify the right matcher; may also need to specify a specific authentication and domain requirements
+            return new StandardListBoxModel().withEmptySelection().withAll(CredentialsProvider.lookupCredentials(StandardCredentials.class, item, null, Collections.<DomainRequirement>emptyList()));
+        }
+
     }
 
 }

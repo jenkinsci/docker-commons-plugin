@@ -1,8 +1,11 @@
 package org.jenkinsci.plugins.docker.commons;
 
+import hudson.Extension;
 import hudson.Launcher;
 import hudson.model.AbstractBuild;
+import hudson.model.AbstractProject;
 import hudson.model.BuildListener;
+import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.Builder;
 import org.kohsuke.stapler.DataBoundConstructor;
 
@@ -34,6 +37,18 @@ public class SampleDockerRegistryBuilder extends Builder {
         } finally {
             key.close();
         }
+    }
+
+    @Extension public static class DescriptorImpl extends BuildStepDescriptor<Builder> {
+
+        @Override public String getDisplayName() {
+            return "Sample docker-push";
+        }
+
+        @Override public boolean isApplicable(Class<? extends AbstractProject> jobType) {
+            return true;
+        }
+
     }
 
 }
