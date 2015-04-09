@@ -1,7 +1,7 @@
 package org.jenkinsci.plugins.docker.commons;
 
+import hudson.remoting.Callable;
 import hudson.remoting.VirtualChannel;
-import jenkins.security.MasterToSlaveCallable;
 import net.sf.json.JSONObject;
 import org.apache.commons.io.FileUtils;
 
@@ -42,7 +42,7 @@ public final class DockerRegistryToken implements Serializable {
      * This is done by inserting the token into {@code ~/.dockercfg}
      */
     public KeyMaterial materialize(final URL endpoint, VirtualChannel target) throws InterruptedException, IOException {
-        target.call(new MasterToSlaveCallable<Void, IOException>() {
+        target.call(new Callable<Void, IOException>() {
             /**
              * Insert the token into {@code ~/.dockercfg}
              */
