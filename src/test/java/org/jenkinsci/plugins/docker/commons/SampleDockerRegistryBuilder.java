@@ -11,19 +11,19 @@ import java.io.IOException;
 /**
  * @author Kohsuke Kawaguchi
  */
-public class SampleDockerHubBuilder extends Builder {
+public class SampleDockerRegistryBuilder extends Builder {
     /**
      * config.jelly should inline this.
      * Not meant to be instantiated and referenced externally.
      */
-    private final DockerHubEndpoint endpoint;
+    private final DockerRegistryEndpoint endpoint;
 
     @DataBoundConstructor
-    public SampleDockerHubBuilder(DockerHubEndpoint endpoint) {
+    public SampleDockerRegistryBuilder(DockerRegistryEndpoint endpoint) {
         this.endpoint = endpoint;
     }
 
-    public DockerHubEndpoint getEndpoint() {
+    public DockerRegistryEndpoint getEndpoint() {
         return endpoint;
     }
 

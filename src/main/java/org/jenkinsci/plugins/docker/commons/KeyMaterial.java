@@ -23,7 +23,7 @@ import java.io.Serializable;
  *
  * @author Kohsuke Kawaguchi
  * @see DockerServerEndpoint#materialize(AbstractBuild)
- * @see DockerHubEndpoint#materialize(AbstractBuild)
+ * @see DockerRegistryEndpoint#materialize(AbstractBuild)
  */
 public abstract class KeyMaterial implements Closeable, Serializable {
     /**

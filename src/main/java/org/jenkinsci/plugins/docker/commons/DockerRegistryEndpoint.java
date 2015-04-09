@@ -36,7 +36,7 @@ import static com.cloudbees.plugins.credentials.CredentialsMatchers.*;
  *
  * @author Kohsuke Kawaguchi
  */
-public class DockerHubEndpoint extends AbstractDescribableImpl<DockerHubEndpoint> {
+public class DockerRegistryEndpoint extends AbstractDescribableImpl<DockerRegistryEndpoint> {
     /**
      * Null if this is on the public docker hub.
      */
@@ -44,7 +44,7 @@ public class DockerHubEndpoint extends AbstractDescribableImpl<DockerHubEndpoint
     private final String credentialsId;
 
     @DataBoundConstructor
-    public DockerHubEndpoint(String urlString, String credentialsId) {
+    public DockerRegistryEndpoint(String urlString, String credentialsId) {
         this.urlString = Util.fixEmpty(urlString);
         this.credentialsId = credentialsId;
     }
@@ -77,15 +77,16 @@ public class DockerHubEndpoint extends AbstractDescribableImpl<DockerHubEndpoint
     }
 
     /**
-     * Plugins that want to refer to a {@link DockerHubCredentials} should do so via ID string,
-     * and use this method to resolve it to {@link DockerHubCredentials}.
+     * Plugins that want to refer to a {@link DockerRegistryCredentials} should do so via ID string,
+     * and use this method to resolve it to {@link DockerRegistryCredentials}.
      *
      * @param context
      *       If you are a build step trying to access DockerHub in the context of a build/job,
      *       specify that job. Otherwise null. If you are scoped to something else, you might
      *       have to interact with {@link CredentialsProvider} directly.
      */
-    public @CheckForNull DockerHubToken getToken(Item context) {
+    public @CheckForNull
+    DockerRegistryToken getToken(Item context) {
         // as a build step, your access to credentials are constrained by what the build
         // can access, hence Jenkins.getAuthentication()
 
@@ -97,8 +98,8 @@ public class DockerHubEndpoint extends AbstractDescribableImpl<DockerHubEndpoint
         }
 
         // look for subtypes that know how to create a token, such as Google Container Registry
-        DockerHubCredentials v = firstOrNull(CredentialsProvider.lookupCredentials(
-                DockerHubCredentials.class, context, Jenkins.getAuthentication(),requirements),
+        DockerRegistryCredentials v = firstOrNull(CredentialsProvider.lookupCredentials(
+                DockerRegistryCredentials.class, context, Jenkins.getAuthentication(),requirements),
             withId(credentialsId));
         if (v!=null)
             return v.getToken();
@@ -108,7 +109,7 @@ public class DockerHubEndpoint extends AbstractDescribableImpl<DockerHubEndpoint
                 UsernamePasswordCredentials.class, context, Jenkins.getAuthentication(),requirements),
             withId(credentialsId));
         if (w!=null)
-            return new DockerHubToken(w.getUsername(),
+            return new DockerRegistryToken(w.getUsername(),
                     Base64.encodeBase64String((w.getUsername() + ":" + w.getPassword().getPlainText()).getBytes(UTF8)));
 
         return null;
@@ -127,7 +128,7 @@ public class DockerHubEndpoint extends AbstractDescribableImpl<DockerHubEndpoint
      * needed to access it.
      */
     public KeyMaterial materialize(Item context,VirtualChannel target) throws IOException, InterruptedException {
-        DockerHubToken token = getToken(context);
+        DockerRegistryToken token = getToken(context);
         if (token==null)    return KeyMaterial.NULL;    // nothing needed to be done
 
         return token.materialize(getUrl(),target);
@@ -147,7 +148,7 @@ public class DockerHubEndpoint extends AbstractDescribableImpl<DockerHubEndpoint
     }
 
     @Extension
-    public static class DescriptorImpl extends Descriptor<DockerHubEndpoint> {
+    public static class DescriptorImpl extends Descriptor<DockerRegistryEndpoint> {
         @Override
         public String getDisplayName() {
             return "Docker Hub";

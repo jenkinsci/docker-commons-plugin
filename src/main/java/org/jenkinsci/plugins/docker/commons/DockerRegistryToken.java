@@ -12,16 +12,16 @@ import java.net.URL;
 
 /**
  * Represents an authentication token that docker(1) understands when pushing/pulling
- * from a docker registry. Obtained from {@link DockerHubCredentials}.
+ * from a docker registry. Obtained from {@link DockerRegistryCredentials}.
  *
  * @author Kohsuke Kawaguchi
- * @see DockerHubCredentials
+ * @see DockerRegistryCredentials
  */
-public final class DockerHubToken implements Serializable {
+public final class DockerRegistryToken implements Serializable {
     private final String email;
     private final String token;
 
-    public DockerHubToken(String email, String token) {
+    public DockerRegistryToken(String email, String token) {
         this.email = email;
         this.token = token;
     }
@@ -51,7 +51,7 @@ public final class DockerHubToken implements Serializable {
                 File f = new File(System.getProperty("user.home"), ".dockercfg");
                 JSONObject json = new JSONObject();
 
-                synchronized (DockerHubToken.class) {// feeble attempt at serializing access to ~/.dockercfg
+                synchronized (DockerRegistryToken.class) {// feeble attempt at serializing access to ~/.dockercfg
                     if (f.exists())
                         json = JSONObject.fromObject(FileUtils.readFileToString(f, "UTF-8"));
 
