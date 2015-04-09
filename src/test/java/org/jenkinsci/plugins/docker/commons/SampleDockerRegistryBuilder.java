@@ -33,8 +33,7 @@ public class SampleDockerRegistryBuilder extends Builder {
         KeyMaterial key = endpoint.materialize(build);
         try {
             // fork docker with appropriate environment to interact with this docker daemon
-            launcher.launch().cmds("docker","push",endpoint.imageName("user/image")).envs(key.env());
-            return true;
+            return launcher.launch().cmds("docker", "push", endpoint.imageName("user/image")).envs(key.env()).join() == 0;
         } finally {
             key.close();
         }
