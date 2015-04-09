@@ -18,19 +18,10 @@ public abstract class DockerHubCredentials extends BaseStandardCredentials {
 
     /**
      * Gets the token value to be used for authenticating access to DockerHub.
-     * This is what gets stored in {@code ~/.dockercfg} as "auth". 
+     * This is what gets stored in {@code ~/.dockercfg}.
      */
     @Nonnull
-    public abstract String getToken();
-
-    /**
-     * {@code .dockercfg} also has the "email" field that is unused, but we need some value in there.
-     * Defining this as a property to allow subtypes to expose this in the future.
-     */
-    @Nonnull
-    public String getEmail() {
-        return getId();
-    }
+    public abstract DockerHubToken getToken();
 
     protected DockerHubCredentials(CredentialsScope scope, String id, String description) {
         super(scope, id, description);

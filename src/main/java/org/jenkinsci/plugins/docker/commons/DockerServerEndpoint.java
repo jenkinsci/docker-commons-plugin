@@ -12,15 +12,15 @@ import java.io.File;
 import java.io.IOException;
 
 /**
- * Encapsulates the endpoint of Docker daemon.
+ * Encapsulates the endpoint of Docker daemon and how to interact with it.
  *
  * @author Kohsuke Kawaguchi
  */
-public class DockerEndpoint extends AbstractDescribableImpl<DockerEndpoint> {
+public class DockerServerEndpoint extends AbstractDescribableImpl<DockerServerEndpoint> {
     private final String uri;
 
     @DataBoundConstructor
-    public DockerEndpoint(String uri) {
+    public DockerServerEndpoint(String uri) {
         this.uri = uri;
     }
 
@@ -67,7 +67,7 @@ public class DockerEndpoint extends AbstractDescribableImpl<DockerEndpoint> {
     }
 
     @Extension
-    public static class DescriptorImpl extends Descriptor<DockerEndpoint> {
+    public static class DescriptorImpl extends Descriptor<DockerServerEndpoint> {
         @Override
         public String getDisplayName() {
             return "Docker Daemon";

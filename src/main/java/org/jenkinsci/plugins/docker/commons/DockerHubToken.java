@@ -1,17 +1,22 @@
 package org.jenkinsci.plugins.docker.commons;
 
-import com.cloudbees.plugins.credentials.CredentialsMatchers;
 import com.cloudbees.plugins.credentials.CredentialsProvider;
 import com.cloudbees.plugins.credentials.common.UsernamePasswordCredentials;
 import com.cloudbees.plugins.credentials.domains.DomainRequirement;
 import hudson.model.Item;
 import jenkins.model.Jenkins;
-import org.jenkinsci.plugins.docker.commons.impl.PlaintextDockerHubCredentials;
+import org.apache.commons.codec.binary.Base64;
 
 import javax.annotation.CheckForNull;
+import java.nio.charset.Charset;
 import java.util.Collections;
 
+import static com.cloudbees.plugins.credentials.CredentialsMatchers.*;
+
 /**
+ * Represents an authentication token that docker(1) understands when pushing/pulling
+ * from a docker registry.
+ *
  * @author Kohsuke Kawaguchi
  */
 public final class DockerHubToken {
@@ -44,25 +49,26 @@ public final class DockerHubToken {
     DockerHubToken get(String credentialId, Item context) {
         // as a build step, your access to credentials are constrained by what the build
         // can access, hence Jenkins.getAuthentication()
-        DockerHubCredentials v = CredentialsMatchers.firstOrNull(
-                CredentialsProvider.lookupCredentials(
-                        DockerHubCredentials.class, context, Jenkins.getAuthentication(),
-                        Collections.<DomainRequirement>emptyList()),
-                CredentialsMatchers.withId(credentialId)
-        );
-        if (v!=null)
-            return new DockerHubToken(v.getEmail(), v.getToken());
 
-        // accept the plain username/password token
-        UsernamePasswordCredentials v2 = CredentialsMatchers.firstOrNull(
-                CredentialsProvider.lookupCredentials(
-                        UsernamePasswordCredentials.class, context, Jenkins.getAuthentication(),
-                        Collections.<DomainRequirement>emptyList()),
-                CredentialsMatchers.withId(credentialId)
-        );
-        if (v2!=null)
-            return new PlaintextDockerHubCredentials(null,null,null,v2.getUsername(), v2.getPassword()).getToken();
+        // look for subtypes that know how to create a token, such as Google Container Registry
+        DockerHubCredentials v = firstOrNull(CredentialsProvider.lookupCredentials(
+                DockerHubCredentials.class, context, Jenkins.getAuthentication(),
+                Collections.<DomainRequirement>emptyList()),
+            withId(credentialId));
+        if (v!=null)
+            return v.getToken();
+
+        // allow the plain username/password token and treat it like how DockerHub turns it into a token,
+        UsernamePasswordCredentials w = firstOrNull(CredentialsProvider.lookupCredentials(
+                UsernamePasswordCredentials.class, context, Jenkins.getAuthentication(),
+                Collections.<DomainRequirement>emptyList()),
+            withId(credentialId));
+        if (w!=null)
+            return new DockerHubToken(w.getUsername(),
+                    Base64.encodeBase64String((w.getUsername() + ":" + w.getPassword().getPlainText()).getBytes(UTF8)));
 
         return null;
     }
+
+    private static final Charset UTF8 = Charset.forName("UTF-8");
 }
