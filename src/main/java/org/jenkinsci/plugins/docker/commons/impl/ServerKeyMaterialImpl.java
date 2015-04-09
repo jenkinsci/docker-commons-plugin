@@ -5,23 +5,22 @@ import hudson.FilePath;
 import org.jenkinsci.plugins.docker.commons.KeyMaterial;
 
 import java.io.IOException;
-import java.io.Serializable;
 
 /**
- * Key/certificates have to be laid out in a specific file names in this directory
- * to make docker(1) happy.
+ * {@link KeyMaterial} for talking to docker daemon.
  *
  * <p>
- * Marked serializale for persistence, although such environment has to handle {@link FilePath} correctly, such as workflow.
+ * Key/certificates have to be laid out in a specific file names in this directory
+ * to make docker(1) happy.
  *
  * @author Kohsuke Kawaguchi
  */
 // TODO: split Closeable part from the base part
-public class KeyMaterialImpl implements KeyMaterial, Serializable {
+public class ServerKeyMaterialImpl extends KeyMaterial {
     private FilePath dir;
     private final String host;
 
-    public KeyMaterialImpl(String host, final FilePath dir) {
+    public ServerKeyMaterialImpl(String host, final FilePath dir) {
         this.host = host;
         this.dir = dir;
     }
@@ -30,7 +29,7 @@ public class KeyMaterialImpl implements KeyMaterial, Serializable {
     public EnvVars env() {
         EnvVars e = new EnvVars();
         if (host!=null)
-            e.put("DOCKER_CERT_PATH",host);
+            e.put("DOCKER_HOST",host);
         if (dir!=null) {
             e.put("DOCKER_TLS_VERIFY", "1");
             e.put("DOCKER_CERT_PATH",dir.getRemote());

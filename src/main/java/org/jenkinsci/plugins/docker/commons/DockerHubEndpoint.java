@@ -7,10 +7,12 @@ import com.cloudbees.plugins.credentials.domains.DomainRequirement;
 import com.cloudbees.plugins.credentials.domains.HostnameRequirement;
 import hudson.Extension;
 import hudson.Util;
+import hudson.model.AbstractBuild;
 import hudson.model.AbstractDescribableImpl;
 import hudson.model.Describable;
 import hudson.model.Descriptor;
 import hudson.model.Item;
+import hudson.remoting.VirtualChannel;
 import jenkins.model.Jenkins;
 import org.apache.commons.codec.binary.Base64;
 import org.kohsuke.stapler.DataBoundConstructor;
@@ -107,6 +109,25 @@ public class DockerHubEndpoint extends AbstractDescribableImpl<DockerHubEndpoint
                     Base64.encodeBase64String((w.getUsername() + ":" + w.getPassword().getPlainText()).getBytes(UTF8)));
 
         return null;
+    }
+
+    /**
+     * Makes the credentials available locally for the on-going build
+     * and returns {@link KeyMaterial} that gives you the parameters needed to access it.
+     */
+    public KeyMaterial materialize(AbstractBuild build) throws IOException, InterruptedException {
+        return materialize(build.getParent(),build.getWorkspace().getChannel());
+    }
+
+    /**
+     * Makes the credentials available locally and returns {@link KeyMaterial} that gives you the parameters
+     * needed to access it.
+     */
+    public KeyMaterial materialize(Item context,VirtualChannel target) throws IOException, InterruptedException {
+        DockerHubToken token = getToken(context);
+        if (token==null)    return KeyMaterial.NULL;    // nothing needed to be done
+
+        return token.materialize(getUrl(),target);
     }
 
     @Extension

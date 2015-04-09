@@ -1,17 +1,14 @@
 package org.jenkinsci.plugins.docker.commons;
 
-import com.cloudbees.plugins.credentials.CredentialsProvider;
-import com.cloudbees.plugins.credentials.common.UsernamePasswordCredentials;
-import com.cloudbees.plugins.credentials.domains.DomainRequirement;
-import hudson.model.Item;
-import jenkins.model.Jenkins;
-import org.apache.commons.codec.binary.Base64;
+import hudson.remoting.VirtualChannel;
+import jenkins.security.MasterToSlaveCallable;
+import net.sf.json.JSONObject;
+import org.apache.commons.io.FileUtils;
 
-import javax.annotation.CheckForNull;
-import java.nio.charset.Charset;
-import java.util.Collections;
-
-import static com.cloudbees.plugins.credentials.CredentialsMatchers.*;
+import java.io.File;
+import java.io.IOException;
+import java.io.Serializable;
+import java.net.URL;
 
 /**
  * Represents an authentication token that docker(1) understands when pushing/pulling
@@ -19,7 +16,7 @@ import static com.cloudbees.plugins.credentials.CredentialsMatchers.*;
  *
  * @author Kohsuke Kawaguchi
  */
-public final class DockerHubToken {
+public final class DockerHubToken implements Serializable {
     private final String email;
     private final String token;
 
@@ -35,4 +32,39 @@ public final class DockerHubToken {
     public String getToken() {
         return token;
     }
+
+    /**
+     * Makes the credentials available locally and returns {@link KeyMaterial} that gives you the parameters
+     * needed to access it.
+     */
+    public KeyMaterial materialize(final URL endpoint, VirtualChannel target) throws InterruptedException, IOException {
+        target.call(new MasterToSlaveCallable<Void, IOException>() {
+            /**
+             * Insert the token into {@code ~/.dockercfg}
+             */
+            @Override
+            public Void call() throws IOException {
+                File f = new File(System.getProperty("user.home"), ".dockercfg");
+                JSONObject json = new JSONObject();
+
+                synchronized (DockerHubToken.class) {// feeble attempt at serializing access to ~/.dockercfg
+                    if (f.exists())
+                        json = JSONObject.fromObject(FileUtils.readFileToString(f, "UTF-8"));
+
+                    json.put(endpoint.toString(), new JSONObject()
+                            .accumulate("auth", getToken())
+                            .accumulate("email", getEmail()));
+
+                    FileUtils.writeStringToFile(f, json.toString(2), "UTF-8");
+                }
+
+                return null;
+            }
+        });
+
+        // risky to clean up ~/.dockercfg as multiple builds might try to use the same credentials
+        return KeyMaterial.NULL;
+    }
+
+    private static final long serialVersionUID = 1L;
 }
