@@ -35,40 +35,4 @@ public final class DockerHubToken {
     public String getToken() {
         return token;
     }
-
-    /**
-     * Plugins that want to refer to a {@link DockerHubCredentials} should do so via ID string,
-     * and use this method to resolve it to {@link DockerHubCredentials}.
-     *
-     * @param context
-     *       If you are a build step trying to access DockerHub in the context of a build/job,
-     *       specify that job. Otherwise null. If you are scoped to something else, you might
-     *       have to interact with {@link CredentialsProvider} directly.
-     */
-    public static @CheckForNull
-    DockerHubToken get(String credentialId, Item context) {
-        // as a build step, your access to credentials are constrained by what the build
-        // can access, hence Jenkins.getAuthentication()
-
-        // look for subtypes that know how to create a token, such as Google Container Registry
-        DockerHubCredentials v = firstOrNull(CredentialsProvider.lookupCredentials(
-                DockerHubCredentials.class, context, Jenkins.getAuthentication(),
-                Collections.<DomainRequirement>emptyList()),
-            withId(credentialId));
-        if (v!=null)
-            return v.getToken();
-
-        // allow the plain username/password token and treat it like how DockerHub turns it into a token,
-        UsernamePasswordCredentials w = firstOrNull(CredentialsProvider.lookupCredentials(
-                UsernamePasswordCredentials.class, context, Jenkins.getAuthentication(),
-                Collections.<DomainRequirement>emptyList()),
-            withId(credentialId));
-        if (w!=null)
-            return new DockerHubToken(w.getUsername(),
-                    Base64.encodeBase64String((w.getUsername() + ":" + w.getPassword().getPlainText()).getBytes(UTF8)));
-
-        return null;
-    }
-
-    private static final Charset UTF8 = Charset.forName("UTF-8");
 }
