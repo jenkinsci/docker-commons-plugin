@@ -3,6 +3,8 @@ package org.jenkinsci.plugins.docker.commons.impl;
 import hudson.EnvVars;
 import hudson.FilePath;
 import org.jenkinsci.plugins.docker.commons.KeyMaterial;
+import org.kohsuke.accmod.Restricted;
+import org.kohsuke.accmod.restrictions.NoExternalUse;
 
 import java.io.IOException;
 
@@ -15,7 +17,7 @@ import java.io.IOException;
  *
  * @author Kohsuke Kawaguchi
  */
-// TODO: split Closeable part from the base part
+@Restricted(NoExternalUse.class)
 public class ServerKeyMaterialImpl extends KeyMaterial {
     private FilePath dir;
     private final String host;

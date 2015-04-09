@@ -6,13 +6,10 @@ import com.cloudbees.plugins.credentials.impl.BaseStandardCredentials;
 import javax.annotation.Nonnull;
 
 /**
- * Represents the endpoint and the credential to access DockerHub, which is a triplet
- * of API endpoint URL, secret token, and (unused) email.
- * 
- * <p>
- * See your ~/.dockercfg for the structure.
+ * Factory of {@link DockerHubToken}, which is normally a secret itself (such as OAuth refresh token.)
  *
  * @author Kohsuke Kawaguchi
+ * @see DockerHubEndpoint
  */
 public abstract class DockerHubCredentials extends BaseStandardCredentials {
 

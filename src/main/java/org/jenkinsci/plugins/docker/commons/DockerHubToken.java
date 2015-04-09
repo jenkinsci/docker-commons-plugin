@@ -12,9 +12,10 @@ import java.net.URL;
 
 /**
  * Represents an authentication token that docker(1) understands when pushing/pulling
- * from a docker registry.
+ * from a docker registry. Obtained from {@link DockerHubCredentials}.
  *
  * @author Kohsuke Kawaguchi
+ * @see DockerHubCredentials
  */
 public final class DockerHubToken implements Serializable {
     private final String email;
@@ -36,6 +37,9 @@ public final class DockerHubToken implements Serializable {
     /**
      * Makes the credentials available locally and returns {@link KeyMaterial} that gives you the parameters
      * needed to access it.
+     *
+     * <p>
+     * This is done by inserting the token into {@code ~/.dockercfg}
      */
     public KeyMaterial materialize(final URL endpoint, VirtualChannel target) throws InterruptedException, IOException {
         target.call(new MasterToSlaveCallable<Void, IOException>() {

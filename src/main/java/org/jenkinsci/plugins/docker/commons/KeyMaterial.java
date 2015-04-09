@@ -2,8 +2,10 @@ package org.jenkinsci.plugins.docker.commons;
 
 import hudson.EnvVars;
 import hudson.model.AbstractBuild;
+import org.jenkinsci.plugins.docker.commons.impl.CompositeKeyMaterial;
 import org.jenkinsci.plugins.docker.commons.impl.NullKeyMaterial;
 
+import javax.annotation.Nullable;
 import java.io.Closeable;
 import java.io.IOException;
 import java.io.Serializable;
@@ -35,6 +37,14 @@ public abstract class KeyMaterial implements Closeable, Serializable {
      * every time {@link KeyMaterial} is created, it must be also cleaned up each time. 
      */
     public abstract void close() throws IOException;
+
+    /**
+     * Merge two {@link KeyMaterial}s into one.
+     */
+    public KeyMaterial plus(@Nullable KeyMaterial rhs) {
+        if (rhs==null)  return this;
+        return new CompositeKeyMaterial(this,rhs);
+    }
 
     /**
      * {@link KeyMaterial} that does nothing.

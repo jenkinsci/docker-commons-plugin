@@ -11,29 +11,29 @@ import java.io.IOException;
 /**
  * @author Kohsuke Kawaguchi
  */
-public class SampleDockerBuilder extends Builder {
+public class SampleDockerHubBuilder extends Builder {
     /**
      * config.jelly should inline this.
      * Not meant to be instantiated and referenced externally.
      */
-    private final DockerServerEndpoint server;
+    private final DockerHubEndpoint endpoint;
 
     @DataBoundConstructor
-    public SampleDockerBuilder(DockerServerEndpoint server) {
-        this.server = server;
+    public SampleDockerHubBuilder(DockerHubEndpoint endpoint) {
+        this.endpoint = endpoint;
     }
 
-    public DockerServerEndpoint getServer() {
-        return server;
+    public DockerHubEndpoint getEndpoint() {
+        return endpoint;
     }
 
     @Override
     public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws InterruptedException, IOException {
         // prepare the credentials to talk to this docker and make it available for docker you'll be forking
-        KeyMaterial key = server.materialize(build);
+        KeyMaterial key = endpoint.materialize(build);
         try {
             // fork docker with appropriate environment to interact with this docker daemon
-            launcher.launch().cmdAsSingleString("docker run ...").envs(key.env());
+            launcher.launch().cmds("docker","push",endpoint.imageName("user/image")).envs(key.env());
             return true;
         } finally {
             key.close();

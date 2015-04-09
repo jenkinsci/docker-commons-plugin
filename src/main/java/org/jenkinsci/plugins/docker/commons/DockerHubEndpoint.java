@@ -37,6 +37,9 @@ import static com.cloudbees.plugins.credentials.CredentialsMatchers.*;
  * @author Kohsuke Kawaguchi
  */
 public class DockerHubEndpoint extends AbstractDescribableImpl<DockerHubEndpoint> {
+    /**
+     * Null if this is on the public docker hub.
+     */
     private final String urlString;
     private final String credentialsId;
 
@@ -128,6 +131,19 @@ public class DockerHubEndpoint extends AbstractDescribableImpl<DockerHubEndpoint
         if (token==null)    return KeyMaterial.NULL;    // nothing needed to be done
 
         return token.materialize(getUrl(),target);
+    }
+
+    /**
+     * Decorates the repository ID like "jenkinsci/workflow-demo" with repository prefix.
+     */
+    public String imageName(String userAndRepo) throws IOException {
+        if (urlString==null)    return userAndRepo;
+        URL url = getUrl();
+
+        StringBuilder s = new StringBuilder(url.getHost());
+        if (url.getPort()>0 && url.getDefaultPort()!=url.getPort())
+            s.append(':').append(url.getPort());
+        return s.append('/').append(userAndRepo).toString();
     }
 
     @Extension
