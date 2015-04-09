@@ -42,12 +42,12 @@ public class DockerRegistryEndpoint extends AbstractDescribableImpl<DockerRegist
      * Null if this is on the public docker hub.
      */
     private final String url;
-    private final String credentialsId;
+    private final @CheckForNull String credentialsId;
 
     @DataBoundConstructor
     public DockerRegistryEndpoint(String url, String credentialsId) {
         this.url = Util.fixEmpty(url);
-        this.credentialsId = credentialsId;
+        this.credentialsId = Util.fixEmpty(credentialsId);
     }
 
     /**
@@ -86,6 +86,10 @@ public class DockerRegistryEndpoint extends AbstractDescribableImpl<DockerRegist
      */
     public @CheckForNull
     DockerRegistryToken getToken(Item context) {
+        if (credentialsId == null) {
+            return null;
+        }
+
         // as a build step, your access to credentials are constrained by what the build
         // can access, hence Jenkins.getAuthentication()
 
