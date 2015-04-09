@@ -21,6 +21,9 @@ public class SampleDockerBuilder extends Builder {
 
     @DataBoundConstructor
     public SampleDockerBuilder(DockerServerEndpoint server, DockerRegistryEndpoint registry) {
+        if (server == null || registry == null) {
+            throw new IllegalArgumentException();
+        }
         this.server = server;
         this.registry = registry;
     }
