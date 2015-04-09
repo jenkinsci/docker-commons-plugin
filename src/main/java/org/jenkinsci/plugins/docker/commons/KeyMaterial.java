@@ -18,10 +18,10 @@ import java.io.IOException;
  */
 public interface KeyMaterial extends Closeable {
     /**
-     * Builds the enviornment variables needed to be passed when docker runs, to access 
+     * Builds the environment variables needed to be passed when docker runs, to access
      * {@link DockerServerCredentials} that this object was created from.
      */
-    EnvVars builEnvironments();
+    EnvVars buildEnvironments();
 
     /**
      * Deletes the key materials from the file system. As key materials are copied into files

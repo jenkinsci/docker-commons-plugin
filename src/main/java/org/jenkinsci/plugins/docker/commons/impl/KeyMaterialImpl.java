@@ -16,17 +16,18 @@ import java.io.Serializable;
  *
  * @author Kohsuke Kawaguchi
  */
+// TODO: split Closeable part from the base part
 public class KeyMaterialImpl implements KeyMaterial, Serializable {
     private FilePath dir;
     private final String host;
 
-    public KeyMaterialImpl(String host, FilePath dir) {
+    public KeyMaterialImpl(String host, final FilePath dir) {
         this.host = host;
         this.dir = dir;
     }
 
     @Override
-    public EnvVars builEnvironments() {
+    public EnvVars buildEnvironments() {
         EnvVars e = new EnvVars();
         if (host!=null)
             e.put("DOCKER_CERT_PATH",host);
