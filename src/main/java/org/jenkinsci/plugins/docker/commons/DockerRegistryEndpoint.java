@@ -21,12 +21,12 @@ import javax.annotation.CheckForNull;
 import javax.annotation.Nullable;
 import java.io.IOException;
 import java.net.URL;
-import java.nio.charset.Charset;
 import java.util.Collections;
 import java.util.List;
 
 import static com.cloudbees.plugins.credentials.CredentialsMatchers.*;
 import javax.annotation.Nonnull;
+import org.apache.commons.io.Charsets;
 
 /**
  * Encapsulates the endpoint of DockerHub and how to interact with it.
@@ -113,7 +113,7 @@ public class DockerRegistryEndpoint extends AbstractDescribableImpl<DockerRegist
             withId(credentialsId));
         if (w!=null)
             return new DockerRegistryToken(w.getUsername(),
-                    Base64.encodeBase64String((w.getUsername() + ":" + w.getPassword().getPlainText()).getBytes(UTF8)));
+                    Base64.encodeBase64String((w.getUsername() + ":" + w.getPassword().getPlainText()).getBytes(Charsets.UTF_8)));
 
         return null;
     }
@@ -159,5 +159,4 @@ public class DockerRegistryEndpoint extends AbstractDescribableImpl<DockerRegist
         }
     }
 
-    private static final Charset UTF8 = Charset.forName("UTF-8");
 }
