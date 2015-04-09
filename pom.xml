@@ -5,9 +5,8 @@
   <parent>
     <groupId>org.jenkins-ci.plugins</groupId>
     <artifactId>plugin</artifactId>
-    <!-- Baseline Jenkins version you use to build and test the plugin. Users must have this version or newer to run. -->
     <version>1.580.1</version>
-    <relativePath />
+    <relativePath/>
   </parent>
   <groupId>org.jenkins-ci.plugins</groupId>
   <artifactId>docker-commons</artifactId>
@@ -49,7 +48,7 @@
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
       <artifactId>credentials</artifactId>
-      <version>1.9.4</version>
+      <version>1.22</version>
     </dependency>
     <dependency>
       <groupId>org.jenkins-ci.modules</groupId>
