@@ -6,10 +6,13 @@ import com.cloudbees.plugins.credentials.common.IdCredentials;
 import com.cloudbees.plugins.credentials.domains.DomainRequirement;
 import hudson.Extension;
 import hudson.FilePath;
+import hudson.model.AbstractBuild;
 import hudson.model.AbstractDescribableImpl;
 import hudson.model.Describable;
 import hudson.model.Descriptor;
 import hudson.model.Item;
+import hudson.model.Run;
+import hudson.remoting.VirtualChannel;
 import jenkins.model.Jenkins;
 import org.apache.commons.io.FileUtils;
 import org.jenkinsci.plugins.docker.commons.impl.KeyMaterialImpl;
@@ -58,11 +61,15 @@ public class DockerServerEndpoint extends AbstractDescribableImpl<DockerServerEn
         return credentialsId;
     }
 
+    public KeyMaterial materialize(AbstractBuild build) throws IOException, InterruptedException {
+        return materialize(build.getParent(),build.getWorkspace().getChannel());
+    }
+
     /**
      * Makes the key materials available locally and returns {@link KeyMaterial} that gives you the parameters
      * needed to access it.
      */
-    public KeyMaterial materialize(Item context) throws IOException, InterruptedException {
+    public KeyMaterial materialize(Item context,VirtualChannel target) throws IOException, InterruptedException {
         // as a build step, your access to credentials are constrained by what the build
         // can access, hence Jenkins.getAuthentication()
         DockerServerCredentials creds=null;
@@ -76,7 +83,7 @@ public class DockerServerEndpoint extends AbstractDescribableImpl<DockerServerEn
         }
 
         // the directory needs to be outside workspace to avoid prying eyes
-        FilePath baseDir = new FilePath(new File(FileUtils.getUserDirectory(), ".docker"));
+        FilePath baseDir = FilePath.getHomeDirectory(target).child(".docker");
 
         return materialize(baseDir, creds);
     }

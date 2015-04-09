@@ -27,7 +27,7 @@ public class KeyMaterialImpl implements KeyMaterial, Serializable {
     }
 
     @Override
-    public EnvVars buildEnvironments() {
+    public EnvVars env() {
         EnvVars e = new EnvVars();
         if (host!=null)
             e.put("DOCKER_CERT_PATH",host);

@@ -4,6 +4,7 @@ import com.cloudbees.plugins.credentials.CredentialsProvider;
 import com.cloudbees.plugins.credentials.common.IdCredentials;
 import com.cloudbees.plugins.credentials.common.UsernamePasswordCredentials;
 import com.cloudbees.plugins.credentials.domains.DomainRequirement;
+import com.cloudbees.plugins.credentials.domains.HostnameRequirement;
 import hudson.Extension;
 import hudson.Util;
 import hudson.model.AbstractDescribableImpl;
@@ -20,6 +21,7 @@ import java.io.IOException;
 import java.net.URL;
 import java.nio.charset.Charset;
 import java.util.Collections;
+import java.util.List;
 
 import static com.cloudbees.plugins.credentials.CredentialsMatchers.*;
 
@@ -82,18 +84,23 @@ public class DockerHubEndpoint extends AbstractDescribableImpl<DockerHubEndpoint
         // as a build step, your access to credentials are constrained by what the build
         // can access, hence Jenkins.getAuthentication()
 
+        List<DomainRequirement> requirements = Collections.emptyList();
+        try {
+            requirements = Collections.<DomainRequirement>singletonList(new HostnameRequirement(getUrl().getHost()));
+        } catch (IOException e) {
+            // shrug off this error and move on. We are matching with ID anyway.
+        }
+
         // look for subtypes that know how to create a token, such as Google Container Registry
         DockerHubCredentials v = firstOrNull(CredentialsProvider.lookupCredentials(
-                DockerHubCredentials.class, context, Jenkins.getAuthentication(),
-                Collections.<DomainRequirement>emptyList()),
+                DockerHubCredentials.class, context, Jenkins.getAuthentication(),requirements),
             withId(credentialsId));
         if (v!=null)
             return v.getToken();
 
         // allow the plain username/password token and treat it like how DockerHub turns it into a token,
         UsernamePasswordCredentials w = firstOrNull(CredentialsProvider.lookupCredentials(
-                UsernamePasswordCredentials.class, context, Jenkins.getAuthentication(),
-                Collections.<DomainRequirement>emptyList()),
+                UsernamePasswordCredentials.class, context, Jenkins.getAuthentication(),requirements),
             withId(credentialsId));
         if (w!=null)
             return new DockerHubToken(w.getUsername(),
