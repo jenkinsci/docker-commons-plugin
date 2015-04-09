@@ -21,11 +21,16 @@ import javax.annotation.CheckForNull;
 import javax.annotation.Nullable;
 import java.io.IOException;
 import java.net.URL;
-import java.nio.charset.Charset;
 import java.util.Collections;
 import java.util.List;
 
 import static com.cloudbees.plugins.credentials.CredentialsMatchers.*;
+import com.cloudbees.plugins.credentials.common.StandardCredentials;
+import com.cloudbees.plugins.credentials.common.StandardListBoxModel;
+import hudson.util.ListBoxModel;
+import javax.annotation.Nonnull;
+import org.apache.commons.io.Charsets;
+import org.kohsuke.stapler.AncestorInPath;
 
 /**
  * Encapsulates the endpoint of DockerHub and how to interact with it.
@@ -40,33 +45,31 @@ public class DockerRegistryEndpoint extends AbstractDescribableImpl<DockerRegist
     /**
      * Null if this is on the public docker hub.
      */
-    private final String urlString;
-    private final String credentialsId;
+    private final String url;
+    private final @CheckForNull String credentialsId;
 
     @DataBoundConstructor
-    public DockerRegistryEndpoint(String urlString, String credentialsId) {
-        this.urlString = Util.fixEmpty(urlString);
-        this.credentialsId = credentialsId;
+    public DockerRegistryEndpoint(String url, String credentialsId) {
+        this.url = Util.fixEmpty(url);
+        this.credentialsId = Util.fixEmpty(credentialsId);
     }
 
     /**
      * Gets the endpoint URL, such as "http://index.docker.io/v1/"
-     *
-     * <p>
-     * Null to indicate whatever Docker picks by default.
      */
-    public URL getUrl() throws IOException {
-        if (urlString!=null)
-            return new URL(urlString);
-        else
+    public @Nonnull URL getEffectiveUrl() throws IOException {
+        if (url != null) {
+            return new URL(url);
+        } else {
             return new URL("http://index.docker.io/v1/");
+        }
     }
 
     /**
      * For stapler.
      */
-    public @Nullable String getUrlString() {
-        return urlString;
+    public @Nullable String getUrl() {
+        return url;
     }
 
     /**
@@ -87,12 +90,16 @@ public class DockerRegistryEndpoint extends AbstractDescribableImpl<DockerRegist
      */
     public @CheckForNull
     DockerRegistryToken getToken(Item context) {
+        if (credentialsId == null) {
+            return null;
+        }
+
         // as a build step, your access to credentials are constrained by what the build
         // can access, hence Jenkins.getAuthentication()
 
         List<DomainRequirement> requirements = Collections.emptyList();
         try {
-            requirements = Collections.<DomainRequirement>singletonList(new HostnameRequirement(getUrl().getHost()));
+            requirements = Collections.<DomainRequirement>singletonList(new HostnameRequirement(getEffectiveUrl().getHost()));
         } catch (IOException e) {
             // shrug off this error and move on. We are matching with ID anyway.
         }
@@ -110,7 +117,7 @@ public class DockerRegistryEndpoint extends AbstractDescribableImpl<DockerRegist
             withId(credentialsId));
         if (w!=null)
             return new DockerRegistryToken(w.getUsername(),
-                    Base64.encodeBase64String((w.getUsername() + ":" + w.getPassword().getPlainText()).getBytes(UTF8)));
+                    Base64.encodeBase64String((w.getUsername() + ":" + w.getPassword().getPlainText()).getBytes(Charsets.UTF_8)));
 
         return null;
     }
@@ -131,20 +138,25 @@ public class DockerRegistryEndpoint extends AbstractDescribableImpl<DockerRegist
         DockerRegistryToken token = getToken(context);
         if (token==null)    return KeyMaterial.NULL;    // nothing needed to be done
 
-        return token.materialize(getUrl(),target);
+        return token.materialize(getEffectiveUrl(),target);
     }
 
     /**
      * Decorates the repository ID like "jenkinsci/workflow-demo" with repository prefix.
      */
     public String imageName(String userAndRepo) throws IOException {
-        if (urlString==null)    return userAndRepo;
-        URL url = getUrl();
+        if (url==null)    return userAndRepo;
+        URL effectiveUrl = getEffectiveUrl();
 
-        StringBuilder s = new StringBuilder(url.getHost());
-        if (url.getPort()>0 && url.getDefaultPort()!=url.getPort())
-            s.append(':').append(url.getPort());
+        StringBuilder s = new StringBuilder(effectiveUrl.getHost());
+        if (effectiveUrl.getPort() > 0 && effectiveUrl.getDefaultPort() != effectiveUrl.getPort()) {
+            s.append(':').append(effectiveUrl.getPort());
+        }
         return s.append('/').append(userAndRepo).toString();
+    }
+
+    @Override public String toString() {
+        return "DockerRegistryEndpoint[" + url + ";credentialsId=" + credentialsId + "]";
     }
 
     @Extension
@@ -153,7 +165,12 @@ public class DockerRegistryEndpoint extends AbstractDescribableImpl<DockerRegist
         public String getDisplayName() {
             return "Docker Hub";
         }
+
+        public ListBoxModel doFillCredentialsIdItems(@AncestorInPath Item item) {
+            // TODO when credentials definition fixed, specify the right matcher; may also need to specify a specific authentication and domain requirements
+            return new StandardListBoxModel().withEmptySelection().withAll(CredentialsProvider.lookupCredentials(StandardCredentials.class, item, null, Collections.<DomainRequirement>emptyList()));
+        }
+
     }
 
-    private static final Charset UTF8 = Charset.forName("UTF-8");
 }

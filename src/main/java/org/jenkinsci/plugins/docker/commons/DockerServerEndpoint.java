@@ -3,6 +3,7 @@ package org.jenkinsci.plugins.docker.commons;
 import com.cloudbees.plugins.credentials.CredentialsMatchers;
 import com.cloudbees.plugins.credentials.CredentialsProvider;
 import com.cloudbees.plugins.credentials.common.IdCredentials;
+import com.cloudbees.plugins.credentials.common.StandardListBoxModel;
 import com.cloudbees.plugins.credentials.domains.DomainRequirement;
 import hudson.Extension;
 import hudson.FilePath;
@@ -21,6 +22,9 @@ import java.io.IOException;
 import java.util.Collections;
 
 import static hudson.Util.*;
+import hudson.util.ListBoxModel;
+import javax.annotation.CheckForNull;
+import org.kohsuke.stapler.AncestorInPath;
 
 /**
  * Encapsulates the endpoint of Docker daemon and how to interact with it.
@@ -33,12 +37,12 @@ import static hudson.Util.*;
  */
 public class DockerServerEndpoint extends AbstractDescribableImpl<DockerServerEndpoint> {
     private final String uri;
-    private final String credentialsId;
+    private final @CheckForNull String credentialsId;
 
     @DataBoundConstructor
     public DockerServerEndpoint(String uri, String credentialsId) {
         this.uri = fixEmpty(uri);
-        this.credentialsId = credentialsId;
+        this.credentialsId = fixEmpty(credentialsId);
     }
 
     /**
@@ -84,6 +88,7 @@ public class DockerServerEndpoint extends AbstractDescribableImpl<DockerServerEn
         }
 
         // the directory needs to be outside workspace to avoid prying eyes
+        // TODO if creds == null, or for other reasons dir is not passed to ServerKeyMaterialImpl, this creates a temp dir which is never deleted
         FilePath baseDir = FilePath.getHomeDirectory(target).child(".docker").createTempDir("keys",null);
 
         return materialize(baseDir, creds);
@@ -121,13 +126,22 @@ public class DockerServerEndpoint extends AbstractDescribableImpl<DockerServerEn
         dir.child(fileName).write(content,"UTF-8");
     }
 
+    @Override public String toString() {
+        return "DockerServerEndpoint[" + uri + ";credentialsId=" + credentialsId + "]";
+    }
+
     @Extension
     public static class DescriptorImpl extends Descriptor<DockerServerEndpoint> {
         @Override
         public String getDisplayName() {
             return "Docker Daemon";
         }
+
+        public ListBoxModel doFillCredentialsIdItems(@AncestorInPath Item item) {
+            // TODO may also need to specify a specific authentication and domain requirements
+            return new StandardListBoxModel().withEmptySelection().withAll(CredentialsProvider.lookupCredentials(DockerServerCredentials.class, item, null, Collections.<DomainRequirement>emptyList()));
+        }
+
     }
 
-    // TODO: write online config.jelly
 }

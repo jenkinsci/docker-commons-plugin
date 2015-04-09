@@ -1,8 +1,11 @@
 package org.jenkinsci.plugins.docker.commons;
 
+import hudson.Extension;
 import hudson.Launcher;
 import hudson.model.AbstractBuild;
+import hudson.model.AbstractProject;
 import hudson.model.BuildListener;
+import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.Builder;
 import org.kohsuke.stapler.DataBoundConstructor;
 
@@ -12,19 +15,25 @@ import java.io.IOException;
  * @author Kohsuke Kawaguchi
  */
 public class SampleDockerBuilder extends Builder {
-    /**
-     * config.jelly should inline this.
-     * Not meant to be instantiated and referenced externally.
-     */
+
     private final DockerServerEndpoint server;
+    private final DockerRegistryEndpoint registry;
 
     @DataBoundConstructor
-    public SampleDockerBuilder(DockerServerEndpoint server) {
+    public SampleDockerBuilder(DockerServerEndpoint server, DockerRegistryEndpoint registry) {
+        if (server == null || registry == null) {
+            throw new IllegalArgumentException();
+        }
         this.server = server;
+        this.registry = registry;
     }
 
     public DockerServerEndpoint getServer() {
         return server;
+    }
+
+    public DockerRegistryEndpoint getRegistry() {
+        return registry;
     }
 
     @Override
@@ -32,11 +41,24 @@ public class SampleDockerBuilder extends Builder {
         // prepare the credentials to talk to this docker and make it available for docker you'll be forking
         KeyMaterial key = server.materialize(build);
         try {
+            key = key.plus(registry.materialize(build));
             // fork docker with appropriate environment to interact with this docker daemon
-            launcher.launch().cmdAsSingleString("docker run ...").envs(key.env());
-            return true;
+            return launcher.launch().cmdAsSingleString("docker run ...").envs(key.env()).join() == 0;
         } finally {
             key.close();
         }
     }
+
+    @Extension public static class DescriptorImpl extends BuildStepDescriptor<Builder> {
+
+        @Override public String getDisplayName() {
+            return "Sample docker-run";
+        }
+
+        @Override public boolean isApplicable(Class<? extends AbstractProject> jobType) {
+            return true;
+        }
+
+    }
+
 }
