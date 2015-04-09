@@ -155,6 +155,10 @@ public class DockerRegistryEndpoint extends AbstractDescribableImpl<DockerRegist
         return s.append('/').append(userAndRepo).toString();
     }
 
+    @Override public String toString() {
+        return "DockerRegistryEndpoint[" + url + ";credentialsId=" + credentialsId + "]";
+    }
+
     @Extension
     public static class DescriptorImpl extends Descriptor<DockerRegistryEndpoint> {
         @Override

@@ -126,6 +126,10 @@ public class DockerServerEndpoint extends AbstractDescribableImpl<DockerServerEn
         dir.child(fileName).write(content,"UTF-8");
     }
 
+    @Override public String toString() {
+        return "DockerServerEndpoint[" + uri + ";credentialsId=" + credentialsId + "]";
+    }
+
     @Extension
     public static class DescriptorImpl extends Descriptor<DockerServerEndpoint> {
         @Override
