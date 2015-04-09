@@ -2,9 +2,12 @@ package org.jenkinsci.plugins.docker.commons;
 
 import com.cloudbees.plugins.credentials.CredentialsProvider;
 import com.cloudbees.plugins.credentials.common.IdCredentials;
+import com.cloudbees.plugins.credentials.common.StandardCredentials;
+import com.cloudbees.plugins.credentials.common.StandardListBoxModel;
 import com.cloudbees.plugins.credentials.common.UsernamePasswordCredentials;
 import com.cloudbees.plugins.credentials.domains.DomainRequirement;
 import com.cloudbees.plugins.credentials.domains.HostnameRequirement;
+import com.google.common.base.Charsets;
 import hudson.Extension;
 import hudson.Util;
 import hudson.model.AbstractBuild;
@@ -13,11 +16,14 @@ import hudson.model.Describable;
 import hudson.model.Descriptor;
 import hudson.model.Item;
 import hudson.remoting.VirtualChannel;
+import hudson.util.ListBoxModel;
 import jenkins.model.Jenkins;
 import org.apache.commons.codec.binary.Base64;
+import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 import javax.annotation.CheckForNull;
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.io.IOException;
 import java.net.URL;
@@ -25,12 +31,6 @@ import java.util.Collections;
 import java.util.List;
 
 import static com.cloudbees.plugins.credentials.CredentialsMatchers.*;
-import com.cloudbees.plugins.credentials.common.StandardCredentials;
-import com.cloudbees.plugins.credentials.common.StandardListBoxModel;
-import hudson.util.ListBoxModel;
-import javax.annotation.Nonnull;
-import org.apache.commons.io.Charsets;
-import org.kohsuke.stapler.AncestorInPath;
 
 /**
  * Encapsulates the endpoint of DockerHub and how to interact with it.
