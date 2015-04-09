@@ -4,10 +4,8 @@ import com.cloudbees.plugins.credentials.CredentialsProvider;
 import com.cloudbees.plugins.credentials.common.IdCredentials;
 import com.cloudbees.plugins.credentials.common.StandardCredentials;
 import com.cloudbees.plugins.credentials.common.StandardListBoxModel;
-import com.cloudbees.plugins.credentials.common.UsernamePasswordCredentials;
 import com.cloudbees.plugins.credentials.domains.DomainRequirement;
 import com.cloudbees.plugins.credentials.domains.HostnameRequirement;
-import com.google.common.base.Charsets;
 import hudson.Extension;
 import hudson.Util;
 import hudson.model.AbstractBuild;
@@ -17,8 +15,9 @@ import hudson.model.Descriptor;
 import hudson.model.Item;
 import hudson.remoting.VirtualChannel;
 import hudson.util.ListBoxModel;
+import jenkins.authentication.tokens.api.AuthenticationTokens;
+import hudson.util.ListBoxModel;
 import jenkins.model.Jenkins;
-import org.apache.commons.codec.binary.Base64;
 import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
 
@@ -80,8 +79,8 @@ public class DockerRegistryEndpoint extends AbstractDescribableImpl<DockerRegist
     }
 
     /**
-     * Plugins that want to refer to a {@link DockerRegistryCredentials} should do so via ID string,
-     * and use this method to resolve it to {@link DockerRegistryCredentials}.
+     * Plugins that want to refer to a {@link IdCredentials} should do so via ID string,
+     * and use this method to resolve it and convert to {@link DockerRegistryToken}.
      *
      * @param context
      *       If you are a build step trying to access DockerHub in the context of a build/job,
@@ -105,21 +104,9 @@ public class DockerRegistryEndpoint extends AbstractDescribableImpl<DockerRegist
         }
 
         // look for subtypes that know how to create a token, such as Google Container Registry
-        DockerRegistryCredentials v = firstOrNull(CredentialsProvider.lookupCredentials(
-                DockerRegistryCredentials.class, context, Jenkins.getAuthentication(),requirements),
-            withId(credentialsId));
-        if (v!=null)
-            return v.getToken();
-
-        // allow the plain username/password token and treat it like how DockerHub turns it into a token,
-        UsernamePasswordCredentials w = firstOrNull(CredentialsProvider.lookupCredentials(
-                UsernamePasswordCredentials.class, context, Jenkins.getAuthentication(),requirements),
-            withId(credentialsId));
-        if (w!=null)
-            return new DockerRegistryToken(w.getUsername(),
-                    Base64.encodeBase64String((w.getUsername() + ":" + w.getPassword().getPlainText()).getBytes(Charsets.UTF_8)));
-
-        return null;
+        return AuthenticationTokens.convert(DockerRegistryToken.class, firstOrNull(CredentialsProvider.lookupCredentials(
+                IdCredentials.class, context, Jenkins.getAuthentication(),requirements),
+                allOf(AuthenticationTokens.matcher(DockerRegistryToken.class), withId(credentialsId))));
     }
 
     /**
@@ -167,8 +154,17 @@ public class DockerRegistryEndpoint extends AbstractDescribableImpl<DockerRegist
         }
 
         public ListBoxModel doFillCredentialsIdItems(@AncestorInPath Item item) {
-            // TODO when credentials definition fixed, specify the right matcher; may also need to specify a specific authentication and domain requirements
-            return new StandardListBoxModel().withEmptySelection().withAll(CredentialsProvider.lookupCredentials(StandardCredentials.class, item, null, Collections.<DomainRequirement>emptyList()));
+            // TODO may also need to specify a specific authentication and domain requirements
+            return new StandardListBoxModel()
+                    .withEmptySelection()
+                    .withMatching(AuthenticationTokens.matcher(DockerRegistryToken.class),
+                            CredentialsProvider.lookupCredentials(
+                                    StandardCredentials.class,
+                                    item,
+                                    null,
+                                    Collections.<DomainRequirement>emptyList()
+                            )
+                    );
         }
 
     }

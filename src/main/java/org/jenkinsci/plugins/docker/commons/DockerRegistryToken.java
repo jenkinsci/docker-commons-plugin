@@ -1,7 +1,9 @@
 package org.jenkinsci.plugins.docker.commons;
 
+import com.cloudbees.plugins.credentials.Credentials;
 import hudson.remoting.Callable;
 import hudson.remoting.VirtualChannel;
+import jenkins.authentication.tokens.api.AuthenticationTokens;
 import net.sf.json.JSONObject;
 import org.apache.commons.io.FileUtils;
 
@@ -12,10 +14,10 @@ import java.net.URL;
 
 /**
  * Represents an authentication token that docker(1) understands when pushing/pulling
- * from a docker registry. Obtained from {@link DockerRegistryCredentials}.
+ * from a docker registry. Obtained from various {@link Credentials} implementations via {@link AuthenticationTokens}.
  *
  * @author Kohsuke Kawaguchi
- * @see DockerRegistryCredentials
+ * @see AuthenticationTokens
  */
 public final class DockerRegistryToken implements Serializable {
     private final String email;
