@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.util.Collections;
 
 import static hudson.Util.*;
+import javax.annotation.CheckForNull;
 
 /**
  * Encapsulates the endpoint of Docker daemon and how to interact with it.
@@ -33,12 +34,12 @@ import static hudson.Util.*;
  */
 public class DockerServerEndpoint extends AbstractDescribableImpl<DockerServerEndpoint> {
     private final String uri;
-    private final String credentialsId;
+    private final @CheckForNull String credentialsId;
 
     @DataBoundConstructor
     public DockerServerEndpoint(String uri, String credentialsId) {
         this.uri = fixEmpty(uri);
-        this.credentialsId = credentialsId;
+        this.credentialsId = fixEmpty(credentialsId);
     }
 
     /**
@@ -84,6 +85,7 @@ public class DockerServerEndpoint extends AbstractDescribableImpl<DockerServerEn
         }
 
         // the directory needs to be outside workspace to avoid prying eyes
+        // TODO if creds == null, or for other reasons dir is not passed to ServerKeyMaterialImpl, this creates a temp dir which is never deleted
         FilePath baseDir = FilePath.getHomeDirectory(target).child(".docker").createTempDir("keys",null);
 
         return materialize(baseDir, creds);
