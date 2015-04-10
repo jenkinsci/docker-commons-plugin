@@ -44,7 +44,8 @@ public abstract class DockerCommand {
     }
 
     public ArgumentListBuilder getArgs() {
-        return args;
+        // Control mods on the args list.
+        return args.clone();
     }
 
     public DockerCommand asUser(@Nonnull String username) {
@@ -77,6 +78,15 @@ public abstract class DockerCommand {
         for (Object arg : args) {
             this.args.add(arg.toString(), true);
         }
+    }
+    
+    public boolean isOptionSet(@Nonnull DockerCommandOption option) {
+        for (String arg : args.toList()) {
+            if (arg.equals(option.option())) {
+                return true;
+            }
+        }
+        return false;
     }
 
     public String getOut() {
