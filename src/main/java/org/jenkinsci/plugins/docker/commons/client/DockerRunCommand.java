@@ -26,22 +26,26 @@ package org.jenkinsci.plugins.docker.commons.client;
 import org.jenkinsci.plugins.docker.commons.fingerprint.ContainerRecord;
 
 import javax.annotation.Nonnull;
+import java.util.Collections;
 
 /**
  * @author <a href="mailto:tom.fennelly@gmail.com">tom.fennelly@gmail.com</a>
  */
-public class RunCommand extends DockerCommand {
+public class DockerRunCommand extends DockerCommand {
 
     private final String image;
     private String command;
     private String[] commandArgs;
 
-    public RunCommand(@Nonnull String image) {
+    public DockerRunCommand(@Nonnull String image) {
         args.add("run");
         this.image = image;
     }
 
     public ContainerRecord getContainer() {
+        
+        // TODO: make sure the command was run in detached mode? Otherwise we don't have a containerId in the out
+        
         String containerId = getOut();
         if (containerId == null) {
             return null;
@@ -49,7 +53,7 @@ public class RunCommand extends DockerCommand {
 
         // TODO need to docker inpsect the container and get some info from it.
         
-        return new ContainerRecord("", containerId, "", 0L, null);
+        return new ContainerRecord("", containerId, "", 0L, Collections.<String,String>emptyMap());
     }
 
     @Override
@@ -65,22 +69,22 @@ public class RunCommand extends DockerCommand {
         }
     }
 
-    public RunCommand withContainerCommand(@Nonnull String command, String... args) {
+    public DockerRunCommand withContainerCommand(@Nonnull String command, String... args) {
         this.command = command;
         this.commandArgs = args;
         return this;
     }
 
-    public RunCommand detached() {
+    public DockerRunCommand detached() {
         args.add(DockerCommandOption.DETACHED.option());
         return this;
     }
 
-    public RunCommand withEnvVar(@Nonnull String name, @Nonnull String value) {
+    public DockerRunCommand withEnvVar(@Nonnull String name, @Nonnull String value) {
         return withEnvVar(name, value, false);
     }
 
-    public RunCommand withEnvVar(@Nonnull String name, @Nonnull String value, boolean masked) {
+    public DockerRunCommand withEnvVar(@Nonnull String name, @Nonnull String value, boolean masked) {
         String var = String.format("%s=%s", name, value);
         args.add(DockerCommandOption.ENV_VAR.option());
         if (masked) {

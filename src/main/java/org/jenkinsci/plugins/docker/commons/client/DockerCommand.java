@@ -39,7 +39,8 @@ public abstract class DockerCommand {
     public abstract void preLaunch();
 
     protected DockerCommand() {
-        args.add("docker");
+        // TODO set up PATH
+        args.add("/usr/local/bin/docker");
     }
 
     public DockerCommand asUser(@Nonnull String username) {
@@ -66,7 +67,7 @@ public abstract class DockerCommand {
         return out;
     }
 
-    public void setOut(String out) {
+    void setOut(String out) {
         this.out = out;
     }
 
@@ -74,7 +75,12 @@ public abstract class DockerCommand {
         return err;
     }
 
-    public void setErr(String err) {
+    void setErr(String err) {
         this.err = err;
-    }    
+    }
+
+    @Override
+    public String toString() {
+        return args.toString();
+    }
 }

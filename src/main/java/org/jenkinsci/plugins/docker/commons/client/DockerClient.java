@@ -30,11 +30,15 @@ import org.jenkinsci.plugins.docker.commons.KeyMaterial;
 import javax.annotation.Nonnull;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * @author <a href="mailto:tom.fennelly@gmail.com">tom.fennelly@gmail.com</a>
  */
 public class DockerClient {
+    
+    private static final Logger LOGGER = Logger.getLogger(DockerClient.class.getName());
     
     private Launcher launcher;
     private KeyMaterial keyMaterial;
@@ -70,6 +74,11 @@ public class DockerClient {
         ByteArrayOutputStream err = new ByteArrayOutputStream();
 
         Launcher.ProcStarter procStarter = launcher.launch();
+
+        if (LOGGER.isLoggable(Level.FINE)) {
+            LOGGER.log(Level.FINE, "Executing docker command {0}", dockerCommand);
+        }
+        
         try {
             return procStarter.cmds(dockerCommand.args).envs(envVars).stdout(out).stderr(err).join();
         } finally {

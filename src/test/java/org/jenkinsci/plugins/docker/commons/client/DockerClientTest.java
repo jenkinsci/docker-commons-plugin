@@ -27,8 +27,10 @@ import hudson.FilePath;
 import hudson.Launcher;
 import hudson.model.StreamBuildListener;
 import hudson.model.TaskListener;
+import org.jenkinsci.plugins.docker.commons.KeyMaterial;
 import org.jenkinsci.plugins.docker.commons.fingerprint.ContainerRecord;
 import org.jenkinsci.plugins.docker.commons.impl.ServerKeyMaterialImpl;
+import org.junit.Assert;
 import org.junit.Test;
 
 import java.io.ByteArrayOutputStream;
@@ -39,43 +41,41 @@ import java.io.IOException;
  * @author <a href="mailto:tom.fennelly@gmail.com">tom.fennelly@gmail.com</a>
  */
 public class DockerClientTest {
-
-    @Test
-    public void test() {
-        System.out.println("*** " + DockerCommandOption.DETACHED);
-    }
     
     @Test
     public void test_run() throws IOException, InterruptedException {
-        
-        
+                
         // Set stuff up for the test
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
         TaskListener taskListener = new StreamBuildListener(outputStream);
         Launcher launcher = new Launcher.LocalLauncher(taskListener);
+
+        // Create the KeyMaterial for connecting to the docker daemon 
+        // TODO a better way of setting this for the test, if there is on
+        KeyMaterial keyMaterial = new ServerKeyMaterialImpl("tcp://192.168.59.103:2376",
+                        new FilePath(new File("/Users/tfennelly/.boot2docker/certs/boot2docker-vm")));
         
         // Create a docker client
-        DockerClient dockerClient = new DockerClient(launcher);        
-        dockerClient.setKeyMaterial(
-                new ServerKeyMaterialImpl("tcp://192.168.59.103:2376", 
-                new FilePath(new File("/Users/tfennelly/.boot2docker/certs/boot2docker-vm"))));
+        DockerClient dockerClient = new DockerClient(launcher).setKeyMaterial(keyMaterial);
 
         // Create a "run" docker command object
-        RunCommand runCommand = new RunCommand("tfennelly/hello")
+        DockerRunCommand dockerRunCommand = new DockerRunCommand("learn/tutorial")
                 .withContainerCommand("echo", "hello world")
                 .detached();
         
         // Config some general settings on the command
-        runCommand.allocatePseudoTTY();
-        runCommand.asUser("username");
-        runCommand.withWorkingDir("/home/blah");
+        dockerRunCommand.allocatePseudoTTY();
+        
+        // Get the username and homedir same as how Oki Docki does it
+        //dockerRunCommand.asUser("username");
+        //dockerRunCommand.withWorkingDir("/home/blah");
         
         // Launch the command via the DockerClient
-        int status = dockerClient.launch(runCommand);
+        int status = dockerClient.launch(dockerRunCommand);
         if (status == 0) {
 
-            ContainerRecord container = runCommand.getContainer();
-            
+            ContainerRecord container = dockerRunCommand.getContainer();
+            Assert.assertEquals(65, container.getContainerId().length());
         } else {
             throw new RuntimeException("Failed to run docker image");            
         }        
