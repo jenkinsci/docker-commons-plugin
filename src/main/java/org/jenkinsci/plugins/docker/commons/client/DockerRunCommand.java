@@ -42,18 +42,17 @@ public class DockerRunCommand extends DockerCommand {
         this.image = image;
     }
 
-    public ContainerRecord getContainer() {
-        
-        // TODO: make sure the containerCmd was run in detached mode? Otherwise we don't have a containerId in the out
-        
-        String containerId = getOut();
-        if (containerId == null) {
+    public ContainerRecord getContainer() {        
+        String out = getOut();        
+        if (out == null) {
             return null;
+        } else if (!isOptionSet(DockerCommandOption.DETACHED)) {
+            throw new UnsupportedOperationException("Cannot get container info. Command was not run in detached mode.");
         }
 
         // TODO need to docker inpsect the container and get some info from it.
         
-        return new ContainerRecord("", containerId, "", 0L, Collections.<String,String>emptyMap());
+        return new ContainerRecord("", out, "", 0L, Collections.<String,String>emptyMap());
     }
 
     @Override
