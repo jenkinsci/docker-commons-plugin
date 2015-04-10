@@ -32,7 +32,7 @@ import javax.annotation.Nonnull;
  */
 public abstract class DockerCommand {
 
-    final ArgumentListBuilder args = new ArgumentListBuilder();
+    private final ArgumentListBuilder args = new ArgumentListBuilder();
     private String out;
     private String err;
     
@@ -43,24 +43,40 @@ public abstract class DockerCommand {
         args.add("/usr/local/bin/docker");
     }
 
+    public ArgumentListBuilder getArgs() {
+        return args;
+    }
+
     public DockerCommand asUser(@Nonnull String username) {
-        args.add(DockerCommandOption.USERNAME.option(), username);
+        addArgs(DockerCommandOption.USERNAME, username);
         return this;
     }
 
     public DockerCommand withWorkingDir(@Nonnull String dir) {
-        args.add(DockerCommandOption.WORKING_DIR.option(), dir);
+        addArgs(DockerCommandOption.WORKING_DIR, dir);
         return this;
     }
 
     public DockerCommand bindHostVolume(@Nonnull String hostDir, @Nonnull String containerDir) {
-        args.add(DockerCommandOption.VOLUME.option(), String.format("%s:%s", hostDir, containerDir));
+        addArgs(DockerCommandOption.VOLUME, String.format("%s:%s", hostDir, containerDir));
         return this;
     }
 
     public DockerCommand allocatePseudoTTY() {
-        args.add(DockerCommandOption.PSEUDO_TTY.option());
+        addArgs(DockerCommandOption.PSEUDO_TTY);
         return this;
+    }
+
+    public void addArgs(Object... args) {
+        for (Object arg : args) {
+            this.args.add(arg.toString());
+        }
+    }
+
+    public void addMaskedArgs(Object... args) {
+        for (Object arg : args) {
+            this.args.add(arg.toString(), true);
+        }
     }
 
     public String getOut() {

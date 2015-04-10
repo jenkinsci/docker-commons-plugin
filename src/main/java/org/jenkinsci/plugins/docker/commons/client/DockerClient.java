@@ -80,7 +80,7 @@ public class DockerClient {
         }
         
         try {
-            return procStarter.cmds(dockerCommand.args).envs(envVars).stdout(out).stderr(err).join();
+            return procStarter.cmds(dockerCommand.getArgs()).envs(envVars).stdout(out).stderr(err).join();
         } finally {
             dockerCommand.setOut(out.toString());
             dockerCommand.setErr(err.toString());

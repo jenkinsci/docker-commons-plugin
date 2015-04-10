@@ -38,7 +38,7 @@ public class DockerRunCommand extends DockerCommand {
     private String[] commandCmdArgs;
 
     public DockerRunCommand(@Nonnull String image) {
-        args.add("run");
+        addArgs("run");
         this.image = image;
     }
 
@@ -59,12 +59,12 @@ public class DockerRunCommand extends DockerCommand {
     @Override
     public void preLaunch() {
         // The image name and the 
-        args.add(image);
+        addArgs(image);
         // Add the containerCmd (to be executed in the container), if supplied
         if (containerCmd != null) {
-            args.add(containerCmd);
+            addArgs(containerCmd);
             if (commandCmdArgs != null && commandCmdArgs.length > 0) {
-                args.add(commandCmdArgs);
+                addArgs(commandCmdArgs);
             }
         }
     }
@@ -76,7 +76,7 @@ public class DockerRunCommand extends DockerCommand {
     }
 
     public DockerRunCommand detached() {
-        args.add(DockerCommandOption.DETACHED.option());
+        addArgs(DockerCommandOption.DETACHED.option());
         return this;
     }
 
@@ -86,11 +86,11 @@ public class DockerRunCommand extends DockerCommand {
 
     public DockerRunCommand withEnvVar(@Nonnull String name, @Nonnull String value, boolean masked) {
         String var = String.format("%s=%s", name, value);
-        args.add(DockerCommandOption.ENV_VAR.option());
+        addArgs(DockerCommandOption.ENV_VAR.option());
         if (masked) {
-            args.addMasked(var);
+            addMaskedArgs(var);
         } else {
-            args.add(var);
+            addArgs(var);
         }
         return this;
     }
