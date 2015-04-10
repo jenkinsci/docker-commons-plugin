@@ -23,16 +23,9 @@
  */
 package org.jenkinsci.plugins.docker.commons.client;
 
-import hudson.EnvVars;
-import hudson.Launcher;
-import hudson.Proc;
 import hudson.util.ArgumentListBuilder;
-import org.jenkinsci.plugins.docker.commons.KeyMaterial;
 
 import javax.annotation.Nonnull;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.PrintStream;
 
 /**
  * @author <a href="mailto:tom.fennelly@gmail.com">tom.fennelly@gmail.com</a>
@@ -50,22 +43,22 @@ public abstract class DockerCommand {
     }
 
     public DockerCommand asUser(@Nonnull String username) {
-        args.add(DockerCommandOptions.USERNAME.name(), username);
+        args.add(DockerCommandOption.USERNAME.option(), username);
         return this;
     }
 
     public DockerCommand withWorkingDir(@Nonnull String dir) {
-        args.add(DockerCommandOptions.WORKING_DIR.name(), dir);
+        args.add(DockerCommandOption.WORKING_DIR.option(), dir);
         return this;
     }
 
     public DockerCommand bindHostVolume(@Nonnull String hostDir, @Nonnull String containerDir) {
-        args.add(DockerCommandOptions.VOLUME.name(), String.format("%s:%s", hostDir, containerDir));
+        args.add(DockerCommandOption.VOLUME.option(), String.format("%s:%s", hostDir, containerDir));
         return this;
     }
 
     public DockerCommand allocatePseudoTTY() {
-        args.add(DockerCommandOptions.PSEUDO_TTY.name());
+        args.add(DockerCommandOption.PSEUDO_TTY.option());
         return this;
     }
 

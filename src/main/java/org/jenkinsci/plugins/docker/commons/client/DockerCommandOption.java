@@ -28,7 +28,7 @@ package org.jenkinsci.plugins.docker.commons.client;
  * 
  * @author <a href="mailto:tom.fennelly@gmail.com">tom.fennelly@gmail.com</a>
  */
-public enum DockerCommandOptions {
+public enum DockerCommandOption {
     
     DETACHED("-d"),
     PSEUDO_TTY("-t"),
@@ -40,8 +40,12 @@ public enum DockerCommandOptions {
     
     private final String option;
 
-    private DockerCommandOptions(String option) {
+    private DockerCommandOption(String option) {
         this.option = option;
+    }
+    
+    public String option() {
+        return option;
     }
 
     @Override

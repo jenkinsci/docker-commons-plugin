@@ -72,7 +72,7 @@ public class RunCommand extends DockerCommand {
     }
 
     public RunCommand detached() {
-        args.add(DockerCommandOptions.DETACHED.name());
+        args.add(DockerCommandOption.DETACHED.option());
         return this;
     }
 
@@ -82,7 +82,7 @@ public class RunCommand extends DockerCommand {
 
     public RunCommand withEnvVar(@Nonnull String name, @Nonnull String value, boolean masked) {
         String var = String.format("%s=%s", name, value);
-        args.add(DockerCommandOptions.ENV_VAR.name());
+        args.add(DockerCommandOption.ENV_VAR.option());
         if (masked) {
             args.addMasked(var);
         } else {

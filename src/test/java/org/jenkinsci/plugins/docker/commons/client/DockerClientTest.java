@@ -41,7 +41,12 @@ import java.io.IOException;
 public class DockerClientTest {
 
     @Test
-    public void test() throws IOException, InterruptedException {
+    public void test() {
+        System.out.println("*** " + DockerCommandOption.DETACHED);
+    }
+    
+    @Test
+    public void test_run() throws IOException, InterruptedException {
         
         
         // Set stuff up for the test
