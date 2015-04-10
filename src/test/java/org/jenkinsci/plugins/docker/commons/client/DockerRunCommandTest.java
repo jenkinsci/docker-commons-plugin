@@ -40,7 +40,7 @@ import java.io.IOException;
 /**
  * @author <a href="mailto:tom.fennelly@gmail.com">tom.fennelly@gmail.com</a>
  */
-public class DockerClientTest {
+public class DockerRunCommandTest {
     
     @Test
     public void test_run() throws IOException, InterruptedException {
@@ -73,8 +73,11 @@ public class DockerClientTest {
         int status = dockerClient.launch(dockerRunCommand);
         if (status == 0) {
 
-            ContainerRecord container = dockerRunCommand.getContainer();
-            Assert.assertEquals(65, container.getContainerId().length());
+            ContainerRecord container = dockerRunCommand.getContainer(dockerClient);
+            Assert.assertEquals(64, container.getContainerId().length());
+            Assert.assertTrue(container.getContainerName().length() > 0);
+            Assert.assertTrue(container.getHost().length() > 0);
+            Assert.assertTrue(container.getCreated() > 0);
         } else {
             throw new RuntimeException("Failed to run docker image");            
         }        

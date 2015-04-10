@@ -36,6 +36,7 @@ public enum DockerCommandOption {
     WORKING_DIR("-w"),
     VOLUME("-v"),
     ENV_VAR("-e"),
+    FORMAT("-f"),
     ;
     
     private final String option;

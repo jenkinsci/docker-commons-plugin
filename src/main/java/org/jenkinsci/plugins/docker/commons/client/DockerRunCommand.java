@@ -27,9 +27,13 @@ import org.jenkinsci.plugins.docker.commons.fingerprint.ContainerRecord;
 
 import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
+import java.io.IOException;
 import java.util.Collections;
+import java.util.Date;
 
 /**
+ * Docker <a href="https://docs.docker.com/reference/commandline/cli/#run">run</a>.
+ * 
  * @author <a href="mailto:tom.fennelly@gmail.com">tom.fennelly@gmail.com</a>
  */
 public class DockerRunCommand extends DockerCommand {
@@ -43,17 +47,19 @@ public class DockerRunCommand extends DockerCommand {
         this.image = image;
     }
 
-    public @CheckForNull ContainerRecord getContainer() {        
+    public @CheckForNull ContainerRecord getContainer(@Nonnull DockerClient dockerClient) throws IOException, InterruptedException {        
         String out = getOut();        
         if (out == null) {
             return null;
-        } else if (!isOptionSet(DockerCommandOption.DETACHED)) {
-            throw new UnsupportedOperationException("Cannot get container info. Command was not run in detached mode.");
-        }
-
-        // TODO need to docker inpsect the container and get some info from it.
+        } 
+            
+        String containerId = out.trim();
+        String host = DockerInspectCommand.getHostName(containerId, dockerClient);
+        String containerName = DockerInspectCommand.getObjectName(containerId, dockerClient);        
+        Date created = DockerInspectCommand.getCreated(containerId, dockerClient);        
         
-        return new ContainerRecord("", out, "", 0L, Collections.<String,String>emptyMap());
+        // TODO get tags and add for ContainerRecord
+        return new ContainerRecord(host, containerId, containerName, created.getTime(), Collections.<String,String>emptyMap());
     }
 
     @Override
@@ -93,5 +99,11 @@ public class DockerRunCommand extends DockerCommand {
             addArgs(var);
         }
         return this;
+    }
+
+    private void assertExecutedDetached() {
+        if (!isOptionSet(DockerCommandOption.DETACHED)) {
+            throw new UnsupportedOperationException("Cannot get container info. Command was not run in detached mode.");
+        }
     }
 }
