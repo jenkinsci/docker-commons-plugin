@@ -65,9 +65,8 @@ public class DockerClientTest {
         
         // Config some general settings on the command
         dockerRunCommand.allocatePseudoTTY();
-        
-        // Get the username and homedir same as how Oki Docki does it
-        //dockerRunCommand.asUser("username");
+        dockerRunCommand.asUser(dockerClient.whoAmI());
+
         //dockerRunCommand.withWorkingDir("/home/blah");
         
         // Launch the command via the DockerClient

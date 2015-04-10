@@ -47,10 +47,6 @@ public class DockerClient {
         this.launcher = launcher;
     }
 
-    public Launcher getLauncher() {
-        return launcher;
-    }
-
     public DockerClient setKeyMaterial(KeyMaterial keyMaterial) {
         this.keyMaterial = keyMaterial;
         return this;
@@ -86,5 +82,20 @@ public class DockerClient {
             dockerCommand.setErr(err.toString());
         }
     }
-    
+
+    /**
+     * Who is executing this {@link DockerClient} instance.
+     *  
+     * @return a {@link String} containing the <strong>uid:gid</strong>.
+     */
+    public String whoAmI() throws IOException, InterruptedException {
+        ByteArrayOutputStream userId = new ByteArrayOutputStream();
+        launcher.launch().cmds("id", "-u").stdout(userId).quiet(true).join();
+
+        ByteArrayOutputStream groupId = new ByteArrayOutputStream();
+        launcher.launch().cmds("id", "-g").stdout(groupId).quiet(true).join();
+        
+        return String.format("%s:%s", userId.toString().trim(), groupId.toString().trim());
+
+    }    
 }
