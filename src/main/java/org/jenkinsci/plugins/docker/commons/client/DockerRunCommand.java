@@ -34,8 +34,8 @@ import java.util.Collections;
 public class DockerRunCommand extends DockerCommand {
 
     private final String image;
-    private String command;
-    private String[] commandArgs;
+    private String containerCmd;
+    private String[] commandCmdArgs;
 
     public DockerRunCommand(@Nonnull String image) {
         args.add("run");
@@ -44,7 +44,7 @@ public class DockerRunCommand extends DockerCommand {
 
     public ContainerRecord getContainer() {
         
-        // TODO: make sure the command was run in detached mode? Otherwise we don't have a containerId in the out
+        // TODO: make sure the containerCmd was run in detached mode? Otherwise we don't have a containerId in the out
         
         String containerId = getOut();
         if (containerId == null) {
@@ -60,18 +60,18 @@ public class DockerRunCommand extends DockerCommand {
     public void preLaunch() {
         // The image name and the 
         args.add(image);
-        // Add the command (to be executed in the container), if supplied
-        if (command != null) {
-            args.add(command);
-            if (commandArgs != null && commandArgs.length > 0) {
-                args.add(commandArgs);
+        // Add the containerCmd (to be executed in the container), if supplied
+        if (containerCmd != null) {
+            args.add(containerCmd);
+            if (commandCmdArgs != null && commandCmdArgs.length > 0) {
+                args.add(commandCmdArgs);
             }
         }
     }
 
     public DockerRunCommand withContainerCommand(@Nonnull String command, String... args) {
-        this.command = command;
-        this.commandArgs = args;
+        this.containerCmd = command;
+        this.commandCmdArgs = args;
         return this;
     }
 
