@@ -25,6 +25,7 @@ package org.jenkinsci.plugins.docker.commons.client;
 
 import org.jenkinsci.plugins.docker.commons.fingerprint.ContainerRecord;
 
+import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
 import java.util.Collections;
 
@@ -42,7 +43,7 @@ public class DockerRunCommand extends DockerCommand {
         this.image = image;
     }
 
-    public ContainerRecord getContainer() {        
+    public @CheckForNull ContainerRecord getContainer() {        
         String out = getOut();        
         if (out == null) {
             return null;

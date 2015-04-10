@@ -47,7 +47,7 @@ public class DockerClient {
         this.launcher = launcher;
     }
 
-    public DockerClient setKeyMaterial(KeyMaterial keyMaterial) {
+    public DockerClient setKeyMaterial(@Nonnull KeyMaterial keyMaterial) {
         this.keyMaterial = keyMaterial;
         return this;
     }

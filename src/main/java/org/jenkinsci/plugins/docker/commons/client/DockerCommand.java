@@ -68,13 +68,13 @@ public abstract class DockerCommand {
         return this;
     }
 
-    public void addArgs(Object... args) {
+    public void addArgs(@Nonnull Object... args) {
         for (Object arg : args) {
             this.args.add(arg.toString());
         }
     }
 
-    public void addMaskedArgs(Object... args) {
+    public void addMaskedArgs(@Nonnull Object... args) {
         for (Object arg : args) {
             this.args.add(arg.toString(), true);
         }
