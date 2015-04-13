@@ -1,5 +1,6 @@
 package org.jenkinsci.plugins.docker.commons.fingerprint;
 
+import hudson.BulkChange;
 import hudson.model.Fingerprint;
 import hudson.model.Run;
 import jenkins.model.Jenkins;
@@ -34,12 +35,18 @@ public class DockerFingerprints {
                 break;
             }
         }
-        if (runFacet == null) {
-            runFacet = new DockerRunFingerprintFacet(f, System.currentTimeMillis(), imageId);
-            facets.add(runFacet);
+        BulkChange bc = new BulkChange(f);
+        try {
+            if (runFacet == null) {
+                runFacet = new DockerRunFingerprintFacet(f, System.currentTimeMillis(), imageId);
+                facets.add(runFacet);
+            }
+            runFacet.add(record);
+            runFacet.addFor(run);
+            bc.commit();
+        } finally {
+            bc.abort();
         }
-        runFacet.add(record);
-        runFacet.addFor(run);
     }
 
     public static void addFromFacet(String imageId, Run<?,?> run) throws IOException {
@@ -52,11 +59,17 @@ public class DockerFingerprints {
                 break;
             }
         }
-        if (fromFacet == null) {
-            fromFacet = new DockerFromFingerprintFacet(f, System.currentTimeMillis(), imageId);
-            facets.add(fromFacet);
+        BulkChange bc = new BulkChange(f);
+        try {
+            if (fromFacet == null) {
+                fromFacet = new DockerFromFingerprintFacet(f, System.currentTimeMillis(), imageId);
+                facets.add(fromFacet);
+            }
+            fromFacet.addFor(run);
+            bc.commit();
+        } finally {
+            bc.abort();
         }
-        fromFacet.addFor(run);
     }
 
 }
