@@ -52,14 +52,25 @@ public class DockerRunCommandTest extends AbstractDockerCommandTest {
         // Launch the command via the DockerClient
         int status = dockerClient.launch(dockerRunCommand);
         if (status == 0) {
-
             ContainerRecord container = dockerRunCommand.getContainer(dockerClient);
             Assert.assertEquals(64, container.getContainerId().length());
             Assert.assertTrue(container.getContainerName().length() > 0);
             Assert.assertTrue(container.getHost().length() > 0);
             Assert.assertTrue(container.getCreated() > 0);
+            
+            // Make sure the container exists before we remove it.
+            Assert.assertTrue(DockerInspectCommand.exists(container.getContainerId(), dockerClient));
+            
+            // Remove of the container
+            DockerRMCommand rmCommand = new DockerRMCommand(container.getContainerId());
+            status = dockerClient.launch(rmCommand);
+            if (status == 0) {
+                Assert.assertFalse(DockerInspectCommand.exists(container.getContainerId(), dockerClient));
+            } else {
+                Assert.fail("Failed to remove docker container");                            
+            }
         } else {
-            throw new RuntimeException("Failed to run docker image");            
+            Assert.fail("Failed to run docker image");            
         }        
     }
 }
