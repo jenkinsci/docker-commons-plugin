@@ -23,18 +23,10 @@
  */
 package org.jenkinsci.plugins.docker.commons.client;
 
-import hudson.FilePath;
-import hudson.Launcher;
-import hudson.model.StreamBuildListener;
-import hudson.model.TaskListener;
-import org.jenkinsci.plugins.docker.commons.KeyMaterial;
 import org.jenkinsci.plugins.docker.commons.fingerprint.ContainerRecord;
-import org.jenkinsci.plugins.docker.commons.impl.ServerKeyMaterialImpl;
 import org.junit.Assert;
 import org.junit.Test;
 
-import java.io.ByteArrayOutputStream;
-import java.io.File;
 import java.io.IOException;
 
 /**
