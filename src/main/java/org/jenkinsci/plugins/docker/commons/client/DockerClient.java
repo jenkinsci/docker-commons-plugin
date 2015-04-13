@@ -24,6 +24,7 @@
 package org.jenkinsci.plugins.docker.commons.client;
 
 import hudson.EnvVars;
+import hudson.FilePath;
 import hudson.Launcher;
 import org.jenkinsci.plugins.docker.commons.KeyMaterial;
 
@@ -42,6 +43,7 @@ public class DockerClient {
     
     private Launcher launcher;
     private KeyMaterial keyMaterial;
+    private FilePath pwd;
 
     public DockerClient(@Nonnull Launcher launcher) {
         this.launcher = launcher;
@@ -52,8 +54,9 @@ public class DockerClient {
         return this;
     }
 
-    public KeyMaterial getKeyMaterial() {
-        return keyMaterial;
+    public DockerClient setPwd(FilePath pwd) {
+        this.pwd = pwd;
+        return this;
     }
 
     public int launch(@Nonnull DockerCommand dockerCommand) throws IOException, InterruptedException {        
@@ -70,6 +73,10 @@ public class DockerClient {
         ByteArrayOutputStream err = new ByteArrayOutputStream();
 
         Launcher.ProcStarter procStarter = launcher.launch();
+        
+        if (pwd != null) {
+            procStarter.pwd(pwd);
+        }
 
         if (LOGGER.isLoggable(Level.FINE)) {
             LOGGER.log(Level.FINE, "Executing docker command {0}", dockerCommand);
