@@ -30,7 +30,7 @@ import javax.annotation.Nonnull;
 /**
  * @author <a href="mailto:tom.fennelly@gmail.com">tom.fennelly@gmail.com</a>
  */
-public abstract class DockerCommand {
+public abstract class DockerCommand<T extends DockerCommand<?>> {
 
     private final ArgumentListBuilder args = new ArgumentListBuilder();
     private String out;
@@ -48,24 +48,28 @@ public abstract class DockerCommand {
         return args.clone();
     }
 
-    public DockerCommand asUser(@Nonnull String username) {
+    @SuppressWarnings("unchecked")
+    public T asUser(@Nonnull String username) {
         addArgs(DockerCommandOption.USERNAME, username);
-        return this;
+        return (T) this;
     }
 
-    public DockerCommand withWorkingDir(@Nonnull String dir) {
+    @SuppressWarnings("unchecked")
+    public T withWorkingDir(@Nonnull String dir) {
         addArgs(DockerCommandOption.WORKING_DIR, dir);
-        return this;
+        return (T) this;
     }
 
-    public DockerCommand bindHostVolume(@Nonnull String hostDir, @Nonnull String containerDir) {
+    @SuppressWarnings("unchecked")
+    public T bindHostVolume(@Nonnull String hostDir, @Nonnull String containerDir) {
         addArgs(DockerCommandOption.VOLUME, String.format("%s:%s", hostDir, containerDir));
-        return this;
+        return (T) this;
     }
 
-    public DockerCommand allocatePseudoTTY() {
+    @SuppressWarnings("unchecked")
+    public T allocatePseudoTTY() {
         addArgs(DockerCommandOption.PSEUDO_TTY);
-        return this;
+        return (T) this;
     }
 
     public void addArgs(@Nonnull Object... args) {

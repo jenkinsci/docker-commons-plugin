@@ -59,13 +59,12 @@ public class DockerRunCommandTest {
         DockerClient dockerClient = new DockerClient(launcher).setKeyMaterial(keyMaterial);
 
         // Create a "run" docker command object
+        // Config some general settings on the command
         DockerRunCommand dockerRunCommand = new DockerRunCommand("learn/tutorial")
                 .withContainerCommand("echo", "hello world")
-                .detached();
-        
-        // Config some general settings on the command
-        dockerRunCommand.allocatePseudoTTY();
-        dockerRunCommand.asUser(dockerClient.whoAmI());
+                .detached()
+                .allocatePseudoTTY()
+                .asUser(dockerClient.whoAmI());
 
         //dockerRunCommand.withWorkingDir("/home/blah");
         

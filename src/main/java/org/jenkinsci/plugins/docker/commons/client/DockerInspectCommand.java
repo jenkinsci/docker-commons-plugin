@@ -37,7 +37,7 @@ import java.util.Date;
  * 
  * @author <a href="mailto:tom.fennelly@gmail.com">tom.fennelly@gmail.com</a>
  */
-public class DockerInspectCommand extends DockerCommand {
+public class DockerInspectCommand extends DockerCommand<DockerInspectCommand> {
     
     // e.g. 2015-04-09T13:40:21.981801679Z
     public static final String DOCKER_DATE_TIME_FORMAT = "yyyy-MM-dd'T'HH:mm:ss";
