@@ -111,4 +111,15 @@ public class DockerInspectCommand extends DockerCommand {
             throw new IOException(command.getErr());
         }
     }
+
+    /**
+     * Check for the existence of an image/container.
+     * @param objectId The image/container ID.
+     * @param dockerClient The {@link DockerClient} instance to use for launching the query.
+     * @return {@code true} if the image/container exists, otherwise {@code false}.
+     */
+    public static boolean exists(@Nonnull String objectId, @Nonnull DockerClient dockerClient) throws IOException, InterruptedException {
+        DockerInspectCommand command = new DockerInspectCommand(objectId).withGoFormattedTemplate("{{.Name}}");
+        return (dockerClient.launch(command) == 0);
+    }
 }
