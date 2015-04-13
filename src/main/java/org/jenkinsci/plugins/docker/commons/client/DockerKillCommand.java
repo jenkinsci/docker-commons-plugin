@@ -23,36 +23,25 @@
  */
 package org.jenkinsci.plugins.docker.commons.client;
 
-import hudson.FilePath;
-import hudson.Launcher;
-import hudson.model.StreamBuildListener;
-import hudson.model.TaskListener;
-import org.jenkinsci.plugins.docker.commons.impl.ServerKeyMaterialImpl;
-import org.junit.Before;
-
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-
 /**
  * @author <a href="mailto:tom.fennelly@gmail.com">tom.fennelly@gmail.com</a>
  */
-public abstract class AbstractDockerCommandTest {
+public class DockerKillCommand extends DockerCommand<DockerKillCommand> {
+    
+    private final String containerId;
 
-    protected Launcher.LocalLauncher launcher;
-    protected ServerKeyMaterialImpl keyMaterial;
+    public DockerKillCommand(String containerId) {
+        addArgs("kill");
+        this.containerId = containerId;
+    }
 
-    @Before
-    public void setup() {
-                
-        // Set stuff up for the test
-        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-        TaskListener taskListener = new StreamBuildListener(outputStream);
-        launcher = new Launcher.LocalLauncher(taskListener);
-
-        // Create the KeyMaterial for connecting to the docker daemon 
-        // TODO a better way of setting this for the test, if there is on
-        keyMaterial = new ServerKeyMaterialImpl("tcp://192.168.59.103:2376",
-                new FilePath(new File("/Users/tfennelly/.boot2docker/certs/boot2docker-vm")));
-        
+    @Override
+    public void preLaunch() {
+        addArgs(containerId);
+    }
+    
+    public DockerKillCommand withSignal(String signal) {        
+        addArgs("-s", signal);
+        return this;
     }
 }
