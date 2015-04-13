@@ -15,17 +15,23 @@ import java.util.Hashtable;
  * @author Kohsuke Kawaguchi
  */
 public abstract class DockerRunPtrFingerprintFacet extends FingerprintFacet {
-    // limited to internal subtyping
-    protected DockerRunPtrFingerprintFacet(Fingerprint fingerprint, long timestamp) {
-        super(fingerprint, timestamp);
-    }
 
+    private final String imageId;
     /**
      * Range of builds that use this as base image keyed by a job full name.
      */
     private final Hashtable<String,RangeSet> usages = new Hashtable<String,RangeSet>();
 
-    public void addFor(Run b) throws IOException {
+    DockerRunPtrFingerprintFacet(Fingerprint fingerprint, long timestamp, String imageId) {
+        super(fingerprint, timestamp);
+        this.imageId = imageId;
+    }
+
+    public String getImageId() {
+        return imageId;
+    }
+
+    public void addFor(Run<?,?> b) throws IOException {
         add(b.getParent().getFullName(), b.getNumber());
     }
 
@@ -62,7 +68,7 @@ public abstract class DockerRunPtrFingerprintFacet extends FingerprintFacet {
         return r;
     }
 
-    public RangeSet getRangeSet(Job job) {
+    public RangeSet getRangeSet(Job<?,?> job) {
         return getRangeSet(job.getFullName());
     }
 }

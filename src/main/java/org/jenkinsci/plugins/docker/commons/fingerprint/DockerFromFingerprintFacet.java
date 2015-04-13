@@ -9,7 +9,7 @@ import hudson.model.Fingerprint;
  * @author Kohsuke Kawaguchi
  */
 public class DockerFromFingerprintFacet extends DockerRunPtrFingerprintFacet {
-    public DockerFromFingerprintFacet(Fingerprint fingerprint, long timestamp) {
-        super(fingerprint, timestamp);
+    DockerFromFingerprintFacet(Fingerprint fingerprint, long timestamp, String imageId) {
+        super(fingerprint, timestamp, imageId);
     }
 }

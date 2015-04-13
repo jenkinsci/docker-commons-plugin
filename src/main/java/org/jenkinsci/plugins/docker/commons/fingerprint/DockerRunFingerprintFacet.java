@@ -1,7 +1,6 @@
 package org.jenkinsci.plugins.docker.commons.fingerprint;
 
 import hudson.model.Fingerprint;
-import jenkins.model.FingerprintFacet;
 
 import java.io.IOException;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -13,11 +12,11 @@ import java.util.concurrent.CopyOnWriteArrayList;
  *
  * @author Kohsuke Kawaguchi
  */
-public class DockerRunFingerprintFacet extends FingerprintFacet {
+public class DockerRunFingerprintFacet extends DockerRunPtrFingerprintFacet {
     public final CopyOnWriteArrayList<ContainerRecord> records = new CopyOnWriteArrayList<ContainerRecord>();
 
-    public DockerRunFingerprintFacet(Fingerprint fingerprint, long timestamp) {
-        super(fingerprint, timestamp);
+    DockerRunFingerprintFacet(Fingerprint fingerprint, long timestamp, String imageId) {
+        super(fingerprint, timestamp, imageId);
     }
 
     public void add(ContainerRecord r) throws IOException {
