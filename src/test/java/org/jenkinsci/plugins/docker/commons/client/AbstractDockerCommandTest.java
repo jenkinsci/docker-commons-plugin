@@ -28,46 +28,32 @@ import hudson.Launcher;
 import hudson.model.StreamBuildListener;
 import hudson.model.TaskListener;
 import org.jenkinsci.plugins.docker.commons.KeyMaterial;
-import org.jenkinsci.plugins.docker.commons.fingerprint.ContainerRecord;
 import org.jenkinsci.plugins.docker.commons.impl.ServerKeyMaterialImpl;
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.Before;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.IOException;
 
 /**
  * @author <a href="mailto:tom.fennelly@gmail.com">tom.fennelly@gmail.com</a>
  */
-public class DockerRunCommandTest extends AbstractDockerCommandTest {
-    
-    @Test
-    public void test_run() throws IOException, InterruptedException {
-        // Create a docker client
-        DockerClient dockerClient = new DockerClient(launcher).setKeyMaterial(keyMaterial);
+public abstract class AbstractDockerCommandTest {
 
-        // Create a "run" docker command object
-        // Config some general settings on the command
-        DockerRunCommand dockerRunCommand = new DockerRunCommand("learn/tutorial")
-                .withContainerCommand("echo", "hello world")
-                .detached()
-                .allocatePseudoTTY()
-                .asUser(dockerClient.whoAmI());
+    protected Launcher.LocalLauncher launcher;
+    protected ServerKeyMaterialImpl keyMaterial;
 
-        //dockerRunCommand.withWorkingDir("/home/blah");
+    @Before
+    public void setup() {
+                
+        // Set stuff up for the test
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        TaskListener taskListener = new StreamBuildListener(outputStream);
+        launcher = new Launcher.LocalLauncher(taskListener);
+
+        // Create the KeyMaterial for connecting to the docker daemon 
+        // TODO a better way of setting this for the test, if there is on
+        keyMaterial = new ServerKeyMaterialImpl("tcp://192.168.59.103:2376",
+                new FilePath(new File("/Users/tfennelly/.boot2docker/certs/boot2docker-vm")));
         
-        // Launch the command via the DockerClient
-        int status = dockerClient.launch(dockerRunCommand);
-        if (status == 0) {
-
-            ContainerRecord container = dockerRunCommand.getContainer(dockerClient);
-            Assert.assertEquals(64, container.getContainerId().length());
-            Assert.assertTrue(container.getContainerName().length() > 0);
-            Assert.assertTrue(container.getHost().length() > 0);
-            Assert.assertTrue(container.getCreated() > 0);
-        } else {
-            throw new RuntimeException("Failed to run docker image");            
-        }        
     }
 }
