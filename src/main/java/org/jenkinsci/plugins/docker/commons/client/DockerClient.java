@@ -67,7 +67,7 @@ public class DockerClient {
     // TODO return a fingerprint
     public void build(@Nonnull FilePath workspace, @CheckForNull String tag) throws IOException, InterruptedException {
         ArgumentListBuilder args = new ArgumentListBuilder();
-        args.add("docker", "build");
+        args.add("build");
         if (tag != null) {
             args.add("-t", tag);
         }
@@ -81,7 +81,7 @@ public class DockerClient {
     public ContainerRecord run(@Nonnull String image, @Nonnull String workdir, @Nonnull Map<String, String> volumes, @Nonnull String user, @CheckForNull String ... command) throws IOException, InterruptedException {
         ArgumentListBuilder args = new ArgumentListBuilder();
 
-        args.add("docker", "run", "-t", "-d", "-u", user, "-w", workdir);
+        args.add("run", "-t", "-d", "-u", user, "-w", workdir);
         for (Map.Entry<String, String> volume : volumes.entrySet()) {
             args.add("-v", volume.getKey() + ":" + volume.getValue() + ":rw");
         }
@@ -100,18 +100,18 @@ public class DockerClient {
     }
 
     public void kill(@Nonnull String containerId) throws IOException, InterruptedException {
-        LaunchResult result = launch("docker", "kill", containerId);
+        LaunchResult result = launch("kill", containerId);
         if (result.getStatus() != 0) {
             throw new IOException(String.format("Failed to kill container '%s'.", containerId));
         }
-        result = launch("docker", "rm", containerId);
+        result = launch("rm", containerId);
         if (result.getStatus() != 0) {
             throw new IOException(String.format("Failed to rm container '%s'.", containerId));
         }
     }
 
     private String inspect(@Nonnull String objectId, @Nonnull String fieldPath) throws IOException, InterruptedException {
-        LaunchResult result = launch("docker", "inspect", "-f", String.format("{{%s}}", fieldPath), objectId);
+        LaunchResult result = launch("inspect", "-f", String.format("{{%s}}", fieldPath), objectId);
         if (result.getStatus() == 0) {
             return result.getOut();
         } else {
@@ -125,7 +125,7 @@ public class DockerClient {
             // TODO Currently truncating. Find out how to specify last part for parsing (TZ etc)
             return new SimpleDateFormat(DOCKER_DATE_TIME_FORMAT).parse(createdString.substring(0, DOCKER_DATE_TIME_FORMAT.length() - 2));
         } catch (ParseException e) {
-            throw new IOException(String.format("Error parsing created date '' for object ''.", createdString, objectId), e);
+            throw new IOException(String.format("Error parsing created date '%s' for object '%s'.", createdString, objectId), e);
         }
     }
 
@@ -137,6 +137,9 @@ public class DockerClient {
     }
     private LaunchResult launch(FilePath pwd, @Nonnull ArgumentListBuilder args) throws IOException, InterruptedException {
         EnvVars envVars = new EnvVars();
+
+        // Prepend the docker command
+        args.prepend("docker");
 
         if (LOGGER.isLoggable(Level.FINE)) {
             LOGGER.log(Level.FINE, "Executing docker command {0}", args.toString());

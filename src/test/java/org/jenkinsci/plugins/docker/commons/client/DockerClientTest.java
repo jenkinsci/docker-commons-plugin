@@ -41,9 +41,11 @@ public class DockerClientTest {
     protected Launcher.LocalLauncher launcher;
     protected ServerKeyMaterialImpl keyMaterial;
 
+
+
+
     @Before
     public void setup() {
-
         // Set stuff up for the test
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
         TaskListener taskListener = new StreamBuildListener(outputStream);
