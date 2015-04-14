@@ -26,6 +26,7 @@ package org.jenkinsci.plugins.docker.commons.client;
 import hudson.EnvVars;
 import hudson.FilePath;
 import hudson.Launcher;
+import hudson.model.Fingerprint;
 import hudson.util.ArgumentListBuilder;
 import org.jenkinsci.plugins.docker.commons.KeyMaterial;
 import org.jenkinsci.plugins.docker.commons.fingerprint.ContainerRecord;
@@ -68,17 +69,22 @@ public class DockerClient {
         return this;
     }
 
-    // TODO return a fingerprint
-    public String build(@Nonnull FilePath pwd, @CheckForNull String tag) throws IOException, InterruptedException {
+    /**
+     * Build a docker image.
+     * @param buildContextPath The build context path. The dir in which the {@code Dockerfile} is located.
+     * @param tag The tag to be applied to the build, or {@code null} if no tag is to be applied.
+     * @return The resulting image ID. This can then be used to {@link Fingerprint}.
+     */
+    public String build(@Nonnull FilePath buildContextPath, @CheckForNull String tag) throws IOException, InterruptedException {
         ArgumentListBuilder args = new ArgumentListBuilder();
         args.add("build");
         if (tag != null) {
             args.add("-t", tag);
         }
         args.add(".");
-        LaunchResult result = launch(pwd, args);
+        LaunchResult result = launch(buildContextPath, args);
         if (result.getStatus() != 0) {
-            throw new IOException(String.format("Failed to build Dockerfile in '%s'.", pwd));
+            throw new IOException(String.format("Failed to build Dockerfile in '%s'.", buildContextPath));
         }
 
         // Extract the short imageId from the end of the docker output
@@ -96,10 +102,19 @@ public class DockerClient {
 
         // inspect that image and get the full 64 char image Id
         String expandedImageId = inspect(shortImageId.toString(), ".Id");
-
         return expandedImageId;
     }
 
+    /**
+     * Run a docker image.
+     * @param image The image name.
+     * @param workdir The working directory in the container, or {@code null} for default.
+     * @param volumes Volumes to be bound. Supply an empty list if no volumes are to be bound.
+     * @param user The username/uid to execute the container command as. Use {@link #whoAmI()} to get 
+     *             the host user.
+     * @param command The command to execute in the image container being run.
+     * @return The {@link ContainerRecord} for the container.
+     */
     public ContainerRecord run(@Nonnull String image, @CheckForNull String workdir, @Nonnull Map<String, String> volumes, @Nonnull String user, @CheckForNull String ... command) throws IOException, InterruptedException {
         ArgumentListBuilder args = new ArgumentListBuilder();
 
@@ -124,6 +139,14 @@ public class DockerClient {
         }
     }
 
+    /**
+     * Kill a container.
+     * 
+     * <p>                              
+     * Also removes ({@link #rm(String)}) the container.
+     * 
+     * @param containerId The container ID.
+     */
     public void kill(@Nonnull String containerId) throws IOException, InterruptedException {
         LaunchResult result = launch("kill", containerId);
         if (result.getStatus() != 0) {
@@ -132,6 +155,10 @@ public class DockerClient {
         rm(containerId);
     }
 
+    /**
+     * Remove a container.
+     * @param containerId The container ID.
+     */
     public void rm(@Nonnull String containerId) throws IOException, InterruptedException {
         LaunchResult result;
         result = launch("rm", containerId);
@@ -140,7 +167,13 @@ public class DockerClient {
         }
     }
 
-    String inspect(@Nonnull String objectId, @Nonnull String fieldPath) throws IOException, InterruptedException {
+    /**
+     * Inspect a docker image/container.
+     * @param objectId The image/container ID.
+     * @param fieldPath The data path of the data required e.g. {@code .NetworkSettings.IPAddress}.
+     * @return The inspected field value.
+     */
+    public String inspect(@Nonnull String objectId, @Nonnull String fieldPath) throws IOException, InterruptedException {
         LaunchResult result = launch("inspect", "-f", String.format("{{%s}}", fieldPath), objectId);
         if (result.getStatus() == 0) {
             return result.getOut();
