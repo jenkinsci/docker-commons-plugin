@@ -52,6 +52,10 @@ public class DockerClient {
     // e.g. 2015-04-09T13:40:21.981801679Z
     public static final String DOCKER_DATE_TIME_FORMAT = "yyyy-MM-dd'T'HH:mm:ss";
 
+    // TODO: Is there some way to setup the path used by the Launcher.
+    // So I can point it to the install location for docker.
+    private static final String DOCKER_COMMAND = System.getProperty("DOCKER_COMMAND", "docker");
+
     private Launcher launcher;
     private KeyMaterial keyMaterial;
 
@@ -78,10 +82,13 @@ public class DockerClient {
         }
     }
 
-    public ContainerRecord run(@Nonnull String image, @Nonnull String workdir, @Nonnull Map<String, String> volumes, @Nonnull String user, @CheckForNull String ... command) throws IOException, InterruptedException {
+    public ContainerRecord run(@Nonnull String image, @CheckForNull String workdir, @Nonnull Map<String, String> volumes, @Nonnull String user, @CheckForNull String ... command) throws IOException, InterruptedException {
         ArgumentListBuilder args = new ArgumentListBuilder();
 
-        args.add("run", "-t", "-d", "-u", user, "-w", workdir);
+        args.add("run", "-t", "-d", "-u", user);
+        if (workdir != null) {
+            args.add("-w", workdir);
+        }
         for (Map.Entry<String, String> volume : volumes.entrySet()) {
             args.add("-v", volume.getKey() + ":" + volume.getValue() + ":rw");
         }
@@ -95,7 +102,7 @@ public class DockerClient {
             String containerId = result.getOut().trim();
             return getContainerRecord(containerId);
         } else {
-            throw new IOException(String.format("Failed to run image '%s'.", image));
+            throw new IOException(String.format("Failed to run image '%s'. Error: %s", image, result.getErr()));
         }
     }
 
@@ -104,13 +111,18 @@ public class DockerClient {
         if (result.getStatus() != 0) {
             throw new IOException(String.format("Failed to kill container '%s'.", containerId));
         }
+        rm(containerId);
+    }
+
+    public void rm(@Nonnull String containerId) throws IOException, InterruptedException {
+        LaunchResult result;
         result = launch("rm", containerId);
         if (result.getStatus() != 0) {
             throw new IOException(String.format("Failed to rm container '%s'.", containerId));
         }
     }
 
-    private String inspect(@Nonnull String objectId, @Nonnull String fieldPath) throws IOException, InterruptedException {
+    String inspect(@Nonnull String objectId, @Nonnull String fieldPath) throws IOException, InterruptedException {
         LaunchResult result = launch("inspect", "-f", String.format("{{%s}}", fieldPath), objectId);
         if (result.getStatus() == 0) {
             return result.getOut();
@@ -139,7 +151,7 @@ public class DockerClient {
         EnvVars envVars = new EnvVars();
 
         // Prepend the docker command
-        args.prepend("docker");
+        args.prepend(DOCKER_COMMAND);
 
         if (LOGGER.isLoggable(Level.FINE)) {
             LOGGER.log(Level.FINE, "Executing docker command {0}", args.toString());
