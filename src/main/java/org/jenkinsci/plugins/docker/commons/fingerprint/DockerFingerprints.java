@@ -10,7 +10,7 @@ import java.util.Collection;
 import jenkins.model.FingerprintFacet;
 
 /**
- * @author Kohsuke Kawaguchi
+ * Entry point into fignerprint related functionalities in Docker.
  */
 public class DockerFingerprints {
     private DockerFingerprints() {} // no instantiation
@@ -25,6 +25,9 @@ public class DockerFingerprints {
         return Jenkins.getInstance().getFingerprintMap().get(imageId.substring(0, 32));
     }
 
+    /**
+     * Adds a new {@link ContainerRecord} for the specified image, creating necessary intermediate objects as it goes.
+     */
     public static void addRunFacet(String imageId, ContainerRecord record, Run<?,?> run) throws IOException {
         Fingerprint f = of(imageId);
         Collection<FingerprintFacet> facets = f.getFacets();
@@ -49,6 +52,9 @@ public class DockerFingerprints {
         }
     }
 
+    /**
+     * Creates a new {@link DockerFromFingerprintFacet} and adds a run. Or adds to an existing one.
+     */
     public static void addFromFacet(String imageId, Run<?,?> run) throws IOException {
         Fingerprint f = of(imageId);
         Collection<FingerprintFacet> facets = f.getFacets();
