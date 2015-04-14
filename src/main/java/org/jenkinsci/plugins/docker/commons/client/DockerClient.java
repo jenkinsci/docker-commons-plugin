@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2013-2015, CloudBees, Inc.
+ * Copyright (c) 2015, CloudBees, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -209,10 +209,10 @@ public class DockerClient {
      */
     public String whoAmI() throws IOException, InterruptedException {
         ByteArrayOutputStream userId = new ByteArrayOutputStream();
-        launcher.launch().cmds("id", "-u").stdout(userId).quiet(true).join();
+        launcher.launch().cmds("id", "-u").stdout(userId).join();
 
         ByteArrayOutputStream groupId = new ByteArrayOutputStream();
-        launcher.launch().cmds("id", "-g").stdout(groupId).quiet(true).join();
+        launcher.launch().cmds("id", "-g").stdout(groupId).join();
 
         return String.format("%s:%s", userId.toString().trim(), groupId.toString().trim());
 
