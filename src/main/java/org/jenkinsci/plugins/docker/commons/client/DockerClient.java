@@ -93,13 +93,7 @@ public class DockerClient {
         LaunchResult result = launch(null, args);
         if (result.getStatus() == 0) {
             String containerId = result.getOut().trim();
-            String host = inspect(containerId, ".Config.Hostname");
-            String containerName = inspect(containerId, ".Name");
-            Date created = getCreatedDate(containerId);
-
-            // TODO get tags and add for ContainerRecord
-            return new ContainerRecord(host, containerId, containerName, created.getTime(), Collections.<String,String>emptyMap());
-
+            return getContainerRecord(containerId);
         } else {
             throw new IOException(String.format("Failed to run image '%s'.", image));
         }
@@ -141,7 +135,6 @@ public class DockerClient {
     private LaunchResult launch(FilePath pwd, @Nonnull String... args) throws IOException, InterruptedException {
         return launch(pwd, new ArgumentListBuilder(args));
     }
-
     private LaunchResult launch(FilePath pwd, @Nonnull ArgumentListBuilder args) throws IOException, InterruptedException {
         EnvVars envVars = new EnvVars();
 
@@ -190,5 +183,14 @@ public class DockerClient {
 
         return String.format("%s:%s", userId.toString().trim(), groupId.toString().trim());
 
+    }
+
+    private ContainerRecord getContainerRecord(String containerId) throws IOException, InterruptedException {
+        String host = inspect(containerId, ".Config.Hostname");
+        String containerName = inspect(containerId, ".Name");
+        Date created = getCreatedDate(containerId);
+
+        // TODO get tags and add for ContainerRecord
+        return new ContainerRecord(host, containerId, containerName, created.getTime(), Collections.<String,String>emptyMap());
     }
 }
