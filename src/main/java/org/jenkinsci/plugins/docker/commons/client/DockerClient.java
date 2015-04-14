@@ -69,17 +69,35 @@ public class DockerClient {
     }
 
     // TODO return a fingerprint
-    public void build(@Nonnull FilePath workspace, @CheckForNull String tag) throws IOException, InterruptedException {
+    public String build(@Nonnull FilePath pwd, @CheckForNull String tag) throws IOException, InterruptedException {
         ArgumentListBuilder args = new ArgumentListBuilder();
         args.add("build");
         if (tag != null) {
             args.add("-t", tag);
         }
         args.add(".");
-        LaunchResult result = launch(workspace, args);
+        LaunchResult result = launch(pwd, args);
         if (result.getStatus() != 0) {
-            throw new IOException(String.format("Failed to build Dockerfile in '%s'.", workspace));
+            throw new IOException(String.format("Failed to build Dockerfile in '%s'.", pwd));
         }
+
+        // Extract the short imageId from the end of the docker output
+        String stdout = result.getOut();
+        int i = stdout.length() - 1;
+        StringBuffer shortImageId = new StringBuffer();
+        while (i > 0) {
+            char c = stdout.charAt(i);
+            if (Character.isWhitespace(c)) {
+                break;
+            }
+            shortImageId.insert(0, c);
+            i--;
+        }
+
+        // inspect that image and get the full 64 char image Id
+        String expandedImageId = inspect(shortImageId.toString(), ".Id");
+
+        return expandedImageId;
     }
 
     public ContainerRecord run(@Nonnull String image, @CheckForNull String workdir, @Nonnull Map<String, String> volumes, @Nonnull String user, @CheckForNull String ... command) throws IOException, InterruptedException {
@@ -99,7 +117,7 @@ public class DockerClient {
         // TODO: change to use BourneShellScript to make it durable
         LaunchResult result = launch(null, args);
         if (result.getStatus() == 0) {
-            String containerId = result.getOut().trim();
+            String containerId = result.getOut();
             return getContainerRecord(containerId);
         } else {
             throw new IOException(String.format("Failed to run image '%s'. Error: %s", image, result.getErr()));

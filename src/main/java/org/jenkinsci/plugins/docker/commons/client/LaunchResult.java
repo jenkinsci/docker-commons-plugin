@@ -48,7 +48,9 @@ public class LaunchResult {
     }
 
     public LaunchResult setOut(String out) {
-        this.out = out;
+        if (out != null) {
+            this.out = out.trim();
+        }
         return this;
     }
 
@@ -57,7 +59,9 @@ public class LaunchResult {
     }
 
     public LaunchResult setErr(String err) {
-        this.err = err;
+        if (err != null) {
+            this.err = err.trim();
+        }
         return this;
     }
 }
