@@ -59,11 +59,15 @@ public abstract class KeyMaterial implements Closeable, Serializable {
     /**
      * {@link KeyMaterial} that does nothing.
      */
-    public static final KeyMaterial NULL = new KeyMaterial(new EnvVars()) {
-        @Override
-        public void close() throws IOException {
-            // noop
-        }
-    };
+    public static final KeyMaterial NULL = new NullKeyMaterial();
 
+    private static final class NullKeyMaterial extends KeyMaterial implements Serializable {
+        private static final long serialVersionUID = 1L;
+        protected NullKeyMaterial() {
+            super(new EnvVars());
+        }
+        @Override
+        public void close() throws IOException {            
+        }
+    }
 }

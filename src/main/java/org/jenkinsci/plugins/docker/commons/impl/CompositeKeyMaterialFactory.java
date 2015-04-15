@@ -7,6 +7,7 @@ import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
 
 import java.io.IOException;
+import java.io.Serializable;
 
 /**
  * Composes two {@link org.jenkinsci.plugins.docker.commons.KeyMaterialFactory}s into one.
@@ -25,34 +26,55 @@ public class CompositeKeyMaterialFactory extends KeyMaterialFactory {
 
     @Override
     public KeyMaterial materialize() throws IOException, InterruptedException {
-        final KeyMaterial lhsMaterialized = lhs.materialize();
-        final KeyMaterial rhsMaterialized;
+        KeyMaterial lhsMaterialized = lhs.materialize();
+        KeyMaterial rhsMaterialized = null;
         
         try {
             rhsMaterialized = rhs.materialize();
+            EnvVars env = lhsMaterialized.env();
+            env.putAll(rhsMaterialized.env());
+    
+            return new CompositeKeyMaterial(env, lhsMaterialized, rhsMaterialized);
         } catch (Exception e) {
-            lhsMaterialized.close();
-            if (e instanceof IOException) {
-                throw (IOException) e;
-            } else if (e instanceof InterruptedException) {
-                throw (InterruptedException) e;
-            } else {
-                throw new IOException("Error materializing credentials.", e);
-            }
-        }
+            try {
+                lhsMaterialized.close();
 
-        EnvVars env = lhsMaterialized.env();
-        env.putAll(rhsMaterialized.env());
-
-        return new KeyMaterial(env) {
-            @Override
-            public void close() throws IOException {
-                try {
-                    lhsMaterialized.close();
-                } finally {
+                // TODO Java 7+ use chained exceptions
+                if (e instanceof IOException) {
+                    throw (IOException) e;
+                } else if (e instanceof InterruptedException) {
+                    throw (InterruptedException) e;
+                } else {
+                    throw new IOException("Error materializing credentials.", e);
+                }
+            } finally {
+                if (rhsMaterialized != null) {
                     rhsMaterialized.close();
                 }
             }
-        };
+        }
+    }
+    
+    private static final class CompositeKeyMaterial extends KeyMaterial implements Serializable {
+        
+        private static final long serialVersionUID = 1L;
+
+        private final KeyMaterial lhsMaterialized;
+        private final KeyMaterial rhsMaterialized;
+
+        protected CompositeKeyMaterial(EnvVars envVars, KeyMaterial lhsMaterialized, KeyMaterial rhsMaterialized) {
+            super(envVars);
+            this.lhsMaterialized = lhsMaterialized;
+            this.rhsMaterialized = rhsMaterialized;
+        }
+
+        @Override
+        public void close() throws IOException {
+            try {
+                lhsMaterialized.close();
+            } finally {
+                rhsMaterialized.close();
+            }
+        }
     }
 }
