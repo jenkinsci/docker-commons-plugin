@@ -89,7 +89,9 @@ public class DockerServerEndpoint extends AbstractDescribableImpl<DockerServerEn
 
         // the directory needs to be outside workspace to avoid prying eyes
         // TODO if creds == null, or for other reasons dir is not passed to ServerKeyMaterialImpl, this creates a temp dir which is never deleted
-        FilePath baseDir = FilePath.getHomeDirectory(target).child(".docker").createTempDir("keys",null);
+        FilePath dotDocker = FilePath.getHomeDirectory(target).child(".docker");
+        dotDocker.mkdirs();
+        FilePath baseDir = dotDocker.createTempDir("keys",null);
 
         return materialize(baseDir, creds);
     }
