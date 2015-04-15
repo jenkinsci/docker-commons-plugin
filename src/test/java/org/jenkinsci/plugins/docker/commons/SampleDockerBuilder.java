@@ -39,9 +39,9 @@ public class SampleDockerBuilder extends Builder {
     @Override
     public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws InterruptedException, IOException {
         // prepare the credentials to talk to this docker and make it available for docker you'll be forking
-        KeyMaterial key = server.materialize(build);
+        KeyMaterialFactory keyMaterialFactory = server.newKeyMaterialFactory(build).plus(registry.newKeyMaterialFactory(build));
+        KeyMaterial key = keyMaterialFactory.materialize();
         try {
-            key = key.plus(registry.materialize(build));
             // fork docker with appropriate environment to interact with this docker daemon
             return launcher.launch().cmdAsSingleString("docker run ...").envs(key.env()).join() == 0;
         } finally {

@@ -35,19 +35,21 @@ public final class DockerRegistryToken implements Serializable {
     }
 
     /**
-     * Makes the credentials available locally and returns {@link KeyMaterial} that gives you the parameters
+     * Makes the credentials available locally and returns {@link KeyMaterialFactory} that gives you the parameters
      * needed to access it.
      *
      * <p>
      * This is done by inserting the token into {@code ~/.dockercfg}
      */
-    public KeyMaterial materialize(final URL endpoint, VirtualChannel target) throws InterruptedException, IOException {
+    public KeyMaterialFactory newKeyMaterialFactory(final URL endpoint, VirtualChannel target) throws InterruptedException, IOException {
         target.call(new Callable<Void, IOException>() {
             /**
              * Insert the token into {@code ~/.dockercfg}
              */
             @Override
             public Void call() throws IOException {
+                // TODO: TF: Should this not be done via docker login (possibly preceded by a logout) ?               
+
                 File f = new File(System.getProperty("user.home"), ".dockercfg");
                 JSONObject json = new JSONObject();
 
@@ -67,7 +69,7 @@ public final class DockerRegistryToken implements Serializable {
         });
 
         // risky to clean up ~/.dockercfg as multiple builds might try to use the same credentials
-        return KeyMaterial.NULL;
+        return KeyMaterialFactory.NULL;
     }
 
     private static final long serialVersionUID = 1L;
