@@ -7,6 +7,8 @@ import jenkins.model.Jenkins;
 
 import java.io.IOException;
 import java.util.Collection;
+import javax.annotation.CheckForNull;
+import javax.annotation.Nonnull;
 import jenkins.model.FingerprintFacet;
 
 /**
@@ -15,21 +17,29 @@ import jenkins.model.FingerprintFacet;
 public class DockerFingerprints {
     private DockerFingerprints() {} // no instantiation
 
+    private static String trim(String imageId) {
+        if (imageId.length() != 64) {
+            throw new IllegalArgumentException("Expecting 64char full image ID, but got " + imageId);
+        }
+        return imageId.substring(0, 32);
+    }
+
     /**
      * Gets {@link Fingerprint} for a given docker image.
      */
-    public static Fingerprint of(String imageId) throws IOException {
-        if (imageId.length()!=64)
-            throw new IllegalArgumentException("Expecting 64char full image ID, but got "+imageId);
+    public static @CheckForNull Fingerprint of(String imageId) throws IOException {
+        return Jenkins.getInstance().getFingerprintMap().get(trim(imageId));
+    }
 
-        return Jenkins.getInstance().getFingerprintMap().get(imageId.substring(0, 32));
+    private static @Nonnull Fingerprint make(Run<?,?> run, String imageId) throws IOException {
+        return Jenkins.getInstance().getFingerprintMap().getOrCreate(run, "<docker-image>", trim(imageId));
     }
 
     /**
      * Adds a new {@link ContainerRecord} for the specified image, creating necessary intermediate objects as it goes.
      */
     public static void addRunFacet(String imageId, ContainerRecord record, Run<?,?> run) throws IOException {
-        Fingerprint f = of(imageId);
+        Fingerprint f = make(run, imageId);
         Collection<FingerprintFacet> facets = f.getFacets();
         DockerRunFingerprintFacet runFacet = null;
         for (FingerprintFacet facet : facets) {
@@ -56,7 +66,7 @@ public class DockerFingerprints {
      * Creates a new {@link DockerFromFingerprintFacet} and adds a run. Or adds to an existing one.
      */
     public static void addFromFacet(String imageId, Run<?,?> run) throws IOException {
-        Fingerprint f = of(imageId);
+        Fingerprint f = make(run, imageId);
         Collection<FingerprintFacet> facets = f.getFacets();
         DockerFromFingerprintFacet fromFacet = null;
         for (FingerprintFacet facet : facets) {
