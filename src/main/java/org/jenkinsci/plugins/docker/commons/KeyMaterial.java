@@ -69,5 +69,8 @@ public abstract class KeyMaterial implements Closeable, Serializable {
         @Override
         public void close() throws IOException {            
         }
+        private Object readResolve() {
+            return NULL;
+        }
     }
 }

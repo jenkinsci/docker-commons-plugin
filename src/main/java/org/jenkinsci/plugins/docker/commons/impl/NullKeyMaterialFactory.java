@@ -1,6 +1,5 @@
 package org.jenkinsci.plugins.docker.commons.impl;
 
-import hudson.EnvVars;
 import org.jenkinsci.plugins.docker.commons.KeyMaterial;
 import org.jenkinsci.plugins.docker.commons.KeyMaterialFactory;
 import org.kohsuke.accmod.Restricted;
@@ -16,11 +15,6 @@ import java.io.IOException;
  */
 @Restricted(NoExternalUse.class)
 public final class NullKeyMaterialFactory extends KeyMaterialFactory {
-
-    // TODO: What's this about and where does it go now? Prob something for Stapler
-    //private Object readResolve() {
-    //    return NULL;
-    //}
 
     private static final long serialVersionUID = 1L;
 
