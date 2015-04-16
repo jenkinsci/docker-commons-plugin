@@ -1,5 +1,6 @@
 package org.jenkinsci.plugins.docker.commons.fingerprint;
 
+import java.io.Serializable;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -13,7 +14,10 @@ import java.util.Map;
  * @author Kohsuke Kawaguchi
  * @see DockerRunFingerprintFacet 
  */
-public class ContainerRecord {
+public class ContainerRecord implements Serializable {
+    
+    private static final long serialVersionUID = 1L;
+    
     private final String host;
     private final String containerId;
     private final String containerName;
