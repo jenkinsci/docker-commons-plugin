@@ -30,7 +30,16 @@ import java.io.IOException;
 import java.io.Serializable;
 
 /**
- * @author <a href="mailto:tom.fennelly@gmail.com">tom.fennelly@gmail.com</a>
+ * Represents a locally extracted credentials information.
+ *
+ * <p>
+ * Implementations of this class are created by their corresponding {@link KeyMaterialFactory}
+ * implementations. Be sure to call {@link #close()} when finished using a {@link KeyMaterial}
+ * instance.
+ *
+ * @author Kohsuke Kawaguchi
+ * @see DockerServerEndpoint#newKeyMaterialFactory(hudson.model.AbstractBuild)
+ * @see DockerRegistryEndpoint#newKeyMaterialFactory(hudson.model.AbstractBuild)
  */
 public abstract class KeyMaterial implements Closeable, Serializable {
 
