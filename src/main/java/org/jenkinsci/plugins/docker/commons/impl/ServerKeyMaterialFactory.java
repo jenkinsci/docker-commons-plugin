@@ -71,18 +71,7 @@ public class ServerKeyMaterialFactory extends KeyMaterialFactory {
             e.put("DOCKER_CERT_PATH", tempCredsDir.getRemote());
         }
 
-        return new KeyMaterial(e) {
-            @Override
-            public void close() throws IOException {
-                try {
-                    if (tempCredsDir !=null) {
-                        tempCredsDir.deleteRecursive();
-                    }
-                } catch (InterruptedException e) {
-                    throw new IOException(e);
-                }
-            }
-        };
+        return new ServerKeyMaterial(e, tempCredsDir);
     }
 
     private void copyInto(FilePath dir, String fileName, String content) throws IOException, InterruptedException {
@@ -91,4 +80,25 @@ public class ServerKeyMaterialFactory extends KeyMaterialFactory {
     }
 
     private static final long serialVersionUID = 1L;
+    
+    private static final class ServerKeyMaterial extends KeyMaterial {
+
+        private final FilePath tempCredsDir;
+
+        protected ServerKeyMaterial(EnvVars envVars, FilePath tempCredsDir) {
+            super(envVars);
+            this.tempCredsDir = tempCredsDir;
+        }
+
+        @Override
+        public void close() throws IOException {
+            try {
+                if (tempCredsDir !=null) {
+                    tempCredsDir.deleteRecursive();
+                }
+            } catch (InterruptedException e) {
+                throw new IOException(e);
+            }
+        }
+    }
 }
