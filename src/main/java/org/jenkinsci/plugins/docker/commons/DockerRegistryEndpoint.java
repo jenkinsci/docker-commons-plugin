@@ -55,13 +55,13 @@ public class DockerRegistryEndpoint extends AbstractDescribableImpl<DockerRegist
     }
 
     /**
-     * Gets the endpoint URL, such as "http://index.docker.io/v1/"
+     * Gets the endpoint URL, such as "https://index.docker.io/v1/"
      */
     public @Nonnull URL getEffectiveUrl() throws IOException {
         if (url != null) {
             return new URL(url);
         } else {
-            return new URL("http://index.docker.io/v1/");
+            return new URL("https://index.docker.io/v1/");
         }
     }
 
