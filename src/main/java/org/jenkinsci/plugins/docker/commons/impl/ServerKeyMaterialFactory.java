@@ -27,12 +27,10 @@ import java.util.UUID;
 @Restricted(NoExternalUse.class)
 public class ServerKeyMaterialFactory extends KeyMaterialFactory {
     
-    private final String host;
     private final DockerServerCredentials credentials;
     private final FilePath baseDir;
 
-    public ServerKeyMaterialFactory(@Nonnull final String host, @CheckForNull final DockerServerCredentials credentials, @Nonnull final FilePath baseDir) {
-        this.host = host;
+    public ServerKeyMaterialFactory(@CheckForNull final DockerServerCredentials credentials, @Nonnull final FilePath baseDir) {
         this.credentials = credentials;
         this.baseDir = baseDir;
     }
@@ -63,9 +61,6 @@ public class ServerKeyMaterialFactory extends KeyMaterialFactory {
         }
 
         EnvVars e = new EnvVars();
-        if (host!=null) {
-            e.put("DOCKER_HOST",host);
-        }
         if (tempCredsDir !=null) {
             e.put("DOCKER_TLS_VERIFY", "1");
             e.put("DOCKER_CERT_PATH", tempCredsDir.getRemote());
