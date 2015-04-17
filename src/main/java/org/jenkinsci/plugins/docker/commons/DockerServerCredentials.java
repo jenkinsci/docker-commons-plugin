@@ -3,6 +3,7 @@ package org.jenkinsci.plugins.docker.commons;
 import com.cloudbees.plugins.credentials.CredentialsScope;
 import com.cloudbees.plugins.credentials.impl.BaseStandardCredentials;
 import hudson.Extension;
+import hudson.Util;
 import hudson.util.Secret;
 import org.kohsuke.stapler.DataBoundConstructor;
 
@@ -31,9 +32,9 @@ public class DockerServerCredentials extends BaseStandardCredentials {
                                    @CheckForNull String clientKey, @CheckForNull String clientCertificate,
                                    @CheckForNull String serverCaCertificate) {
         super(scope, id, description);
-        this.clientKey = clientKey == null ? null : Secret.fromString(clientKey);
-        this.clientCertificate = clientCertificate;
-        this.serverCaCertificate = serverCaCertificate;
+        this.clientKey = Util.fixEmptyAndTrim(clientKey) == null ? null : Secret.fromString(clientKey);
+        this.clientCertificate = Util.fixEmptyAndTrim(clientCertificate);
+        this.serverCaCertificate = Util.fixEmptyAndTrim(serverCaCertificate);
     }
 
     /**
