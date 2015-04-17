@@ -1,0 +1,4 @@
+<?jelly escape-by-default='true'?>
+<div>
+  This specification indicates that the credentials within this domain can be used against Docker servers
+</div>
