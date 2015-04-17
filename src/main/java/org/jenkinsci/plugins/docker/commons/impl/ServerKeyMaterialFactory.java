@@ -26,11 +26,9 @@ import java.util.UUID;
 public class ServerKeyMaterialFactory extends KeyMaterialFactory {
     
     private final DockerServerCredentials credentials;
-    private final FilePath baseDir;
 
-    public ServerKeyMaterialFactory(@CheckForNull final DockerServerCredentials credentials, @Nonnull final FilePath baseDir) {
+    public ServerKeyMaterialFactory(@CheckForNull final DockerServerCredentials credentials) {
         this.credentials = credentials;
-        this.baseDir = baseDir;
     }
 
     @Override
@@ -43,7 +41,7 @@ public class ServerKeyMaterialFactory extends KeyMaterialFactory {
             String ca = credentials.getServerCaCertificateInPEM();
 
             if (key != null && cert != null && ca != null) {
-                final FilePath tempCredsDir = new FilePath(baseDir, UUID.randomUUID().toString());
+                final FilePath tempCredsDir = new FilePath(getContext().getBaseDir(), UUID.randomUUID().toString());
 
                 // protect this information from prying eyes
                 tempCredsDir.chmod(0600);

@@ -2,10 +2,12 @@ package org.jenkinsci.plugins.docker.commons.impl;
 
 import hudson.EnvVars;
 import org.jenkinsci.plugins.docker.commons.KeyMaterial;
+import org.jenkinsci.plugins.docker.commons.KeyMaterialContext;
 import org.jenkinsci.plugins.docker.commons.KeyMaterialFactory;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
 
+import javax.annotation.Nonnull;
 import java.io.IOException;
 import java.io.Serializable;
 
@@ -22,6 +24,16 @@ public class CompositeKeyMaterialFactory extends KeyMaterialFactory {
         this.factories = factories == null || factories.length == 0
                 ? new KeyMaterialFactory[]{new NullKeyMaterialFactory()}
                 : factories.clone();
+    }
+
+    @Override
+    public synchronized KeyMaterialFactory contextualize(@Nonnull KeyMaterialContext context) {
+        KeyMaterialFactory contextualized = super.contextualize(context);
+        assert contextualized == this;
+        for (KeyMaterialFactory factory : factories) {
+            factory.contextualize(context);
+        }
+        return this;
     }
 
     @Override

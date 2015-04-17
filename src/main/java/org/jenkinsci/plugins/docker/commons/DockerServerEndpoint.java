@@ -102,7 +102,9 @@ public class DockerServerEndpoint extends AbstractDescribableImpl<DockerServerEn
      * Create a {@link KeyMaterialFactory} for connecting to the docker server/host. 
      */
     public KeyMaterialFactory newKeyMaterialFactory(FilePath dir, @Nullable DockerServerCredentials credentials) throws IOException, InterruptedException {
-        return new ServerHostKeyMaterialFactory(getUri()).plus(new ServerKeyMaterialFactory(credentials, dir));
+        return new ServerHostKeyMaterialFactory(getUri())
+                .plus(new ServerKeyMaterialFactory(credentials))
+                .contextualize(new KeyMaterialContext(dir));
     }
 
     @Override public String toString() {
