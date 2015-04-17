@@ -8,6 +8,8 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.io.IOException;
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Represents a locally extracted credentials information.
@@ -72,10 +74,12 @@ public abstract class KeyMaterialFactory implements Serializable {
         if (factories == null || factories.length == 0) {
             return this;
         }
-        KeyMaterialFactory[] tmp = new KeyMaterialFactory[factories.length + 1];
-        tmp[0] = this;
-        System.arraycopy(factories, 0, tmp, 1, factories.length);
-        return new CompositeKeyMaterialFactory(tmp);
+        List<KeyMaterialFactory> tmp = new ArrayList<KeyMaterialFactory>(factories.length + 1);
+        tmp.add(this);
+        for (KeyMaterialFactory f: factories) {
+            if (f != null) tmp.add(f);
+        }
+        return new CompositeKeyMaterialFactory(tmp.toArray(new KeyMaterialFactory[tmp.size()]));
     }
 
     public static final KeyMaterialFactory NULL = new NullKeyMaterialFactory();
