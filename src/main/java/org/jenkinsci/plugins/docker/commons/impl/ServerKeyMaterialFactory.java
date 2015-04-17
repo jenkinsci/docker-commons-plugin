@@ -9,7 +9,6 @@ import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
 
 import javax.annotation.CheckForNull;
-import javax.annotation.Nonnull;
 import java.io.IOException;
 import java.util.UUID;
 
@@ -25,36 +24,44 @@ import java.util.UUID;
 @Restricted(NoExternalUse.class)
 public class ServerKeyMaterialFactory extends KeyMaterialFactory {
     
-    private final DockerServerCredentials credentials;
+    @CheckForNull 
+    private final String key;
+    @CheckForNull 
+    private final String cert;
+    @CheckForNull 
+    private final String ca;
 
     public ServerKeyMaterialFactory(@CheckForNull final DockerServerCredentials credentials) {
-        this.credentials = credentials;
+        key = credentials.getClientKey();
+        cert = credentials.getClientCertificate();
+        ca = credentials.getServerCaCertificate();
+    }
+
+    public ServerKeyMaterialFactory(@CheckForNull String key, @CheckForNull String cert, @CheckForNull String ca) {
+        this.key = key;
+        this.cert = cert;
+        this.ca = ca;
     }
 
     @Override
     public KeyMaterial materialize() throws IOException, InterruptedException {
         
         EnvVars e = new EnvVars();
-        if (credentials != null) {
-            String key = credentials.getClientSecretKeyInPEM();
-            String cert = credentials.getClientCertificateInPEM();
-            String ca = credentials.getServerCaCertificateInPEM();
 
-            if (key != null && cert != null && ca != null) {
-                final FilePath tempCredsDir = new FilePath(getContext().getBaseDir(), UUID.randomUUID().toString());
+        if (key != null && cert != null && ca != null) {
+            final FilePath tempCredsDir = new FilePath(getContext().getBaseDir(), UUID.randomUUID().toString());
 
-                // protect this information from prying eyes
-                tempCredsDir.chmod(0600);
+            // protect this information from prying eyes
+            tempCredsDir.chmod(0600);
 
-                // these file names are defined by convention by docker
-                copyInto(tempCredsDir, "key.pem", key);
-                copyInto(tempCredsDir,"cert.pem", cert);
-                copyInto(tempCredsDir,"ca.pem", ca);
+            // these file names are defined by convention by docker
+            copyInto(tempCredsDir, "key.pem", key);
+            copyInto(tempCredsDir,"cert.pem", cert);
+            copyInto(tempCredsDir,"ca.pem", ca);
 
-                e.put("DOCKER_TLS_VERIFY", "1");
-                e.put("DOCKER_CERT_PATH", tempCredsDir.getRemote());
-                return new ServerKeyMaterial(e, tempCredsDir);
-            }
+            e.put("DOCKER_TLS_VERIFY", "1");
+            e.put("DOCKER_CERT_PATH", tempCredsDir.getRemote());
+            return new ServerKeyMaterial(e, tempCredsDir);
         }
 
         return new ServerKeyMaterial(e);

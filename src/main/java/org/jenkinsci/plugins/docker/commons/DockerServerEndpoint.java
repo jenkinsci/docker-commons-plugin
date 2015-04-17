@@ -39,6 +39,8 @@ import static hudson.Util.fixEmpty;
  * @author Kohsuke Kawaguchi
  */
 public class DockerServerEndpoint extends AbstractDescribableImpl<DockerServerEndpoint> {
+    // TODO once we have a base type to migrate DockerServerCredentials replace with the corresponding interface
+    private static final Class<DockerServerCredentials> BASE_CREDENTIAL_TYPE = DockerServerCredentials.class;
     private final String uri;
     private final @CheckForNull String credentialsId;
 
@@ -129,7 +131,7 @@ public class DockerServerEndpoint extends AbstractDescribableImpl<DockerServerEn
                     .withMatching(
                             AuthenticationTokens.matcher(KeyMaterialFactory.class),
                             CredentialsProvider
-                                    .lookupCredentials(DockerServerCredentials.class, item, null, domainRequirements)
+                                    .lookupCredentials(BASE_CREDENTIAL_TYPE, item, null, domainRequirements)
                     );
         }
 
