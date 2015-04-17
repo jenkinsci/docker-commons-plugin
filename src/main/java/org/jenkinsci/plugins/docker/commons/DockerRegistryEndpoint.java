@@ -124,21 +124,21 @@ public class DockerRegistryEndpoint extends AbstractDescribableImpl<DockerRegist
 
     /**
      * Makes the credentials available locally for the on-going build
-     * and returns {@link KeyMaterial} that gives you the parameters needed to access it.
+     * and returns {@link KeyMaterialFactory} that gives you the parameters needed to access it.
      */
-    public KeyMaterial materialize(AbstractBuild build) throws IOException, InterruptedException {
-        return materialize(build.getParent(),build.getWorkspace().getChannel());
+    public KeyMaterialFactory newKeyMaterialFactory(AbstractBuild build) throws IOException, InterruptedException {
+        return newKeyMaterialFactory(build.getParent(), build.getWorkspace().getChannel());
     }
 
     /**
-     * Makes the credentials available locally and returns {@link KeyMaterial} that gives you the parameters
+     * Makes the credentials available locally and returns {@link KeyMaterialFactory} that gives you the parameters
      * needed to access it.
      */
-    public KeyMaterial materialize(Item context,VirtualChannel target) throws IOException, InterruptedException {
+    public KeyMaterialFactory newKeyMaterialFactory(Item context, VirtualChannel target) throws IOException, InterruptedException {
         DockerRegistryToken token = getToken(context);
-        if (token==null)    return KeyMaterial.NULL;    // nothing needed to be done
+        if (token==null)    return KeyMaterialFactory.NULL;    // nothing needed to be done
 
-        return token.materialize(getEffectiveUrl(),target);
+        return token.newKeyMaterialFactory(getEffectiveUrl(), target);
     }
 
     /**

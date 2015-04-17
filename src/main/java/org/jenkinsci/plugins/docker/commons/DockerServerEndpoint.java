@@ -14,7 +14,7 @@ import hudson.model.Descriptor;
 import hudson.model.Item;
 import hudson.remoting.VirtualChannel;
 import jenkins.model.Jenkins;
-import org.jenkinsci.plugins.docker.commons.impl.ServerKeyMaterialImpl;
+import org.jenkinsci.plugins.docker.commons.impl.ServerKeyMaterialFactory;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 import javax.annotation.Nullable;
@@ -64,17 +64,17 @@ public class DockerServerEndpoint extends AbstractDescribableImpl<DockerServerEn
 
     /**
      * Makes the key materials available locally for the on-going build
-     * and returns {@link KeyMaterial} that gives you the parameters needed to access it.
+     * and returns {@link KeyMaterialFactory} that gives you the parameters needed to access it.
      */
-    public KeyMaterial materialize(AbstractBuild build) throws IOException, InterruptedException {
-        return materialize(build.getParent(),build.getWorkspace().getChannel());
+    public KeyMaterialFactory newKeyMaterialFactory(AbstractBuild build) throws IOException, InterruptedException {
+        return newKeyMaterialFactory(build.getParent(), build.getWorkspace().getChannel());
     }
 
     /**
-     * Makes the key materials available locally and returns {@link KeyMaterial} that gives you the parameters
+     * Makes the key materials available locally and returns {@link KeyMaterialFactory} that gives you the parameters
      * needed to access it.
      */
-    public KeyMaterial materialize(Item context, VirtualChannel target) throws IOException, InterruptedException {
+    public KeyMaterialFactory newKeyMaterialFactory(Item context, VirtualChannel target) throws IOException, InterruptedException {
         // as a build step, your access to credentials are constrained by what the build
         // can access, hence Jenkins.getAuthentication()
         DockerServerCredentials creds=null;
@@ -93,39 +93,14 @@ public class DockerServerEndpoint extends AbstractDescribableImpl<DockerServerEn
         dotDocker.mkdirs();
         FilePath baseDir = dotDocker.createTempDir("keys",null);
 
-        return materialize(baseDir, creds);
+        return newKeyMaterialFactory(baseDir, creds);
     }
 
     /**
-     * The most raw form of the {@code materialize(...)} family of methods in case
-     * you need to control every aspect of it.
+     * Create a {@link KeyMaterialFactory} for connecting to the docker server/host. 
      */
-    public KeyMaterial materialize(FilePath dir, @Nullable DockerServerCredentials credentials) throws IOException, InterruptedException {
-        String endpoint = getUri();
-
-        if (credentials==null)
-            return new ServerKeyMaterialImpl(endpoint,null);  // no credential here, endpoint only
-
-        String key = credentials.getClientSecretKeyInPEM();
-        String cert = credentials.getClientCertificateInPEM();
-        String ca = credentials.getServerCaCertificateInPEM();
-        if (key==null && cert==null && ca==null)
-            return new ServerKeyMaterialImpl(endpoint,null);  // no need to create temporary directory
-
-        // protect this information from prying eyes
-        dir.chmod(0600);
-
-        // these file names are defined by convention by docker
-        copyInto(dir,"key.pem", key);
-        copyInto(dir,"cert.pem", cert);
-        copyInto(dir,"ca.pem", ca);
-
-        return new ServerKeyMaterialImpl(endpoint,dir);
-    }
-
-    private void copyInto(FilePath dir, String fileName, String content) throws IOException, InterruptedException {
-        if (content==null)      return;
-        dir.child(fileName).write(content,"UTF-8");
+    public KeyMaterialFactory newKeyMaterialFactory(FilePath dir, @Nullable DockerServerCredentials credentials) throws IOException, InterruptedException {
+        return new ServerKeyMaterialFactory(getUri(), credentials, dir);
     }
 
     @Override public String toString() {
