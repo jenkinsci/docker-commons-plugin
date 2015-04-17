@@ -32,11 +32,16 @@ public abstract class KeyMaterialFactory implements Serializable {
     public abstract KeyMaterial materialize() throws IOException, InterruptedException;
 
     /**
-     * Merge two {@link KeyMaterialFactory}s into one.
+     * Merge additional {@link KeyMaterialFactory}s into one.
      */
-    public KeyMaterialFactory plus(@Nullable KeyMaterialFactory rhs) {
-        if (rhs==null)  return this;
-        return new CompositeKeyMaterialFactory(this,rhs);
+    public KeyMaterialFactory plus(@Nullable KeyMaterialFactory... factories) {
+        if (factories == null || factories.length == 0) {
+            return this;
+        }
+        KeyMaterialFactory[] tmp = new KeyMaterialFactory[factories.length + 1];
+        tmp[0] = this;
+        System.arraycopy(factories, 0, tmp, 1, factories.length);
+        return new CompositeKeyMaterialFactory(tmp);
     }
 
     private static final long serialVersionUID = 1L;
