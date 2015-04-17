@@ -54,7 +54,9 @@ public class CompositeKeyMaterialFactory extends KeyMaterialFactory {
                         keyMaterials[index].close();
                     }
                 } catch (IOException ioe) {
-                    // ignore
+                    // ignore as we want to try and close them all and we are reporting the original exception
+                } catch (Throwable t) {
+                    // ignore as we want to try and close them all and we are reporting the original exception
                 }
             }
             // TODO Java 7+ use chained exceptions
