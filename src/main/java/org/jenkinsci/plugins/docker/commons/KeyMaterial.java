@@ -43,8 +43,14 @@ import java.io.Serializable;
  */
 public abstract class KeyMaterial implements Closeable, Serializable {
 
+    /**
+     * Standardize serialization
+     */
     private static final long serialVersionUID = 1L;
-    
+
+    /**
+     * The environment variables
+     */
     private final EnvVars envVars;
 
     protected KeyMaterial(EnvVars envVars) {

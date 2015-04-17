@@ -4,9 +4,12 @@ import hudson.model.AbstractBuild;
 import org.jenkinsci.plugins.docker.commons.impl.CompositeKeyMaterialFactory;
 import org.jenkinsci.plugins.docker.commons.impl.NullKeyMaterialFactory;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.io.IOException;
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Represents a locally extracted credentials information.
@@ -20,7 +23,40 @@ import java.io.Serializable;
  * @see DockerRegistryEndpoint#newKeyMaterialFactory(AbstractBuild)
  */
 public abstract class KeyMaterialFactory implements Serializable {
+
+    /**
+     * Ensure consistent serialization.
+     */
+    private static final long serialVersionUID = 1L;
     
+    private /* write once */ KeyMaterialContext context;
+    
+    protected synchronized void checkContextualized() {
+        if (context == null) {
+            throw new IllegalStateException("KeyMaterialFactories must be contextualized before use");
+        }
+    }
+
+    /**
+     * Sets the {@link KeyMaterialContext} within which this {@link KeyMaterialFactory} can {@link #materialize()}
+     * {@link KeyMaterial} instances. Can only be called once. 
+     * @param context the {@link KeyMaterialContext}.
+     * @return must return {@code this} (which is only returned to simplify use via method chaining)
+     */
+    public synchronized KeyMaterialFactory contextualize(@Nonnull KeyMaterialContext context) {
+        if (this.context != null) {
+            throw new IllegalStateException("KeyMaterialFactories cannot be re-contextualized");
+        }
+        this.context = context;
+        return this;
+    }
+
+    @Nonnull
+    protected synchronized KeyMaterialContext getContext() {
+        checkContextualized();
+        return context;
+    }
+
     /**
      * Builds the key material environment variables needed to be passed when docker runs, to access
      * {@link DockerServerCredentials} that this object was created from.
@@ -32,14 +68,19 @@ public abstract class KeyMaterialFactory implements Serializable {
     public abstract KeyMaterial materialize() throws IOException, InterruptedException;
 
     /**
-     * Merge two {@link KeyMaterialFactory}s into one.
+     * Merge additional {@link KeyMaterialFactory}s into one.
      */
-    public KeyMaterialFactory plus(@Nullable KeyMaterialFactory rhs) {
-        if (rhs==null)  return this;
-        return new CompositeKeyMaterialFactory(this,rhs);
+    public KeyMaterialFactory plus(@Nullable KeyMaterialFactory... factories) {
+        if (factories == null || factories.length == 0) {
+            return this;
+        }
+        List<KeyMaterialFactory> tmp = new ArrayList<KeyMaterialFactory>(factories.length + 1);
+        tmp.add(this);
+        for (KeyMaterialFactory f: factories) {
+            if (f != null) tmp.add(f);
+        }
+        return new CompositeKeyMaterialFactory(tmp.toArray(new KeyMaterialFactory[tmp.size()]));
     }
-
-    private static final long serialVersionUID = 1L;
 
     public static final KeyMaterialFactory NULL = new NullKeyMaterialFactory();
 }

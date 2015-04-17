@@ -14,6 +14,8 @@ import hudson.model.Descriptor;
 import hudson.model.Item;
 import hudson.remoting.VirtualChannel;
 import jenkins.model.Jenkins;
+import org.jenkinsci.plugins.docker.commons.impl.CompositeKeyMaterialFactory;
+import org.jenkinsci.plugins.docker.commons.impl.ServerHostKeyMaterialFactory;
 import org.jenkinsci.plugins.docker.commons.impl.ServerKeyMaterialFactory;
 import org.kohsuke.stapler.DataBoundConstructor;
 
@@ -100,7 +102,9 @@ public class DockerServerEndpoint extends AbstractDescribableImpl<DockerServerEn
      * Create a {@link KeyMaterialFactory} for connecting to the docker server/host. 
      */
     public KeyMaterialFactory newKeyMaterialFactory(FilePath dir, @Nullable DockerServerCredentials credentials) throws IOException, InterruptedException {
-        return new ServerKeyMaterialFactory(getUri(), credentials, dir);
+        return new ServerHostKeyMaterialFactory(getUri())
+                .plus(new ServerKeyMaterialFactory(credentials))
+                .contextualize(new KeyMaterialContext(dir));
     }
 
     @Override public String toString() {
