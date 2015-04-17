@@ -35,7 +35,7 @@ public class CompositeKeyMaterialFactory extends KeyMaterialFactory {
                 env.putAll(keyMaterials[index].env());
             }
             return new CompositeKeyMaterial(env, keyMaterials);
-        } catch (Exception e) {
+        } catch (Throwable e) {
             for (int index = keyMaterials.length - 1; index >= 0; index--) {
                 try {
                     if (keyMaterials[index] != null) {
@@ -50,6 +50,8 @@ public class CompositeKeyMaterialFactory extends KeyMaterialFactory {
                 throw (IOException) e;
             } else if (e instanceof InterruptedException) {
                 throw (InterruptedException) e;
+            } else if (e instanceof RuntimeException) {
+                throw (RuntimeException) e;
             } else {
                 throw new IOException("Error materializing credentials.", e);
             }
@@ -69,18 +71,28 @@ public class CompositeKeyMaterialFactory extends KeyMaterialFactory {
 
         @Override
         public void close() throws IOException {
-            IOException first = null;
+            Throwable first = null;
             for (int index = keyMaterials.length - 1; index >= 0; index--) {
                 try {
                     if (keyMaterials[index] != null) {
                         keyMaterials[index].close();
                     }
-                } catch (IOException ioe) {
-                    first = first == null ? ioe : first;
+                } catch (IOException e) {
+                    first = first == null ? e : first;
+                } catch (RuntimeException e) {
+                    first = first == null ? e : first;
+                } catch (Throwable e) {
+                    first = first == null ? e : first;
                 }
             }
             if (first != null) {
-                throw first;
+                if (first instanceof IOException) {
+                    throw (IOException) first;
+                } else if (first instanceof RuntimeException) {
+                    throw (RuntimeException) first;
+                } else {
+                    throw new IOException("Error closing credentials.", first);
+                }
             }
         }
     }
