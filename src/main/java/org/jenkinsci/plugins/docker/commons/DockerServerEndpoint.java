@@ -13,6 +13,7 @@ import hudson.model.Describable;
 import hudson.model.Descriptor;
 import hudson.model.Item;
 import hudson.remoting.VirtualChannel;
+import jenkins.authentication.tokens.api.AuthenticationTokens;
 import jenkins.model.Jenkins;
 import org.jenkinsci.plugins.docker.commons.impl.CompositeKeyMaterialFactory;
 import org.jenkinsci.plugins.docker.commons.impl.ServerHostKeyMaterialFactory;
@@ -103,7 +104,7 @@ public class DockerServerEndpoint extends AbstractDescribableImpl<DockerServerEn
      */
     public KeyMaterialFactory newKeyMaterialFactory(FilePath dir, @Nullable DockerServerCredentials credentials) throws IOException, InterruptedException {
         return new ServerHostKeyMaterialFactory(getUri())
-                .plus(new ServerKeyMaterialFactory(credentials))
+                .plus(AuthenticationTokens.convert(KeyMaterialFactory.class, credentials))
                 .contextualize(new KeyMaterialContext(dir));
     }
 
