@@ -5,6 +5,7 @@ import com.cloudbees.plugins.credentials.domains.DomainSpecification;
 import com.cloudbees.plugins.credentials.domains.DomainSpecificationDescriptor;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
+import org.kohsuke.stapler.DataBoundConstructor;
 
 /**
  * A {@link DomainSpecification} that allows users to identify credential domains that are for use against docker 
@@ -13,6 +14,11 @@ import hudson.Extension;
  * @author Stephen Connolly
  */
 public class DockerServerDomainSpecification extends DomainSpecification {
+
+    @DataBoundConstructor
+    public DockerServerDomainSpecification() {
+    }
+
     /** {@inheritDoc} */
     @NonNull
     @Override
