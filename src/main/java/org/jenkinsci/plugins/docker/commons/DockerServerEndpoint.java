@@ -111,6 +111,32 @@ public class DockerServerEndpoint extends AbstractDescribableImpl<DockerServerEn
         return "DockerServerEndpoint[" + uri + ";credentialsId=" + credentialsId + "]";
     }
 
+    @Override
+    public int hashCode() {
+        int hash = 7;
+        hash = 13 * hash + (this.uri != null ? this.uri.hashCode() : 0);
+        hash = 13 * hash + (this.credentialsId != null ? this.credentialsId.hashCode() : 0);
+        return hash;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == null) {
+            return false;
+        }
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+        final DockerServerEndpoint other = (DockerServerEndpoint) obj;
+        if ((this.uri == null) ? (other.uri != null) : !this.uri.equals(other.uri)) {
+            return false;
+        }
+        if ((this.credentialsId == null) ? (other.credentialsId != null) : !this.credentialsId.equals(other.credentialsId)) {
+            return false;
+        }
+        return true;
+    }
+    
     @Extension
     public static class DescriptorImpl extends Descriptor<DockerServerEndpoint> {
         @Override

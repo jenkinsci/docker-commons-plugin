@@ -159,6 +159,32 @@ public class DockerRegistryEndpoint extends AbstractDescribableImpl<DockerRegist
         return "DockerRegistryEndpoint[" + url + ";credentialsId=" + credentialsId + "]";
     }
 
+    @Override
+    public int hashCode() {
+        int hash = 3;
+        hash = 31 * hash + (this.url != null ? this.url.hashCode() : 0);
+        hash = 31 * hash + (this.credentialsId != null ? this.credentialsId.hashCode() : 0);
+        return hash;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == null) {
+            return false;
+        }
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+        final DockerRegistryEndpoint other = (DockerRegistryEndpoint) obj;
+        if ((this.url == null) ? (other.url != null) : !this.url.equals(other.url)) {
+            return false;
+        }
+        if ((this.credentialsId == null) ? (other.credentialsId != null) : !this.credentialsId.equals(other.credentialsId)) {
+            return false;
+        }
+        return true;
+    }
+    
     @Extension
     public static class DescriptorImpl extends Descriptor<DockerRegistryEndpoint> {
         @Override
