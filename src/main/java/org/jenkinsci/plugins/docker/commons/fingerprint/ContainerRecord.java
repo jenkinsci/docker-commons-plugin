@@ -21,13 +21,13 @@ public class ContainerRecord implements Serializable {
     
     private final String host;
     private final String containerId;
-    private final String imageId;
+    private transient String imageId;
     private final String containerName;
 
     private final long created;
     private final Map<String,String> tags;
 
-    public ContainerRecord(@Nonnull String host, @Nonnull String containerId, @Nonnull String imageId, @Nonnull String containerName, long created, @Nonnull Map<String,String> tags) {
+    public ContainerRecord(@Nonnull String host, @Nonnull String containerId, String imageId, @Nonnull String containerName, long created, @Nonnull Map<String,String> tags) {
         this.host = host;
         this.containerId = containerId;
         this.imageId = imageId;
@@ -56,6 +56,14 @@ public class ContainerRecord implements Serializable {
      */
     public String getImageId() {
         return imageId;
+    }
+
+    /**
+     * Set the image ID of the image from which this container was started.
+     * @param imageId The image ID of the image from which this container was started.
+     */
+    public void setImageId(@Nonnull String imageId) {
+        this.imageId = imageId;
     }
 
     /**
