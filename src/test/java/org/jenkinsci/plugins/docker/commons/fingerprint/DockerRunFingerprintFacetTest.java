@@ -24,8 +24,6 @@
 package org.jenkinsci.plugins.docker.commons.fingerprint;
 
 import hudson.Util;
-import hudson.matrix.MatrixProject;
-import hudson.model.AbstractProject;
 import hudson.model.Fingerprint;
 import hudson.model.FreeStyleBuild;
 import hudson.model.FreeStyleProject;
@@ -72,14 +70,10 @@ public class DockerRunFingerprintFacetTest {
         addFingerprinterToProject(project);
         return project;
     }
-    private void addFingerprinterToProject(AbstractProject<?, ?> project) throws Exception {
+    private void addFingerprinterToProject(FreeStyleProject project) throws Exception {
         StringBuilder targets = new StringBuilder();
         for (int i = 0; i < singleContents.length; i++) {
-            if (project instanceof MatrixProject) {
-                ((MatrixProject)project).getBuildersList().add(new Shell("echo " + singleContents[i] + " > " + singleFiles[i]));
-            } else {
-                ((FreeStyleProject)project).getBuildersList().add(new Shell("echo " + singleContents[i] + " > " + singleFiles[i]));                
-            }            
+            project.getBuildersList().add(new Shell("echo " + singleContents[i] + " > " + singleFiles[i]));
             targets.append(singleFiles[i]).append(',');
         }
         project.getPublishersList().add(new Fingerprinter(targets.toString(), false));
