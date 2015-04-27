@@ -23,18 +23,14 @@
  */
 package org.jenkinsci.plugins.docker.commons.fingerprint;
 
-import hudson.Util;
 import hudson.model.Fingerprint;
 import hudson.model.FreeStyleBuild;
 import hudson.model.FreeStyleProject;
-import hudson.tasks.Fingerprinter;
-import hudson.tasks.Shell;
 import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
 
-import java.io.IOException;
 import java.util.Collections;
 
 /**
@@ -47,42 +43,18 @@ public class DockerRunFingerprintFacetTest {
     
     @Test
     public void test_readResolve() throws Exception {
-        FreeStyleProject p = createFreeStyleProjectWithFingerprints();
+        FreeStyleProject p = rule.createFreeStyleProject("test");
         FreeStyleBuild b = rule.assertBuildStatusSuccess(p.scheduleBuild2(0));
         
-        Fingerprint f = rule.jenkins._getFingerprint(Util.getDigestOf(singleContents[0] + "\n"));
-        DockerRunFingerprintFacet facet = new DockerRunFingerprintFacet(f, System.currentTimeMillis(), "xxxxx");
-
         ContainerRecord r = new ContainerRecord("192.168.1.10", "cid", null, "magic", System.currentTimeMillis(), Collections.<String, String>emptyMap());
-        facet.add(r);
+        DockerFingerprints.addRunFacet(IMAGE_ID, r, b);
+        Fingerprint fingerprint = DockerFingerprints.of(IMAGE_ID);
+        DockerRunFingerprintFacet facet = (DockerRunFingerprintFacet) fingerprint.getFacets().iterator().next();
 
         Assert.assertNull(r.getImageId());
         facet.readResolve();
-        Assert.assertEquals("xxxxx", r.getImageId());
-        
-        System.out.println();
+        Assert.assertEquals(IMAGE_ID, r.getImageId());
     }
 
-
-    // Lifted from FingerprinterTest in Jenkins core
-    private FreeStyleProject createFreeStyleProjectWithFingerprints() throws IOException, Exception {
-        FreeStyleProject project = rule.createFreeStyleProject();
-        addFingerprinterToProject(project);
-        return project;
-    }
-    private void addFingerprinterToProject(FreeStyleProject project) throws Exception {
-        StringBuilder targets = new StringBuilder();
-        for (int i = 0; i < singleContents.length; i++) {
-            project.getBuildersList().add(new Shell("echo " + singleContents[i] + " > " + singleFiles[i]));
-            targets.append(singleFiles[i]).append(',');
-        }
-        project.getPublishersList().add(new Fingerprinter(targets.toString(), false));
-    }
-    
-    private static final String[] singleContents = {
-        "abcdef"
-    };
-    private static final String[] singleFiles = {
-        "test.txt"
-    };
+    private static String IMAGE_ID = "0409d3ebf4f571d7dd2cf4b00f9d897f8af1d6d8a0f1ff791d173ba9891fd72f";    
 }
