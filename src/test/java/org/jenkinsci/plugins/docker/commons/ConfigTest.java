@@ -39,7 +39,6 @@ public class ConfigTest {
 
     @Test public void configRoundTrip() throws Exception {
         // TODO how to create DockerServerCredentials? There are no implementations.
-        // (There are none of DockerRegistryCredentials either, but at least DockerRegistryEndpoint accepts UsernamePasswordCredentials.)
         IdCredentials registryCredentials = new UsernamePasswordCredentialsImpl(CredentialsScope.GLOBAL, "registryCreds", null, "me", "pass");
         CredentialsProvider.lookupStores(r.jenkins).iterator().next().addCredentials(Domain.global(), registryCredentials);
         SampleDockerBuilder b1 = new SampleDockerBuilder(new DockerServerEndpoint("", ""), new DockerRegistryEndpoint("http://dhe.mycorp.com/", registryCredentials.getId()));
