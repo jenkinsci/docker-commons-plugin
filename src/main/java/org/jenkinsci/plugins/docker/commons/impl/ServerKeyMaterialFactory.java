@@ -90,12 +90,6 @@ public class ServerKeyMaterialFactory extends KeyMaterialFactory {
                 for (FilePath tempDir : tempDirs) {
                     try {
                         tempDir.deleteRecursive();
-                    } catch (InterruptedException e) {
-                        first = first == null ? e : first;
-                    } catch (IOException e) {
-                        first = first == null ? e : first;
-                    } catch (RuntimeException e) {
-                        first = first == null ? e : first;
                     } catch (Throwable e) {
                         first = first == null ? e : first;
                     }
