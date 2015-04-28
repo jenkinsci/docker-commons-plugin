@@ -1,97 +1,81 @@
 package org.jenkinsci.plugins.docker.commons;
 
 import com.cloudbees.plugins.credentials.CredentialsScope;
-import com.cloudbees.plugins.credentials.common.StandardCertificateCredentials;
 import com.cloudbees.plugins.credentials.impl.BaseStandardCredentials;
-import edu.umd.cs.findbugs.annotations.NonNull;
+import hudson.Extension;
+import hudson.Util;
 import hudson.util.Secret;
-import org.bouncycastle.openssl.PEMReader;
+import org.kohsuke.stapler.DataBoundConstructor;
 
-import javax.annotation.Nullable;
-import java.io.IOException;
-import java.io.StringReader;
-import java.security.GeneralSecurityException;
-import java.security.KeyPair;
-import java.security.KeyStore;
-import java.security.cert.Certificate;
-import java.security.cert.X509Certificate;
-import java.security.interfaces.RSAPublicKey;
+import javax.annotation.CheckForNull;
 
 /**
  * Represents the connection details to talk to a docker host, which involves
  * endpoint URI, optional client secret key &amp; certificate, and optional CA certificate
  * to verify the server.
- *  
+ *
  * @author Kohsuke Kawaguchi
  * @see DockerServerEndpoint
  */
-public abstract class DockerServerCredentials extends BaseStandardCredentials implements StandardCertificateCredentials {
-    protected DockerServerCredentials(CredentialsScope scope, String id, String description) {
+// TODO migrate to a standard type once we have a certificate type that we can migrate to
+public class DockerServerCredentials extends BaseStandardCredentials {
+
+    @CheckForNull 
+    private final Secret clientKey;
+    @CheckForNull 
+    private final String clientCertificate;
+    @CheckForNull 
+    private final String serverCaCertificate;
+
+    @DataBoundConstructor
+    public DockerServerCredentials(CredentialsScope scope, String id, String description,
+                                   @CheckForNull String clientKey, @CheckForNull String clientCertificate,
+                                   @CheckForNull String serverCaCertificate) {
         super(scope, id, description);
+        this.clientKey = Util.fixEmptyAndTrim(clientKey) == null ? null : Secret.fromString(clientKey);
+        this.clientCertificate = Util.fixEmptyAndTrim(clientCertificate);
+        this.serverCaCertificate = Util.fixEmptyAndTrim(serverCaCertificate);
     }
 
     /**
      * Gets the PEM formatted secret key to identify the client. The {@code --tlskey} option in docker(1)
-     * 
+     *
      * @return null if there's no authentication
      */
-    public abstract @Nullable String getClientSecretKeyInPEM();
-
-    public RSAPublicKey getClientSecretKey() throws IOException {
-        String v = getClientSecretKeyInPEM();
-        if (v==null)    return null;
-        Object x = new PEMReader(new StringReader(v)).readObject();
-        return (RSAPublicKey)((KeyPair) x).getPublic();
-    }
-    
-    /**
-     * Gets the PEM formatted client certificate that matches with {@link #getClientSecretKey()}.
-     * The {@code --tlscert} option in docker(1). 
-     * 
-     * @return null if there's no authentication
-     */
-    public abstract @Nullable String getClientCertificateInPEM();
-
-    public X509Certificate getClientCertificate() throws IOException {
-        String v = getClientCertificateInPEM();
-        if (v==null)    return null;
-        Object x = new PEMReader(new StringReader(v)).readObject();
-        return (X509Certificate)x;
+    @CheckForNull
+    public String getClientKey() {
+        return clientKey == null ? null : clientKey.getPlainText();
     }
 
     /**
-     * Gets the PEM formatted server certificate that matches with {@link #getClientSecretKey()}.
+     * Gets the PEM formatted client certificate.
+     * The {@code --tlscert} option in docker(1).
+     *
+     * @return null if there's no authentication
+     */
+    @CheckForNull 
+    public String getClientCertificate() {
+        return clientCertificate;
+    }
+
+    /**
+     * Gets the PEM formatted server certificate.
      * The {@code --tlscacert} option in docker(1).
      *
      * @return null if there's no authentication
      */
-    public abstract @Nullable String getServerCaCertificateInPEM();
-    
-    public X509Certificate getServerCaCertificate() throws IOException {
-        String v = getServerCaCertificateInPEM();
-        if (v==null)    return null;
-        Object x = new PEMReader(new StringReader(v)).readObject();
-        return (X509Certificate)x;
+    @CheckForNull 
+    public String getServerCaCertificate() {
+        return serverCaCertificate;
     }
 
-    @NonNull
-    @Override
-    public KeyStore getKeyStore() {
-        try {
-            KeyStore ks = KeyStore.getInstance("JKS");
-            ks.setKeyEntry("default", getClientSecretKey(), null,
-                    new Certificate[] {getClientCertificate()});
-            return ks;
-        } catch (GeneralSecurityException e) {
-            throw new IllegalArgumentException("Unable to load key into keystore",e);
-        } catch (IOException e) {
-            throw new IllegalArgumentException("Unable to load key into keystore",e);
+    @Extension
+    public static class DescriptorImpl extends BaseStandardCredentialsDescriptor {
+        @Override
+        public String getDisplayName() {
+            return "Docker Server Certificate Authentication";
         }
+
     }
 
-    @NonNull
-    @Override
-    public Secret getPassword() {
-        return Secret.fromString("");    // fixed since docker can't handle it
-    }
 }

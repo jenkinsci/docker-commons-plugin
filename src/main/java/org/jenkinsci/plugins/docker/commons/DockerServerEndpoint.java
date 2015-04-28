@@ -5,6 +5,7 @@ import com.cloudbees.plugins.credentials.CredentialsProvider;
 import com.cloudbees.plugins.credentials.common.IdCredentials;
 import com.cloudbees.plugins.credentials.common.StandardListBoxModel;
 import com.cloudbees.plugins.credentials.domains.DomainRequirement;
+import com.cloudbees.plugins.credentials.domains.URIRequirementBuilder;
 import hudson.Extension;
 import hudson.FilePath;
 import hudson.model.AbstractBuild;
@@ -13,20 +14,20 @@ import hudson.model.Describable;
 import hudson.model.Descriptor;
 import hudson.model.Item;
 import hudson.remoting.VirtualChannel;
+import hudson.util.ListBoxModel;
+import jenkins.authentication.tokens.api.AuthenticationTokens;
 import jenkins.model.Jenkins;
-import org.jenkinsci.plugins.docker.commons.impl.CompositeKeyMaterialFactory;
 import org.jenkinsci.plugins.docker.commons.impl.ServerHostKeyMaterialFactory;
-import org.jenkinsci.plugins.docker.commons.impl.ServerKeyMaterialFactory;
+import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.QueryParameter;
 
+import javax.annotation.CheckForNull;
 import javax.annotation.Nullable;
 import java.io.IOException;
-import java.util.Collections;
+import java.util.List;
 
-import static hudson.Util.*;
-import hudson.util.ListBoxModel;
-import javax.annotation.CheckForNull;
-import org.kohsuke.stapler.AncestorInPath;
+import static hudson.Util.fixEmpty;
 
 /**
  * Encapsulates the endpoint of Docker daemon and how to interact with it.
@@ -38,6 +39,8 @@ import org.kohsuke.stapler.AncestorInPath;
  * @author Kohsuke Kawaguchi
  */
 public class DockerServerEndpoint extends AbstractDescribableImpl<DockerServerEndpoint> {
+    // TODO once we have a base type to migrate DockerServerCredentials replace with the corresponding interface
+    private static final Class<DockerServerCredentials> BASE_CREDENTIAL_TYPE = DockerServerCredentials.class;
     private final String uri;
     private final @CheckForNull String credentialsId;
 
@@ -81,10 +84,12 @@ public class DockerServerEndpoint extends AbstractDescribableImpl<DockerServerEn
         // can access, hence Jenkins.getAuthentication()
         DockerServerCredentials creds=null;
         if (credentialsId!=null) {
+            List<DomainRequirement> domainRequirements = URIRequirementBuilder.fromUri(getUri()).build();
+            domainRequirements.add(new DockerServerDomainRequirement());
             creds = CredentialsMatchers.firstOrNull(
                     CredentialsProvider.lookupCredentials(
                             DockerServerCredentials.class, context, Jenkins.getAuthentication(),
-                            Collections.<DomainRequirement>emptyList()),
+                            domainRequirements),
                     CredentialsMatchers.withId(credentialsId)
             );
         }
@@ -102,8 +107,8 @@ public class DockerServerEndpoint extends AbstractDescribableImpl<DockerServerEn
      * Create a {@link KeyMaterialFactory} for connecting to the docker server/host. 
      */
     public KeyMaterialFactory newKeyMaterialFactory(FilePath dir, @Nullable DockerServerCredentials credentials) throws IOException, InterruptedException {
-        return new ServerHostKeyMaterialFactory(getUri())
-                .plus(new ServerKeyMaterialFactory(credentials))
+        return (uri == null ? KeyMaterialFactory.NULL : new ServerHostKeyMaterialFactory(uri))
+                .plus(AuthenticationTokens.convert(KeyMaterialFactory.class, credentials))
                 .contextualize(new KeyMaterialContext(dir));
     }
 
@@ -144,9 +149,16 @@ public class DockerServerEndpoint extends AbstractDescribableImpl<DockerServerEn
             return "Docker Daemon";
         }
 
-        public ListBoxModel doFillCredentialsIdItems(@AncestorInPath Item item) {
-            // TODO may also need to specify a specific authentication and domain requirements
-            return new StandardListBoxModel().withEmptySelection().withAll(CredentialsProvider.lookupCredentials(DockerServerCredentials.class, item, null, Collections.<DomainRequirement>emptyList()));
+        public ListBoxModel doFillCredentialsIdItems(@AncestorInPath Item item, @QueryParameter String uri) {
+            List<DomainRequirement> domainRequirements = URIRequirementBuilder.fromUri(uri).build();
+            domainRequirements.add(new DockerServerDomainRequirement());
+            return new StandardListBoxModel()
+                    .withEmptySelection()
+                    .withMatching(
+                            AuthenticationTokens.matcher(KeyMaterialFactory.class),
+                            CredentialsProvider
+                                    .lookupCredentials(BASE_CREDENTIAL_TYPE, item, null, domainRequirements)
+                    );
         }
 
     }
