@@ -91,10 +91,6 @@ public class CompositeKeyMaterialFactory extends KeyMaterialFactory {
                     if (keyMaterials[index] != null) {
                         keyMaterials[index].close();
                     }
-                } catch (IOException e) {
-                    first = first == null ? e : first;
-                } catch (RuntimeException e) {
-                    first = first == null ? e : first;
                 } catch (Throwable e) {
                     first = first == null ? e : first;
                 }
