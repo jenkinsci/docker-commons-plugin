@@ -26,6 +26,7 @@ package org.jenkinsci.plugins.docker.commons;
 
 import com.cloudbees.plugins.credentials.CredentialsProvider;
 import com.cloudbees.plugins.credentials.CredentialsScope;
+import com.cloudbees.plugins.credentials.CredentialsStore;
 import com.cloudbees.plugins.credentials.common.IdCredentials;
 import com.cloudbees.plugins.credentials.domains.Domain;
 import com.cloudbees.plugins.credentials.impl.UsernamePasswordCredentialsImpl;
@@ -38,12 +39,14 @@ public class ConfigTest {
     @Rule public JenkinsRule r = new JenkinsRule();
 
     @Test public void configRoundTrip() throws Exception {
-        // TODO how to create DockerServerCredentials? There are no implementations.
+        CredentialsStore store = CredentialsProvider.lookupStores(r.jenkins).iterator().next();
+        IdCredentials serverCredentials = new DockerServerCredentials(CredentialsScope.GLOBAL, "serverCreds", null, "clientKey", "clientCertificate", "serverCaCertificate");
+        store.addCredentials(Domain.global(), serverCredentials);
         IdCredentials registryCredentials = new UsernamePasswordCredentialsImpl(CredentialsScope.GLOBAL, "registryCreds", null, "me", "pass");
-        CredentialsProvider.lookupStores(r.jenkins).iterator().next().addCredentials(Domain.global(), registryCredentials);
+        store.addCredentials(Domain.global(), registryCredentials);
         SampleDockerBuilder b1 = new SampleDockerBuilder(new DockerServerEndpoint("", ""), new DockerRegistryEndpoint("http://dhe.mycorp.com/", registryCredentials.getId()));
         r.assertEqualDataBoundBeans(b1, r.configRoundtrip(b1));
-        b1 = new SampleDockerBuilder(new DockerServerEndpoint("tcp://192.168.1.104:8333", ""), new DockerRegistryEndpoint("", ""));
+        b1 = new SampleDockerBuilder(new DockerServerEndpoint("tcp://192.168.1.104:8333", serverCredentials.getId()), new DockerRegistryEndpoint("", ""));
         r.assertEqualDataBoundBeans(b1, r.configRoundtrip(b1));
     }
 
