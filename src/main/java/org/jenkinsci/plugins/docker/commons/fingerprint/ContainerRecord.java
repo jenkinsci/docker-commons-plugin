@@ -1,5 +1,6 @@
 package org.jenkinsci.plugins.docker.commons.fingerprint;
 
+import javax.annotation.Nonnull;
 import java.io.Serializable;
 import java.util.Collections;
 import java.util.HashMap;
@@ -20,14 +21,16 @@ public class ContainerRecord implements Serializable {
     
     private final String host;
     private final String containerId;
+    private transient String imageId;
     private final String containerName;
+
     private final long created;
-    
     private final Map<String,String> tags;
 
-    public ContainerRecord(String host, String containerId, String containerName, long created, Map<String,String> tags) {
+    public ContainerRecord(@Nonnull String host, @Nonnull String containerId, String imageId, @Nonnull String containerName, long created, @Nonnull Map<String,String> tags) {
         this.host = host;
         this.containerId = containerId;
+        this.imageId = imageId;
         this.containerName = containerName;
         this.created = created;
         this.tags = new HashMap<String,String>(tags);
@@ -45,6 +48,22 @@ public class ContainerRecord implements Serializable {
      */
     public String getContainerId() {
         return containerId;
+    }
+
+    /**
+     * Get the ID of the image from which this container was started.
+     * @return The ID of the image from which this container was started.
+     */
+    public String getImageId() {
+        return imageId;
+    }
+
+    /**
+     * Set the image ID of the image from which this container was started.
+     * @param imageId The image ID of the image from which this container was started.
+     */
+    public void setImageId(@Nonnull String imageId) {
+        this.imageId = imageId;
     }
 
     /**
