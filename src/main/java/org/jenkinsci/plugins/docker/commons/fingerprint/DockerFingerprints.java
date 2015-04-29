@@ -27,18 +27,22 @@ public class DockerFingerprints {
     /**
      * Gets {@link Fingerprint} for a given docker image.
      */
-    public static @CheckForNull Fingerprint of(String imageId) throws IOException {
+    public static @CheckForNull Fingerprint of(@Nonnull String imageId) throws IOException {
         return Jenkins.getInstance().getFingerprintMap().get(trim(imageId));
     }
 
-    private static @Nonnull Fingerprint make(Run<?,?> run, String imageId) throws IOException {
+    private static @Nonnull Fingerprint make(@Nonnull Run<?,?> run, @Nonnull String imageId) throws IOException {
         return Jenkins.getInstance().getFingerprintMap().getOrCreate(run, "<docker-image>", trim(imageId));
     }
 
     /**
      * Adds a new {@link ContainerRecord} for the specified image, creating necessary intermediate objects as it goes.
      */
-    public static void addRunFacet(String imageId, ContainerRecord record, Run<?,?> run) throws IOException {
+    public static void addRunFacet(@Nonnull ContainerRecord record, @Nonnull Run<?,?> run) throws IOException {
+        String imageId = record.getImageId();
+        if (imageId == null) {
+            throw new IllegalArgumentException("Invalid ContainerRecord instance. ContainerRecords passed to addRunFacet must have an image ID.");
+        }
         Fingerprint f = make(run, imageId);
         Collection<FingerprintFacet> facets = f.getFacets();
         DockerRunFingerprintFacet runFacet = null;
@@ -65,7 +69,7 @@ public class DockerFingerprints {
     /**
      * Creates a new {@link DockerFromFingerprintFacet} and adds a run. Or adds to an existing one.
      */
-    public static void addFromFacet(String imageId, Run<?,?> run) throws IOException {
+    public static void addFromFacet(@Nonnull String imageId, @Nonnull Run<?,?> run) throws IOException {
         Fingerprint f = make(run, imageId);
         Collection<FingerprintFacet> facets = f.getFacets();
         DockerFromFingerprintFacet fromFacet = null;

@@ -46,14 +46,17 @@ public class DockerRunFingerprintFacetTest {
         FreeStyleProject p = rule.createFreeStyleProject("test");
         FreeStyleBuild b = rule.assertBuildStatusSuccess(p.scheduleBuild2(0));
         
-        ContainerRecord r = new ContainerRecord("192.168.1.10", "cid", null, "magic", System.currentTimeMillis(), Collections.<String, String>emptyMap());
-        DockerFingerprints.addRunFacet(IMAGE_ID, r, b);
-        Fingerprint fingerprint = DockerFingerprints.of(IMAGE_ID);
-        DockerRunFingerprintFacet facet = (DockerRunFingerprintFacet) fingerprint.getFacets().iterator().next();
+        ContainerRecord r1 = new ContainerRecord("192.168.1.10", "cid", IMAGE_ID, "magic", System.currentTimeMillis(), Collections.<String, String>emptyMap());
+        DockerFingerprints.addRunFacet(r1, b);
 
-        Assert.assertNull(r.getImageId());
+        Fingerprint fingerprint = DockerFingerprints.of(IMAGE_ID);
+        DockerRunFingerprintFacet facet = new DockerRunFingerprintFacet(fingerprint, System.currentTimeMillis(), IMAGE_ID);
+        ContainerRecord r2 = new ContainerRecord("192.168.1.10", "cid", null, "magic", System.currentTimeMillis(), Collections.<String, String>emptyMap());
+        facet.add(r2);
+        
+        Assert.assertNull(r2.getImageId());
         facet.readResolve();
-        Assert.assertEquals(IMAGE_ID, r.getImageId());
+        Assert.assertEquals(IMAGE_ID, r2.getImageId());
     }
 
     private static String IMAGE_ID = "0409d3ebf4f571d7dd2cf4b00f9d897f8af1d6d8a0f1ff791d173ba9891fd72f";    
