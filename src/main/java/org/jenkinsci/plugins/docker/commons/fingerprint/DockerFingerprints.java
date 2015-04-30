@@ -40,9 +40,6 @@ public class DockerFingerprints {
      */
     public static void addRunFacet(@Nonnull ContainerRecord record, @Nonnull Run<?,?> run) throws IOException {
         String imageId = record.getImageId();
-        if (imageId == null) {
-            throw new IllegalArgumentException("Invalid ContainerRecord instance. ContainerRecords passed to addRunFacet must have an image ID.");
-        }
         Fingerprint f = make(run, imageId);
         Collection<FingerprintFacet> facets = f.getFacets();
         DockerRunFingerprintFacet runFacet = null;
