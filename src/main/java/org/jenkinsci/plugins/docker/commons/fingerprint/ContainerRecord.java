@@ -27,7 +27,7 @@ public class ContainerRecord implements Serializable {
     private final long created;
     private final Map<String,String> tags;
 
-    public ContainerRecord(@Nonnull String host, @Nonnull String containerId, String imageId, @Nonnull String containerName, long created, @Nonnull Map<String,String> tags) {
+    public ContainerRecord(@Nonnull String host, @Nonnull String containerId, @Nonnull String imageId, @Nonnull String containerName, long created, @Nonnull Map<String,String> tags) {
         this.host = host;
         this.containerId = containerId;
         this.imageId = imageId;
