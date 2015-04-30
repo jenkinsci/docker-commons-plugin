@@ -66,7 +66,12 @@ public class DockerFingerprints {
     /**
      * Creates a new {@link DockerFromFingerprintFacet} and adds a run. Or adds to an existing one.
      */
-    public static void addFromFacet(@Nonnull String imageId, @Nonnull Run<?,?> run) throws IOException {
+    public static void addFromFacet(@Nonnull String baseImageId, @Nonnull String derivedImageId, @Nonnull Run<?,?> run) throws IOException {
+        long timestamp = System.currentTimeMillis();
+        addHalfFromFacet(baseImageId, derivedImageId, false, run, timestamp);
+        addHalfFromFacet(derivedImageId, baseImageId, true, run, timestamp);
+    }
+    private static void addHalfFromFacet(@Nonnull String imageId, @Nonnull String otherImageId, boolean inverse, @Nonnull Run<?,?> run, long timestamp) throws IOException {
         Fingerprint f = make(run, imageId);
         Collection<FingerprintFacet> facets = f.getFacets();
         DockerFromFingerprintFacet fromFacet = null;
@@ -79,7 +84,7 @@ public class DockerFingerprints {
         BulkChange bc = new BulkChange(f);
         try {
             if (fromFacet == null) {
-                fromFacet = new DockerFromFingerprintFacet(f, System.currentTimeMillis(), imageId);
+                fromFacet = new DockerFromFingerprintFacet(f, timestamp, imageId, otherImageId, inverse);
                 facets.add(fromFacet);
             }
             fromFacet.addFor(run);
