@@ -1,6 +1,10 @@
 package org.jenkinsci.plugins.docker.commons.fingerprint;
 
 import hudson.model.Fingerprint;
+import java.util.Collections;
+import java.util.Set;
+import java.util.TreeSet;
+import javax.annotation.Nonnull;
 
 /**
  * Facet representing the fact that some Docker image was derived from this one.
@@ -11,15 +15,18 @@ import hudson.model.Fingerprint;
  */
 public class DockerAncestorFingerprintFacet extends DockerRunPtrFingerprintFacet {
 
-    private final String descendantImageId;
+    final Set<String> descendantImageIds = new TreeSet<String>();
 
-    DockerAncestorFingerprintFacet(Fingerprint fingerprint, long timestamp, String imageId, String descendantImageId) {
+    DockerAncestorFingerprintFacet(Fingerprint fingerprint, long timestamp, String imageId) {
         super(fingerprint, timestamp, imageId);
-        this.descendantImageId = descendantImageId;
     }
 
-    public String getDescendantImageId() {
-        return descendantImageId;
+    /**
+     * Gets the descendant images built from this image.
+     * @return a set of 64-digit IDs, never empty
+     */
+    public @Nonnull Set<String> getDescendantImageIds() {
+        return Collections.unmodifiableSet(descendantImageIds);
     }
 
 }

@@ -1,6 +1,10 @@
 package org.jenkinsci.plugins.docker.commons.fingerprint;
 
 import hudson.model.Fingerprint;
+import java.util.Collections;
+import java.util.Set;
+import java.util.TreeSet;
+import javax.annotation.Nonnull;
 
 /**
  * Facet representing the fact that this Docker image was derived from another.
@@ -11,15 +15,21 @@ import hudson.model.Fingerprint;
  */
 public class DockerDescendantFingerprintFacet extends DockerRunPtrFingerprintFacet {
 
-    private final String ancestorImageId;
+    final Set<String> ancestorImageIds = new TreeSet<String>();
 
-    DockerDescendantFingerprintFacet(Fingerprint fingerprint, long timestamp, String imageId, String ancestorImageId) {
+    DockerDescendantFingerprintFacet(Fingerprint fingerprint, long timestamp, String imageId) {
         super(fingerprint, timestamp, imageId);
-        this.ancestorImageId = ancestorImageId;
     }
 
-    public String getAncestorImageId() {
-        return ancestorImageId;
+    /**
+     * Gets the ancestor image that this image was built from.
+     * In principle there could be several, in case distinct {@code Dockerfile}s used distinct {@code FROM} images,
+     * yet wound up producing the same result (because some corresponded to intermediate layers which were cached).
+     * This is unlikely but possible.
+     * @return a set of 64-digit IDs, never empty, typically a singleton
+     */
+    public @Nonnull Set<String> getAncestorImageIds() {
+        return Collections.unmodifiableSet(ancestorImageIds);
     }
 
 }
