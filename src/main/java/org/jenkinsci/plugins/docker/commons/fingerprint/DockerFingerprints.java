@@ -110,7 +110,9 @@ public class DockerFingerprints {
                 ancestorFacet = new DockerAncestorFingerprintFacet(f, timestamp, descendantImageId);
                 facets.add(ancestorFacet);
             }
-            ancestorFacet.addAncestorImageId(ancestorImageId);
+            if (ancestorImageId != null) {
+                ancestorFacet.addAncestorImageId(ancestorImageId);
+            }
             ancestorFacet.addFor(run);
             bc.commit();
         } finally {

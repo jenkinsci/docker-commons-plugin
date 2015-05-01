@@ -20,7 +20,7 @@ public class DockerAncestorFingerprintFacet extends DockerRunPtrFingerprintFacet
         super(fingerprint, timestamp, imageId);
     }
 
-    synchronized void addAncestorImageId(String id) {
+    synchronized void addAncestorImageId(@Nonnull String id) {
         ancestorImageIds.add(id);
     }
 
