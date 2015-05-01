@@ -64,25 +64,56 @@ public class DockerFingerprints {
     }
 
     /**
-     * Creates a new {@link DockerFromFingerprintFacet} and adds a run. Or adds to an existing one.
+     * Creates a new {@link DockerAncestorFingerprintFacet} and {@link DockerDescendantFingerprintFacet} and adds a run.
+     * Or adds to existing facets.
+     * @param ancestorImageId the ID of the image specified in a {@code FROM} instruction, or null in case of {@code scratch} (i.e., the descendant is a base image)
+     * @param descendantImageId the ID of the image which was built
+     * @param run the build in which the image building occurred
      */
-    public static void addFromFacet(@Nonnull String imageId, @Nonnull Run<?,?> run) throws IOException {
-        Fingerprint f = make(run, imageId);
+    public static void addFromFacet(@CheckForNull String ancestorImageId, @Nonnull String descendantImageId, @Nonnull Run<?,?> run) throws IOException {
+        long timestamp = System.currentTimeMillis();
+        if (ancestorImageId != null) {
+            Fingerprint f = make(run, ancestorImageId);
+            Collection<FingerprintFacet> facets = f.getFacets();
+            DockerDescendantFingerprintFacet descendantFacet = null;
+            for (FingerprintFacet facet : facets) {
+                if (facet instanceof DockerDescendantFingerprintFacet) {
+                    descendantFacet = (DockerDescendantFingerprintFacet) facet;
+                    break;
+                }
+            }
+            BulkChange bc = new BulkChange(f);
+            try {
+                if (descendantFacet == null) {
+                    descendantFacet = new DockerDescendantFingerprintFacet(f, timestamp, ancestorImageId);
+                    facets.add(descendantFacet);
+                }
+                descendantFacet.addDescendantImageId(descendantImageId);
+                descendantFacet.addFor(run);
+                bc.commit();
+            } finally {
+                bc.abort();
+            }
+        }
+        Fingerprint f = make(run, descendantImageId);
         Collection<FingerprintFacet> facets = f.getFacets();
-        DockerFromFingerprintFacet fromFacet = null;
+        DockerAncestorFingerprintFacet ancestorFacet = null;
         for (FingerprintFacet facet : facets) {
-            if (facet instanceof DockerFromFingerprintFacet) {
-                fromFacet = (DockerFromFingerprintFacet) facet;
+            if (facet instanceof DockerAncestorFingerprintFacet) {
+                ancestorFacet = (DockerAncestorFingerprintFacet) facet;
                 break;
             }
         }
         BulkChange bc = new BulkChange(f);
         try {
-            if (fromFacet == null) {
-                fromFacet = new DockerFromFingerprintFacet(f, System.currentTimeMillis(), imageId);
-                facets.add(fromFacet);
+            if (ancestorFacet == null) {
+                ancestorFacet = new DockerAncestorFingerprintFacet(f, timestamp, descendantImageId);
+                facets.add(ancestorFacet);
             }
-            fromFacet.addFor(run);
+            if (ancestorImageId != null) {
+                ancestorFacet.addAncestorImageId(ancestorImageId);
+            }
+            ancestorFacet.addFor(run);
             bc.commit();
         } finally {
             bc.abort();
