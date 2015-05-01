@@ -1,7 +1,6 @@
 package org.jenkinsci.plugins.docker.commons.fingerprint;
 
 import hudson.model.Fingerprint;
-import java.util.Collections;
 import java.util.Set;
 import java.util.TreeSet;
 import javax.annotation.Nonnull;
@@ -15,10 +14,14 @@ import javax.annotation.Nonnull;
  */
 public class DockerDescendantFingerprintFacet extends DockerRunPtrFingerprintFacet {
 
-    final Set<String> ancestorImageIds = new TreeSet<String>();
+    private final Set<String> ancestorImageIds = new TreeSet<String>();
 
     DockerDescendantFingerprintFacet(Fingerprint fingerprint, long timestamp, String imageId) {
         super(fingerprint, timestamp, imageId);
+    }
+
+    synchronized void addAncestorImageId(String id) {
+        ancestorImageIds.add(id);
     }
 
     /**
@@ -28,8 +31,8 @@ public class DockerDescendantFingerprintFacet extends DockerRunPtrFingerprintFac
      * This is unlikely but possible.
      * @return a set of 64-digit IDs, never empty, typically a singleton
      */
-    public @Nonnull Set<String> getAncestorImageIds() {
-        return Collections.unmodifiableSet(ancestorImageIds);
+    public synchronized @Nonnull Set<String> getAncestorImageIds() {
+        return new TreeSet<String>(ancestorImageIds);
     }
 
 }
