@@ -6,33 +6,30 @@ import java.util.TreeSet;
 import javax.annotation.Nonnull;
 
 /**
- * Facet representing the fact that this Docker image was derived from another.
- * This facet would be added to the fingerprint corresponding to an image built using a {@code Dockerfile}.
- * {@link #getAncestorImageId} indicates the ID of the image specified in the {@code FROM} instruction.
+ * Facet representing the fact that some Docker image was derived from this one.
+ * This facet would be added to the fingerprint corresponding to the {@code FROM} instruction in a {@code Dockerfile}.
+ * {@link #getDescendantImageIds} indicates the image that was built from that file.
  * @see DockerFingerprints#addFromFacet
- * @see DockerAncestorFingerprintFacet
+ * @see DockerDescendantFingerprintFacet
  */
 public class DockerDescendantFingerprintFacet extends DockerRunPtrFingerprintFacet {
 
-    private final Set<String> ancestorImageIds = new TreeSet<String>();
+    private final Set<String> descendantImageIds = new TreeSet<String>();
 
     DockerDescendantFingerprintFacet(Fingerprint fingerprint, long timestamp, String imageId) {
         super(fingerprint, timestamp, imageId);
     }
 
-    synchronized void addAncestorImageId(String id) {
-        ancestorImageIds.add(id);
+    synchronized void addDescendantImageId(String id) {
+        descendantImageIds.add(id);
     }
 
     /**
-     * Gets the ancestor image that this image was built from.
-     * In principle there could be several, in case distinct {@code Dockerfile}s used distinct {@code FROM} images,
-     * yet wound up producing the same result (because some corresponded to intermediate layers which were cached).
-     * This is unlikely but possible.
-     * @return a set of 64-digit IDs, never empty, typically a singleton
+     * Gets the descendant images built from this image.
+     * @return a set of 64-digit IDs, never empty
      */
-    public synchronized @Nonnull Set<String> getAncestorImageIds() {
-        return new TreeSet<String>(ancestorImageIds);
+    public synchronized @Nonnull Set<String> getDescendantImageIds() {
+        return new TreeSet<String>(descendantImageIds);
     }
 
 }
