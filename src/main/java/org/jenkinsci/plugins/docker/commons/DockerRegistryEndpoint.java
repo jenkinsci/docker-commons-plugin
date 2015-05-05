@@ -71,17 +71,18 @@ public class DockerRegistryEndpoint extends AbstractDescribableImpl<DockerRegist
     }
 
     /**
-     * Parse the registry endpoint out of a registry:port/namespace/name:tag string. Credentials are set to the id
-     * passed. The url is built from registry:port into https://registry:port, the same way docker push does.
+     * Parse the registry endpoint out of a registry:port/namespace/name:tag string as created by
+     * {@link #imageName(String)}. Credentials are set to the id passed. The url is built from registry:port into
+     * https://registry:port, the same way docker push does.
      * 
      * @param s
      * @param credentialsId
-     *            can be null
+     *            passed to the constructor, can be null
      * @throws IllegalArgumentException
      *             if string can't be parsed
      * @return The DockerRegistryEndpoint corresponding to the registry:port part of the string
      */
-    public static DockerRegistryEndpoint parse(String s, @CheckForNull String credentialsId) {
+    public static DockerRegistryEndpoint fromImageName(String s, @CheckForNull String credentialsId) {
         Matcher matcher = DOCKER_REGISTRY_PATTERN.matcher(s);
         if (!matcher.matches() || matcher.groupCount() < 7) {
             throw new IllegalArgumentException(s + " does not match regex " + DOCKER_REGISTRY_PATTERN);
@@ -176,7 +177,13 @@ public class DockerRegistryEndpoint extends AbstractDescribableImpl<DockerRegist
     }
 
     /**
-     * Decorates the repository ID like "jenkinsci/workflow-demo" with repository prefix.
+     * Decorates the repository ID namespace/name (ie. "jenkinsci/workflow-demo") with registry prefix
+     * (docker.acme.com:80/jenkinsci/workflow-demo).
+     * 
+     * @param userAndRepo
+     *            the namespace/name part to append to the registry
+     * @return the full registry:port/namespace/name string
+     * @throws IOException
      */
     public String imageName(String userAndRepo) throws IOException {
         if (url==null)    return userAndRepo;
