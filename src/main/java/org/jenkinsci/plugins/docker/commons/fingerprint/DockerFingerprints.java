@@ -12,7 +12,7 @@ import javax.annotation.Nonnull;
 import jenkins.model.FingerprintFacet;
 
 /**
- * Entry point into fignerprint related functionalities in Docker.
+ * Entry point into fingerprint related functionalities in Docker.
  */
 public class DockerFingerprints {
     private DockerFingerprints() {} // no instantiation
@@ -22,6 +22,15 @@ public class DockerFingerprints {
             throw new IllegalArgumentException("Expecting 64char full image ID, but got " + imageId);
         }
         return imageId.substring(0, 32);
+    }
+    
+    /**
+     * Gets a fingerprint hash for Docker image.
+     * @param imageId Docker image ID.
+     * @return 32-symbol fingerprint hash
+     */
+    /*package*/ static @Nonnull String getImageFingerprintHash(@Nonnull String imageId) {
+        return trim(imageId);
     }
 
     /**
@@ -57,6 +66,7 @@ public class DockerFingerprints {
             }
             runFacet.add(record);
             runFacet.addFor(run);
+            DockerFingerprintAction.addToRun(f, imageId, run);
             bc.commit();
         } finally {
             bc.abort();
@@ -90,6 +100,7 @@ public class DockerFingerprints {
                 }
                 descendantFacet.addDescendantImageId(descendantImageId);
                 descendantFacet.addFor(run);
+                DockerFingerprintAction.addToRun(f, ancestorImageId, run);
                 bc.commit();
             } finally {
                 bc.abort();
@@ -114,6 +125,7 @@ public class DockerFingerprints {
                 ancestorFacet.addAncestorImageId(ancestorImageId);
             }
             ancestorFacet.addFor(run);
+            DockerFingerprintAction.addToRun(f, descendantImageId, run);
             bc.commit();
         } finally {
             bc.abort();

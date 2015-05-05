@@ -1,0 +1,75 @@
+<?jelly escape-by-default='true'?>
+<!--
+The MIT License
+
+Copyright 2015 CloudBees Inc.
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
+-->
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" 
+         xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form" xmlns:i="jelly:fmt">
+  <l:layout title="${%title(it.run.fullDisplayName)}">
+    <st:include it="${it.run}" page="sidepanel.jelly"/>
+    <l:main-panel>
+      <h1>
+        <l:icon class="icon-fingerprint icon-xlg"/>
+        ${%title(it.run.fullDisplayName)}
+      </h1>
+      <table class="sortable bigtable pane">
+        <thead style="text-align:left">
+          <tr>
+            <th>${%Image ID}</th>
+            <th>${%Created on}</th>
+            <th>${%Introduced}</th>
+          </tr>
+        </thead>
+        <tbody>
+          <j:forEach var="imageId" items="${it.imageIDs}">
+            <j:set var="fp" value="${it.getFingerprint(imageId)}"/>
+            <tr>
+              <j:choose>
+                <j:when test="${fp==null}">
+                  <td>${imageId}</td>
+                  <td>${%Unknown}</td>
+                  <td>${%outside Jenkins}</td>     
+                </j:when>
+                <j:otherwise>
+                  <td>
+                    <a href="${rootURL}/fingerprint/${fp.hashString}">${imageId}</a>
+                  </td>
+                  <td>${fp.timestampString}</td>
+                  <td>
+                    <j:choose>
+                      <j:when test="${fp.original==null}">
+                        ${%outside Jenkins}
+                      </j:when>
+                      <j:otherwise>
+                        <t:buildLink job="${fp.original.job}" number="${fp.original.number}" jobName="${fp.original.name}" />
+                      </j:otherwise>
+                    </j:choose>
+                  </td> 
+                </j:otherwise>
+              </j:choose>
+            </tr>
+          </j:forEach>
+        </tbody>
+      </table>
+    </l:main-panel>
+  </l:layout>
+</j:jelly>
