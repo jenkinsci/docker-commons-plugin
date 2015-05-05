@@ -29,7 +29,8 @@ public class DockerAncestorFingerprintFacet extends DockerRunPtrFingerprintFacet
      * In principle there could be several, in case distinct {@code Dockerfile}s used distinct {@code FROM} images,
      * yet wound up producing the same result (because some corresponded to intermediate layers which were cached).
      * This is unlikely but possible.
-     * @return a set of 64-digit IDs, never empty, typically a singleton
+     * The set may be empty in case you built a base image ({@code FROM scratch}), in which case there is no ID for the ancestor.
+     * @return a set of 64-digit IDs, typically a singleton
      */
     public synchronized @Nonnull Set<String> getAncestorImageIds() {
         return new TreeSet<String>(ancestorImageIds);
