@@ -6,6 +6,7 @@ import com.cloudbees.plugins.credentials.common.StandardCredentials;
 import com.cloudbees.plugins.credentials.common.StandardListBoxModel;
 import com.cloudbees.plugins.credentials.domains.DomainRequirement;
 import com.cloudbees.plugins.credentials.domains.HostnameRequirement;
+
 import hudson.Extension;
 import hudson.Util;
 import hudson.model.AbstractBuild;
@@ -16,18 +17,22 @@ import hudson.model.Item;
 import hudson.remoting.VirtualChannel;
 import hudson.util.ListBoxModel;
 import jenkins.authentication.tokens.api.AuthenticationTokens;
-import hudson.util.ListBoxModel;
 import jenkins.model.Jenkins;
+
 import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+
 import java.io.IOException;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Collections;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import static com.cloudbees.plugins.credentials.CredentialsMatchers.*;
 
@@ -41,6 +46,18 @@ import static com.cloudbees.plugins.credentials.CredentialsMatchers.*;
  * @author Kohsuke Kawaguchi
  */
 public class DockerRegistryEndpoint extends AbstractDescribableImpl<DockerRegistryEndpoint> {
+
+    /**
+     * Some regex magic to parse docker registry:port/namespace/name:tag into parts, using the same constraints as
+     * docker push.
+     * 
+     * registry must not contain / and must contain a .
+     * 
+     * everything but name is optional
+     */
+    private static final Pattern DOCKER_REGISTRY_PATTERN = Pattern
+            .compile("(([^/]+\\.[^/]+)/)?(([a-z0-9_]+)/)?([a-zA-Z0-9-_\\.]+)(:([a-z0-9-_\\.]+))?");
+
     /**
      * Null if this is on the public docker hub.
      */
@@ -51,6 +68,36 @@ public class DockerRegistryEndpoint extends AbstractDescribableImpl<DockerRegist
     public DockerRegistryEndpoint(String url, String credentialsId) {
         this.url = Util.fixEmpty(url);
         this.credentialsId = Util.fixEmpty(credentialsId);
+    }
+
+    /**
+     * Parse the registry endpoint out of a registry:port/namespace/name:tag string. Credentials are set to the id
+     * passed. The url is built from registry:port into https://registry:port, the same way docker push does.
+     * 
+     * @param s
+     * @param credentialsId
+     *            can be null
+     * @throws IllegalArgumentException
+     *             if string can't be parsed
+     * @return The DockerRegistryEndpoint corresponding to the registry:port part of the string
+     */
+    public static DockerRegistryEndpoint parse(String s, @CheckForNull String credentialsId) {
+        Matcher matcher = DOCKER_REGISTRY_PATTERN.matcher(s);
+        if (!matcher.matches() || matcher.groupCount() < 7) {
+            throw new IllegalArgumentException(s + " does not match regex " + DOCKER_REGISTRY_PATTERN);
+        }
+        String url;
+        try {
+            // docker push always uses https
+            url = matcher.group(2) == null ? null : new URL("https://" + matcher.group(2)).toString();
+        } catch (MalformedURLException e) {
+            throw new IllegalArgumentException(s + " can not be parsed as URL: " + e.getMessage());
+        }
+        // not used, but could be
+        String namespace = matcher.group(4);
+        String repoName = matcher.group(5);
+        String tag = matcher.group(7);
+        return new DockerRegistryEndpoint(url, credentialsId);
     }
 
     /**
