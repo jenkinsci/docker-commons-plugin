@@ -1,6 +1,7 @@
 package org.jenkinsci.plugins.docker.commons.impl;
 
 import org.jenkinsci.plugins.docker.commons.KeyMaterial;
+import org.jenkinsci.plugins.docker.commons.KeyMaterialContext;
 import org.jenkinsci.plugins.docker.commons.KeyMaterialFactory;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
@@ -21,5 +22,10 @@ public final class NullKeyMaterialFactory extends KeyMaterialFactory {
     @Override
     public KeyMaterial materialize() throws IOException, InterruptedException {
         return KeyMaterial.NULL;
+    }
+
+    @Override
+    public synchronized KeyMaterialFactory contextualize(KeyMaterialContext context) {
+        return this;
     }
 }
