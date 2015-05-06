@@ -57,6 +57,12 @@ public class DockerRunFingerprintFacetTest {
         Assert.assertNull(r2.getImageId());
         facet.readResolve();
         Assert.assertEquals(IMAGE_ID, r2.getImageId());
+        
+        // Check that actions have been automatically added
+        DockerFingerprintAction fpAction = b.getAction(DockerFingerprintAction.class);
+        Assert.assertNotNull("DockerFingerprintAction should be added automatically", fpAction);
+        Assert.assertTrue("Docker image should be referred in the action", 
+                fpAction.getImageIDs().contains(IMAGE_ID));
     }
 
     private static String IMAGE_ID = "0409d3ebf4f571d7dd2cf4b00f9d897f8af1d6d8a0f1ff791d173ba9891fd72f";    
