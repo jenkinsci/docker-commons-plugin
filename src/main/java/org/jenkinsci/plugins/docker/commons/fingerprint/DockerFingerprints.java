@@ -16,32 +16,33 @@ import jenkins.model.FingerprintFacet;
  */
 public class DockerFingerprints {
     private DockerFingerprints() {} // no instantiation
-
-    private static String trim(String imageId) {
+ 
+    /**
+     * Gets a fingerprint hash for Docker image ID.
+     * This method calculates image hash without retrieving a fingerprint by 
+     * {@link DockerFingerprints#of(java.lang.String)}, which may be a high-cost call.
+     * 
+     * @param imageId Docker image ID.
+     *      Only 64-char full image IDs are supported.
+     * @return 32-char fingerprint hash
+     * @throws IllegalArgumentException Invalid image ID
+     */
+    public static @Nonnull String getImageFingerprintHash(@Nonnull String imageId) {
         if (imageId.length() != 64) {
-            throw new IllegalArgumentException("Expecting 64char full image ID, but got " + imageId);
+            throw new IllegalArgumentException("Expecting 64-char full image ID, but got " + imageId);
         }
         return imageId.substring(0, 32);
-    }
-    
-    /**
-     * Gets a fingerprint hash for Docker image.
-     * @param imageId Docker image ID.
-     * @return 32-symbol fingerprint hash
-     */
-    /*package*/ static @Nonnull String getImageFingerprintHash(@Nonnull String imageId) {
-        return trim(imageId);
     }
 
     /**
      * Gets {@link Fingerprint} for a given docker image.
      */
     public static @CheckForNull Fingerprint of(@Nonnull String imageId) throws IOException {
-        return Jenkins.getInstance().getFingerprintMap().get(trim(imageId));
+        return Jenkins.getInstance().getFingerprintMap().get(getImageFingerprintHash(imageId));
     }
 
     private static @Nonnull Fingerprint make(@Nonnull Run<?,?> run, @Nonnull String imageId) throws IOException {
-        return Jenkins.getInstance().getFingerprintMap().getOrCreate(run, "<docker-image>", trim(imageId));
+        return Jenkins.getInstance().getFingerprintMap().getOrCreate(run, "<docker-image>", getImageFingerprintHash(imageId));
     }
 
     /**
