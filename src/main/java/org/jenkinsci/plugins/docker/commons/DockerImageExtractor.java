@@ -42,10 +42,10 @@ public abstract class DockerImageExtractor implements ExtensionPoint {
      * Return an empty collection if none is found.
      *
      * @param job the job being queried.
-     * @return a collection of names, an or an empty collection.
+     * @return a collection of names, or an empty collection.
      */
     @Nonnull
-    public abstract Collection<String> getDockerImagesUsedByJob(Job<?,?> job);
+    public abstract Collection<String> getDockerImagesUsedByJob(@Nonnull Job<?,?> job);
 
     public static ExtensionList<DockerImageExtractor> all() {
         Jenkins j = Jenkins.getInstance();
