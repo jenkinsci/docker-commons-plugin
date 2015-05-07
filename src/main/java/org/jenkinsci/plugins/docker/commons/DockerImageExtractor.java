@@ -30,6 +30,8 @@ import jenkins.model.Jenkins;
 
 import javax.annotation.Nonnull;
 import java.util.Collection;
+import java.util.Set;
+import java.util.TreeSet;
 
 /**
  * Identifies the Docker images used by a Jenkins job. Docker-related plugins can use this
@@ -47,13 +49,22 @@ public abstract class DockerImageExtractor implements ExtensionPoint {
     @Nonnull
     public abstract Collection<String> getDockerImagesUsedByJob(@Nonnull Job<?,?> job);
 
-    public static ExtensionList<DockerImageExtractor> all() {
+    /**
+     * Provides a set of repository names {@code namespace/name} that the job uses as seen by all the declared {@link DockerImageExtractor}s.
+     * Returns an empty set if none is found.
+     *
+     * @param job the job being queried.
+     * @return a set of names, or an empty set.
+     */
+    @Nonnull
+    public static Set<String> getDockerImagesUsedByJobFromAll(@Nonnull Job<?,?> job) {
         Jenkins j = Jenkins.getInstance();
-        //TODO return ExtensionList.lookup(DockerImageExtractor.class); when core req is past 1.572
-        if (j == null) {
-            return ExtensionList.create((Jenkins)null, DockerImageExtractor.class);
-        } else {
-            return j.getExtensionList(DockerImageExtractor.class);
+        Set<String> names = new TreeSet<String>();
+        if (j != null) {
+            for (DockerImageExtractor extractor : j.getExtensionList(DockerImageExtractor.class)) {
+                names.addAll(extractor.getDockerImagesUsedByJob(job));
+            }
         }
+        return names;
     }
 }
