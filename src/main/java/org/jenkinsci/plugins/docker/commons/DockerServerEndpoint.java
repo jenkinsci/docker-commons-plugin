@@ -95,12 +95,14 @@ public class DockerServerEndpoint extends AbstractDescribableImpl<DockerServerEn
         }
 
         // the directory needs to be outside workspace to avoid prying eyes
-        // TODO if creds == null, or for other reasons dir is not passed to ServerKeyMaterialImpl, this creates a temp dir which is never deleted
-        FilePath dotDocker = FilePath.getHomeDirectory(target).child(".docker");
+        FilePath dotDocker = dotDocker(target);
         dotDocker.mkdirs();
-        FilePath baseDir = dotDocker.createTempDir("keys",null);
+        // ServerKeyMaterialFactory.materialize creates a random subdir if one is needed:
+        return newKeyMaterialFactory(dotDocker, creds);
+    }
 
-        return newKeyMaterialFactory(baseDir, creds);
+    static FilePath dotDocker(VirtualChannel target) throws IOException, InterruptedException {
+        return FilePath.getHomeDirectory(target).child(".docker");
     }
 
     /**
