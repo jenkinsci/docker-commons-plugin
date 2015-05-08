@@ -118,12 +118,6 @@ public class DockerTool extends ToolInstallation implements EnvironmentSpecific<
             return super.getDefaultInstallers();
         }
 
-        public FormValidation doCheckName(@QueryParameter String value) {
-            return FormValidation.validateRequired(value);
-        }
-
-        // TODO public FormValidation doCheckHome(@QueryParameter File value) is of marginal value since it can only check paths on the master
-
     }
 
 }
