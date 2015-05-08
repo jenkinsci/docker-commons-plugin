@@ -30,6 +30,8 @@ import com.cloudbees.plugins.credentials.CredentialsStore;
 import com.cloudbees.plugins.credentials.common.IdCredentials;
 import com.cloudbees.plugins.credentials.domains.Domain;
 import com.cloudbees.plugins.credentials.impl.UsernamePasswordCredentialsImpl;
+import hudson.tools.ToolProperty;
+import java.util.Collections;
 import org.junit.Test;
 import org.junit.Rule;
 import org.jvnet.hudson.test.JenkinsRule;
@@ -47,6 +49,9 @@ public class ConfigTest {
         SampleDockerBuilder b1 = new SampleDockerBuilder(new DockerServerEndpoint("", ""), new DockerRegistryEndpoint("http://dhe.mycorp.com/", registryCredentials.getId()));
         r.assertEqualDataBoundBeans(b1, r.configRoundtrip(b1));
         b1 = new SampleDockerBuilder(new DockerServerEndpoint("tcp://192.168.1.104:8333", serverCredentials.getId()), new DockerRegistryEndpoint("", ""));
+        r.assertEqualDataBoundBeans(b1, r.configRoundtrip(b1));
+        r.jenkins.getDescriptorByType(DockerTool.DescriptorImpl.class).setInstallations(new DockerTool("Docker 1.5", "/usr/local/docker15", Collections.<ToolProperty<?>>emptyList()));
+        b1.setToolName("Docker 1.5");
         r.assertEqualDataBoundBeans(b1, r.configRoundtrip(b1));
     }
 
