@@ -113,6 +113,11 @@ public class DockerTool extends ToolInstallation implements EnvironmentSpecific<
             return "Docker";
         }
 
+        @Override public void setInstallations(DockerTool... installations) {
+            super.setInstallations(installations);
+            save(); // TODO this ought to be automatic (or done from configure)
+        }
+
         @Override public List<? extends ToolInstaller> getDefaultInstallers() {
             // TODO can download for example https://get.docker.com/builds/Linux/x86_64/docker-1.5.0 or https://get.docker.com/builds/Linux/i386/docker-latest and place in a bin subdir
             return super.getDefaultInstallers();
