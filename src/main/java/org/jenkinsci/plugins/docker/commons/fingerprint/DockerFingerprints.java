@@ -47,23 +47,23 @@ public class DockerFingerprints {
     
     /**
      * Get or create a {@link Fingerprint} for the image.
-     * @param run Origin of the fingerprint
+     * @param run Origin of the fingerprint (if available)
      * @param id Image ID. Only 64-char full IDs are supported.
      * @return Fingerprint for the specified ID
      * @throws IOException Fingerprint load/save error
      */
-    public static @Nonnull Fingerprint makeForImage(@Nonnull Run<?,?> run, @Nonnull String id) throws IOException {
+    public static @Nonnull Fingerprint makeForImage(@CheckForNull Run<?,?> run, @Nonnull String id) throws IOException {
         return Jenkins.getInstance().getFingerprintMap().getOrCreate(run, "<docker-image>", getFingerprintHash(id));
     }
     
     /**
      * Get or create a {@link Fingerprint} for the container.
-     * @param run Origin of the fingerprint
+     * @param run Origin of the fingerprint (if available)
      * @param id Image ID. Only 64-char full IDs are supported.
      * @return Fingerprint for the specified ID
      * @throws IOException Fingerprint load/save error
      */
-    public static @Nonnull Fingerprint makeForContainer(@Nonnull Run<?,?> run, @Nonnull String id) throws IOException {
+    public static @Nonnull Fingerprint makeForContainer(@CheckForNull Run<?,?> run, @Nonnull String id) throws IOException {
         return Jenkins.getInstance().getFingerprintMap().getOrCreate(run, "<docker-container>", getFingerprintHash(id));
     }
 
