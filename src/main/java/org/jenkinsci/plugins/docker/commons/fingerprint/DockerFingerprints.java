@@ -7,15 +7,23 @@ import jenkins.model.Jenkins;
 
 import java.io.IOException;
 import java.util.Collection;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
 import jenkins.model.FingerprintFacet;
+import org.apache.commons.collections.CollectionUtils;
 
 /**
  * Entry point into fingerprint related functionalities in Docker.
  * This class provide basic methods for both images and containers
  */
 public class DockerFingerprints {
+    
+    private static final Logger LOGGER = Logger.getLogger(DockerFingerprints.class.getName());
+    
     private DockerFingerprints() {} // no instantiation
  
     /**
@@ -45,6 +53,15 @@ public class DockerFingerprints {
         return Jenkins.getInstance().getFingerprintMap().get(getFingerprintHash(id));
     }
     
+    private static @CheckForNull Fingerprint ofNoException(@Nonnull String id) {
+        try {
+            return of(id);
+        } catch (IOException ex) { // The error is not a hazard in CheckForNull logic
+            LOGGER.log(Level.WARNING, "Cannot retrieve a fingerprint for Docker id="+id, ex);
+        }
+        return null;
+    }
+    
     /**
      * Get or create a {@link Fingerprint} for the image.
      * @param run Origin of the fingerprint (if available)
@@ -67,6 +84,75 @@ public class DockerFingerprints {
         return Jenkins.getInstance().getFingerprintMap().getOrCreate(run, "<docker-container>", getFingerprintHash(id));
     }
 
+    /**
+     * Retrieves a facet from the {@link Fingerprint}.
+     * The method suppresses {@link IOException} if a fingerprint loading fails.
+     * @param <TFacet> Facet type to be retrieved
+     * @param id Docker item ID. Only 64-char full IDs are supported
+     * @param facetClass Class to be retrieved
+     * @return First matching facet. Null may be returned if the loading fails
+     */
+    public static @CheckForNull @SuppressWarnings("unchecked")
+            <TFacet extends FingerprintFacet> TFacet getFacet
+            (@Nonnull String id, @Nonnull Class<TFacet> facetClass) { 
+        final Fingerprint fp = ofNoException(id); 
+        return (fp != null) ? getFacet(fp, facetClass) : null;
+    }
+            
+    /**
+     * Retrieves a facet from the {@link Fingerprint}.
+     * The method suppresses {@link IOException} if a fingerprint loading fails.
+     * @param <TFacet> Facet type to be retrieved
+     * @param id Docker item ID. Only 64-char full IDs are supported
+     * @param facetClass Class to be retrieved
+     * @return First matching facet. Null may be returned if the loading fails
+     */
+    @SuppressWarnings("unchecked")
+    public static @Nonnull <TFacet extends FingerprintFacet> Collection<TFacet> getFacets
+            (@Nonnull String id, @Nonnull Class<TFacet> facetClass) { 
+        final Fingerprint fp = ofNoException(id);
+        return (fp != null) ? getFacets(fp, facetClass) : CollectionUtils.EMPTY_COLLECTION;
+    }        
+    
+    //TODO: deprecate and use the core's method when it's available
+    /**
+     * Retrieves a facet from the {@link Fingerprint}.
+     * @param <TFacet> Facet type to be retrieved
+     * @param fingerprint Fingerprint, which stores facets
+     * @param facetClass Class to be retrieved
+     * @return First matching facet.
+     */
+     @SuppressWarnings("unchecked")
+    public static @CheckForNull <TFacet extends FingerprintFacet> TFacet getFacet
+            (@Nonnull Fingerprint fingerprint, @Nonnull Class<TFacet> facetClass) {  
+        for ( FingerprintFacet facet : fingerprint.getFacets()) {
+            if (facetClass.isAssignableFrom(facet.getClass())) {
+                return (TFacet)facet;
+            }
+        }
+        return null;      
+    }
+ 
+    //TODO: deprecate and use the core's method when it's available
+    /**
+     * Retrieves facets from the {@link Fingerprint}.
+     * @param <TFacet> Facet type to be retrieved
+     * @param fingerprint Fingerprint, which stores facets
+     * @param facetClass Facet class to be retrieved
+     * @return All found facets
+     */
+    public static @Nonnull @SuppressWarnings("unchecked")
+            <TFacet extends FingerprintFacet> Collection<TFacet> getFacets
+            (@Nonnull Fingerprint fingerprint, @Nonnull Class<TFacet> facetClass) { 
+        final List<TFacet> res = new LinkedList<TFacet>();
+        for ( FingerprintFacet facet : fingerprint.getFacets()) {
+            if (facetClass.isAssignableFrom(facet.getClass())) {
+                res.add((TFacet)facet);
+            }
+        }
+        return res;      
+    }
+    
     /**
      * Adds a new {@link ContainerRecord} for the specified image, creating necessary intermediate objects as it goes.
      */
