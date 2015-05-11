@@ -56,7 +56,7 @@ public class DockerTool extends ToolInstallation implements EnvironmentSpecific<
     /**
      * Unqualified Docker command name, for use in case no {@link DockerTool} has been selected and thus {@link #getExecutable} cannot be called.
      */
-    private static final String COMMAND = System.getProperty("DOCKER_COMMAND", "docker"); // property overridable only for tests
+    static final String COMMAND = System.getProperty("DOCKER_COMMAND", "docker"); // property overridable only for tests
 
     @DataBoundConstructor public DockerTool(String name, String home, List<? extends ToolProperty<?>> properties) {
         super(name, home, properties);
@@ -113,9 +113,14 @@ public class DockerTool extends ToolInstallation implements EnvironmentSpecific<
             return "Docker";
         }
 
+        @Override public DockerTool[] getInstallations() {
+            load(); // TODO this ought to be automatic
+            return super.getInstallations();
+        }
+
         @Override public void setInstallations(DockerTool... installations) {
             super.setInstallations(installations);
-            save(); // TODO this ought to be automatic (or done from configure)
+            save(); // TODO this ought to be automatic
         }
 
         @Override public List<? extends ToolInstaller> getDefaultInstallers() {
