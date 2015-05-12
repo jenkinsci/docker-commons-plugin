@@ -24,7 +24,8 @@
 
 package org.jenkinsci.plugins.docker.commons;
 
-import hudson.Launcher;
+import hudson.slaves.DumbSlave;
+import hudson.tools.ToolLocationNodeProperty;
 import hudson.tools.ToolProperty;
 import hudson.util.StreamTaskListener;
 import java.util.Collections;
@@ -38,11 +39,16 @@ public class DockerToolTest {
     @Rule public JenkinsRule r = new JenkinsRule();
 
     @Test public void getExecutable() throws Exception {
-        Launcher launcher = new Launcher.LocalLauncher(StreamTaskListener.fromStderr());
-        assertEquals(DockerTool.COMMAND, DockerTool.getExecutable(null, launcher));
-        r.jenkins.getDescriptorByType(DockerTool.DescriptorImpl.class).setInstallations(new DockerTool("docker15", "/usr/local/docker15", Collections.<ToolProperty<?>>emptyList()));
+        assertEquals(DockerTool.COMMAND, DockerTool.getExecutable(null, null, null, null));
+        DockerTool.DescriptorImpl descriptor = r.jenkins.getDescriptorByType(DockerTool.DescriptorImpl.class);
+        String name = "docker15";
+        descriptor.setInstallations(new DockerTool(name, "/usr/local/docker15", Collections.<ToolProperty<?>>emptyList()));
         // TODO r.jenkins.restart() does not reproduce need for get/setInstallations; use RestartableJenkinsRule in 1.567+
-        assertEquals("/usr/local/docker15/bin/docker", DockerTool.getExecutable("docker15", launcher));
+        assertEquals("/usr/local/docker15/bin/docker", DockerTool.getExecutable(name, null, null, null));
+        DumbSlave slave = r.createOnlineSlave();
+        slave.getNodeProperties().add(new ToolLocationNodeProperty(new ToolLocationNodeProperty.ToolLocation(descriptor, name, "/opt/docker")));
+        assertEquals("/usr/local/docker15/bin/docker", DockerTool.getExecutable(name, null, null, null));
+        assertEquals("/opt/docker/bin/docker", DockerTool.getExecutable(name, slave, StreamTaskListener.fromStderr(), null));
     }
 
 }
