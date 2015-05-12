@@ -24,8 +24,21 @@ THE SOFTWARE.
 -->
 
 <?jelly escape-by-default='true'?>
-<j:jelly xmlns:j="jelly:core" xmlns:f="/lib/form">
-    <f:property field="server"/>
-    <f:property field="registry"/>
-    <d:selectDockerTool field="toolName" xmlns:d="/org/jenkinsci/plugins/docker/commons"/>
+<j:jelly xmlns:j="jelly:core" xmlns:f="/lib/form" xmlns:st="jelly:stapler">
+    <st:documentation>
+        Renders a form field to select a DockerTool.
+        The field is expected to be a String tool name, with Util.fixEmpty on the @DataBoundSetter to account for the default.
+        <st:attribute name="field" use="required">
+           Form field name. Used for databinding.
+        </st:attribute>
+    </st:documentation>
+    <!-- TODO this is pretty generic, perhaps it should be generalized to a tag in Jenkins core -->
+    <f:entry title="${%Docker installation}">
+        <select class="setting-input" name="_.${attrs.field}">
+            <option value="">(${%Default})</option>
+            <j:forEach var="tool" items="${app.getDescriptorByName('org.jenkinsci.plugins.docker.commons.DockerTool').installations}">
+                <f:option selected="${tool.name == instance[attrs.field]}" value="${tool.name}">${tool.name}</f:option>
+            </j:forEach>
+        </select>
+    </f:entry>
 </j:jelly>
