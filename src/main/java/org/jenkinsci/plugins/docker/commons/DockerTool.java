@@ -26,6 +26,7 @@ package org.jenkinsci.plugins.docker.commons;
 
 import hudson.EnvVars;
 import hudson.Extension;
+import hudson.FilePath;
 import hudson.Util;
 import hudson.model.EnvironmentSpecific;
 import hudson.model.Node;
@@ -83,6 +84,12 @@ public class DockerTool extends ToolInstallation implements EnvironmentSpecific<
                         }
                         String home = Util.fixEmpty(tool.getHome());
                         if (home != null) {
+                            if (node != null) {
+                                FilePath homeFP = node.createPath(home);
+                                if (homeFP != null) {
+                                    return homeFP.child("bin/docker").getRemote();
+                                }
+                            }
                             return home + "/bin/docker";
                         }
                     }
