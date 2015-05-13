@@ -26,7 +26,7 @@ package org.jenkinsci.plugins.docker.commons;
 
 import hudson.EnvVars;
 import hudson.Extension;
-import hudson.Launcher;
+import hudson.FilePath;
 import hudson.Util;
 import hudson.model.EnvironmentSpecific;
 import hudson.model.Node;
@@ -37,14 +37,13 @@ import hudson.tools.ToolInstallation;
 import hudson.tools.ToolInstaller;
 import hudson.tools.ToolProperty;
 import hudson.util.ArgumentListBuilder;
-import hudson.util.FormValidation;
 import java.io.IOException;
 import java.util.List;
 import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import jenkins.model.Jenkins;
 import org.kohsuke.stapler.DataBoundConstructor;
-import org.kohsuke.stapler.QueryParameter;
 
 /**
  * An installation of Docker.
@@ -66,30 +65,38 @@ public class DockerTool extends ToolInstallation implements EnvironmentSpecific<
      * Gets the executable name to use for a given launcher.
      * Suitable for the first item in {@link ArgumentListBuilder}.
      * @param name the name of the selected tool, or null for the default
-     * @param launcher a launcher specifying the slave (currently unused)
+     * @param node optionally, a node (such as a slave) on which we are running Docker
+     * @param listener a listener, required in case {@code node} is not null
+     * @param env optionally, environment variables to use when expanding the home directory
      * @return {@code docker} or an absolute path
      */
-    public static @Nonnull String getExecutable(@CheckForNull String name, @Nonnull Launcher launcher) {
+    public static @Nonnull String getExecutable(@CheckForNull String name, @CheckForNull Node node, @Nullable TaskListener listener, @CheckForNull EnvVars env) throws IOException, InterruptedException {
         if (name != null) {
             Jenkins j = Jenkins.getInstance();
             if (j != null) {
                 for (DockerTool tool : j.getDescriptorByType(DescriptorImpl.class).getInstallations()) {
                     if (tool.getName().equals(name)) {
-                        return tool.getExecutable(launcher);
+                        if (node != null) {
+                            tool = tool.forNode(node, listener);
+                        }
+                        if (env != null) {
+                            tool = tool.forEnvironment(env);
+                        }
+                        String home = Util.fixEmpty(tool.getHome());
+                        if (home != null) {
+                            if (node != null) {
+                                FilePath homeFP = node.createPath(home);
+                                if (homeFP != null) {
+                                    return homeFP.child("bin/docker").getRemote();
+                                }
+                            }
+                            return home + "/bin/docker";
+                        }
                     }
                 }
             }
         }
         return COMMAND;
-    }
-
-    private @Nonnull String getExecutable(@Nonnull Launcher launcher) {
-        String home = Util.fixEmpty(getHome());
-        if (home != null) {
-            return home + "/bin/docker";
-        } else {
-            return COMMAND;
-        }
     }
 
     public DockerTool forEnvironment(EnvVars environment) {

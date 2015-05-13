@@ -51,7 +51,7 @@ public class SampleDockerBuilder extends Builder {
         KeyMaterial key = keyMaterialFactory.materialize();
         try {
             // fork docker with appropriate environment to interact with this docker daemon
-            return launcher.launch().cmds(DockerTool.getExecutable(toolName, launcher), "info").envs(key.env()).join() == 0;
+            return launcher.launch().cmds(DockerTool.getExecutable(toolName, build.getBuiltOn(), listener, build.getEnvironment(listener)), "info").envs(key.env()).join() == 0;
         } finally {
             key.close();
         }
