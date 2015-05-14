@@ -34,7 +34,7 @@ THE SOFTWARE.
       <table class="sortable bigtable pane">
         <thead style="text-align:left">
           <tr>
-            <th>${%Image ID}</th>
+            <th>${%Image Summary}</th>
             <th>${%Created on}</th>
             <th>${%Introduced}</th>
           </tr>
@@ -45,13 +45,18 @@ THE SOFTWARE.
             <tr>
               <j:choose>
                 <j:when test="${fp==null}">
-                  <td>${imageId}</td>
+                  <td>${%ID}: ${imageId}</td>
                   <td>${%Unknown}</td>
                   <td>${%outside Jenkins}</td>     
                 </j:when>
                 <j:otherwise>
                   <td>
-                    <a href="${rootURL}/fingerprint/${fp.hashString}">${imageId}</a>
+                    ${%ID}: <a href="${rootURL}/fingerprint/${fp.hashString}">${imageId}</a>
+                    <j:forEach var="dockerFacet" items="${it.getDockerFacets(imageId)}">
+                      <div>
+                        <st:include page="summary.jelly" from="${dockerFacet}" optional="true" it="${dockerFacet}" />
+                      </div>
+                    </j:forEach>
                   </td>
                   <td>${fp.timestampString}</td>
                   <td>

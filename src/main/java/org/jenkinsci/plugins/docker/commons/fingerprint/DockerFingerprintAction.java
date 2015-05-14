@@ -28,12 +28,16 @@ import hudson.model.Run;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Set;
 import javax.annotation.CheckForNull;
+import jenkins.model.FingerprintFacet;
 import jenkins.model.RunAction2;
 import org.jenkinsci.plugins.docker.commons.Messages;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
+import org.kohsuke.stapler.Facet;
 
 /**
  * Adds a link, which provides a list of fingerprints with
@@ -104,6 +108,19 @@ public class DockerFingerprintAction implements RunAction2 {
         } catch (IOException ex) {
             return null; // nothing to do in web UI - return null as well
         }
+    }
+    
+    public List<DockerFingerprintFacet> getDockerFacets(String imageId) {
+        List<DockerFingerprintFacet> res = new LinkedList<DockerFingerprintFacet>();
+        final Fingerprint fp = getFingerprint(imageId);
+        if (fp != null) {
+            for (final FingerprintFacet f : fp.getFacets()) {
+                if (f instanceof DockerFingerprintFacet) {
+                    res.add((DockerFingerprintFacet) f);
+                }
+            }
+        }
+        return res;
     }
 
     /**
