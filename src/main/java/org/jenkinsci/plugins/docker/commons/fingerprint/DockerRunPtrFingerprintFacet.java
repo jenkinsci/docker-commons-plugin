@@ -14,7 +14,7 @@ import java.util.Hashtable;
  *
  * @author Kohsuke Kawaguchi
  */
-public abstract class DockerRunPtrFingerprintFacet extends FingerprintFacet {
+public abstract class DockerRunPtrFingerprintFacet extends DockerFingerprintFacet {
 
     private final String imageId;
     /**
