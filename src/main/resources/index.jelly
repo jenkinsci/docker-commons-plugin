@@ -24,5 +24,5 @@ THE SOFTWARE.
 -->
 <?jelly escape-by-default='true'?>
 <div>
-  Define sharable configuration parts for various Docker related plugins.
+  Provides a common shared functionality for various Docker-related plugins.
 </div>
