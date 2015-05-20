@@ -23,16 +23,16 @@
  */
 package org.jenkinsci.plugins.docker.commons.impl;
 
-import org.jenkinsci.plugins.docker.commons.KeyMaterial;
-import org.jenkinsci.plugins.docker.commons.KeyMaterialContext;
-import org.jenkinsci.plugins.docker.commons.KeyMaterialFactory;
+import org.jenkinsci.plugins.docker.commons.credentials.KeyMaterial;
+import org.jenkinsci.plugins.docker.commons.credentials.KeyMaterialContext;
+import org.jenkinsci.plugins.docker.commons.credentials.KeyMaterialFactory;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
 
 import java.io.IOException;
 
 /**
- * {@link org.jenkinsci.plugins.docker.commons.KeyMaterialFactory} that does nothing.
+ * {@link org.jenkinsci.plugins.docker.commons.credentials.KeyMaterialFactory} that does nothing.
  *
  * @see org.jenkinsci.plugins.docker.commons.KeyMaterial#NULL
  * @author Kohsuke Kawaguchi

@@ -23,6 +23,10 @@
  */
 package org.jenkinsci.plugins.docker.commons;
 
+import org.jenkinsci.plugins.docker.commons.credentials.KeyMaterialFactory;
+import org.jenkinsci.plugins.docker.commons.credentials.KeyMaterial;
+import org.jenkinsci.plugins.docker.commons.credentials.DockerServerEndpoint;
+import org.jenkinsci.plugins.docker.commons.credentials.DockerRegistryEndpoint;
 import hudson.Extension;
 import hudson.Launcher;
 import hudson.Util;

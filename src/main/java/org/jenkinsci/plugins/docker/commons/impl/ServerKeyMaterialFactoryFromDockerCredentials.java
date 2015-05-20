@@ -27,8 +27,8 @@ import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import jenkins.authentication.tokens.api.AuthenticationTokenException;
 import jenkins.authentication.tokens.api.AuthenticationTokenSource;
-import org.jenkinsci.plugins.docker.commons.DockerServerCredentials;
-import org.jenkinsci.plugins.docker.commons.KeyMaterialFactory;
+import org.jenkinsci.plugins.docker.commons.credentials.DockerServerCredentials;
+import org.jenkinsci.plugins.docker.commons.credentials.KeyMaterialFactory;
 
 /**
  * @author Stephen Connolly

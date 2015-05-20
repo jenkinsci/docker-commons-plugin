@@ -32,7 +32,7 @@ import jenkins.authentication.tokens.api.AuthenticationTokenException;
 import jenkins.authentication.tokens.api.AuthenticationTokenSource;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.io.Charsets;
-import org.jenkinsci.plugins.docker.commons.DockerRegistryToken;
+import org.jenkinsci.plugins.docker.commons.credentials.DockerRegistryToken;
 
 @Extension
 public class UsernamePasswordDockerRegistryTokenSource extends

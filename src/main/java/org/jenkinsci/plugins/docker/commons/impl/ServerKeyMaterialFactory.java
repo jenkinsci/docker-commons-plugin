@@ -25,9 +25,9 @@ package org.jenkinsci.plugins.docker.commons.impl;
 
 import hudson.EnvVars;
 import hudson.FilePath;
-import org.jenkinsci.plugins.docker.commons.DockerServerCredentials;
-import org.jenkinsci.plugins.docker.commons.KeyMaterial;
-import org.jenkinsci.plugins.docker.commons.KeyMaterialFactory;
+import org.jenkinsci.plugins.docker.commons.credentials.DockerServerCredentials;
+import org.jenkinsci.plugins.docker.commons.credentials.KeyMaterial;
+import org.jenkinsci.plugins.docker.commons.credentials.KeyMaterialFactory;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
 
@@ -36,7 +36,7 @@ import java.io.IOException;
 import java.util.UUID;
 
 /**
- * {@link org.jenkinsci.plugins.docker.commons.KeyMaterialFactory} for talking to docker daemon.
+ * {@link org.jenkinsci.plugins.docker.commons.credentials.KeyMaterialFactory} for talking to docker daemon.
  *
  * <p>
  * Key/certificates have to be laid out in a specific file names in this directory

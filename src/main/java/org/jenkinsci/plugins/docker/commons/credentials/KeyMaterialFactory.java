@@ -21,7 +21,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package org.jenkinsci.plugins.docker.commons;
+package org.jenkinsci.plugins.docker.commons.credentials;
 
 import hudson.model.AbstractBuild;
 import org.jenkinsci.plugins.docker.commons.impl.CompositeKeyMaterialFactory;

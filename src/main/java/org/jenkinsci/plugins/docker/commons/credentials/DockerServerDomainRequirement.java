@@ -21,37 +21,17 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package org.jenkinsci.plugins.docker.commons;
+package org.jenkinsci.plugins.docker.commons.credentials;
 
-import hudson.FilePath;
-
-import javax.annotation.Nonnull;
-import java.io.Serializable;
+import com.cloudbees.plugins.credentials.domains.Domain;
+import com.cloudbees.plugins.credentials.domains.DomainRequirement;
 
 /**
- * Represents the context within a {@link KeyMaterialFactory} can {@link KeyMaterialFactory#materialize()}
- * {@link KeyMaterial} instances.
+ * Used to mark {@link Domain} that credentials in this domain are meant to be used for
+ * producing {@link DockerServerCredentials}.
  *
  * @author Stephen Connolly
+ * @see DockerServerDomainSpecification
  */
-public class KeyMaterialContext implements Serializable {
-    private static final long serialVersionUID = 1L;
-
-    @Nonnull
-    private final FilePath baseDir;
-
-    public KeyMaterialContext(@Nonnull FilePath baseDir) {
-        this.baseDir = baseDir;
-    }
-
-    /**
-     * Returns the base directory that can be used to {@link KeyMaterialFactory#materialize()}
-     * {@link KeyMaterial} instances.
-     *
-     * @return the base directory.
-     */
-    @Nonnull
-    public FilePath getBaseDir() {
-        return baseDir;
-    }
+public class DockerServerDomainRequirement extends DomainRequirement {
 }

@@ -24,9 +24,9 @@
 package org.jenkinsci.plugins.docker.commons.impl;
 
 import hudson.EnvVars;
-import org.jenkinsci.plugins.docker.commons.KeyMaterial;
-import org.jenkinsci.plugins.docker.commons.KeyMaterialContext;
-import org.jenkinsci.plugins.docker.commons.KeyMaterialFactory;
+import org.jenkinsci.plugins.docker.commons.credentials.KeyMaterial;
+import org.jenkinsci.plugins.docker.commons.credentials.KeyMaterialContext;
+import org.jenkinsci.plugins.docker.commons.credentials.KeyMaterialFactory;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
 
@@ -35,7 +35,7 @@ import java.io.IOException;
 import java.io.Serializable;
 
 /**
- * Composes multiple {@link org.jenkinsci.plugins.docker.commons.KeyMaterialFactory}s into one.
+ * Composes multiple {@link org.jenkinsci.plugins.docker.commons.credentials.KeyMaterialFactory}s into one.
  *
  * @author Kohsuke Kawaguchi
  */
