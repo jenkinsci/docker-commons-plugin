@@ -21,26 +21,17 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package org.jenkinsci.plugins.docker.commons.fingerprint;
+package org.jenkinsci.plugins.docker.commons.credentials;
 
-import hudson.model.Fingerprint;
-import jenkins.model.FingerprintFacet;
+import com.cloudbees.plugins.credentials.domains.Domain;
+import com.cloudbees.plugins.credentials.domains.DomainRequirement;
 
 /**
- * Abstract class, which indicates {@link FingerprintFacet}s related to Docker.
- * This class is being used to retrieve the Docker-related data from {@link Fingerprint}s.
- * 
- * <p/>
- * The facet may include the following optional resources (jelly, groovy, etc.):
- * <ul>
- *   <li>summary - Short summary of the facet for tables like {@link DockerFingerprintAction}
- * </ul>
- * 
- * @author Oleg Nenashev
+ * Used to mark {@link Domain} that credentials in this domain are meant to be used for
+ * producing {@link DockerServerCredentials}.
+ *
+ * @author Stephen Connolly
+ * @see DockerServerDomainSpecification
  */
-public abstract class DockerFingerprintFacet extends FingerprintFacet {
-    
-    public DockerFingerprintFacet(Fingerprint fingerprint, long timestamp) {
-        super(fingerprint, timestamp);
-    }
+public class DockerServerDomainRequirement extends DomainRequirement {
 }

@@ -22,7 +22,7 @@
  * THE SOFTWARE.
  */
 
-package org.jenkinsci.plugins.docker.commons;
+package org.jenkinsci.plugins.docker.commons.tools;
 
 import hudson.slaves.DumbSlave;
 import hudson.tools.ToolLocationNodeProperty;

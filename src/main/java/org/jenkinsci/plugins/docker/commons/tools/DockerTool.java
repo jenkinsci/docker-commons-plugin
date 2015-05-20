@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright 2015 Jesse Glick.
+ * Copyright 2015 Jesse Glick, CloudBees Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -22,7 +22,7 @@
  * THE SOFTWARE.
  */
 
-package org.jenkinsci.plugins.docker.commons;
+package org.jenkinsci.plugins.docker.commons.tools;
 
 import hudson.EnvVars;
 import hudson.Extension;
@@ -48,7 +48,7 @@ import org.kohsuke.stapler.DataBoundConstructor;
 /**
  * An installation of Docker.
  * If nonempty, expected to have an executable file {@code bin/docker}.
- * Use {@code <d:selectDockerTool field="toolName" xmlns:d="/org/jenkinsci/plugins/docker/commons"/>} to customize.
+ * Use {@code <d:selectDockerTool field="toolName" xmlns:d="/org/jenkinsci/plugins/docker/commons/lib"/>} to customize.
  */
 public class DockerTool extends ToolInstallation implements EnvironmentSpecific<DockerTool>, NodeSpecific<DockerTool> {
 

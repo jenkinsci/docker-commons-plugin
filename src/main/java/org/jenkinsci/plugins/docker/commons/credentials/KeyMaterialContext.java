@@ -21,26 +21,37 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package org.jenkinsci.plugins.docker.commons.fingerprint;
+package org.jenkinsci.plugins.docker.commons.credentials;
 
-import hudson.model.Fingerprint;
-import jenkins.model.FingerprintFacet;
+import hudson.FilePath;
+
+import javax.annotation.Nonnull;
+import java.io.Serializable;
 
 /**
- * Abstract class, which indicates {@link FingerprintFacet}s related to Docker.
- * This class is being used to retrieve the Docker-related data from {@link Fingerprint}s.
- * 
- * <p/>
- * The facet may include the following optional resources (jelly, groovy, etc.):
- * <ul>
- *   <li>summary - Short summary of the facet for tables like {@link DockerFingerprintAction}
- * </ul>
- * 
- * @author Oleg Nenashev
+ * Represents the context within a {@link KeyMaterialFactory} can {@link KeyMaterialFactory#materialize()}
+ * {@link KeyMaterial} instances.
+ *
+ * @author Stephen Connolly
  */
-public abstract class DockerFingerprintFacet extends FingerprintFacet {
-    
-    public DockerFingerprintFacet(Fingerprint fingerprint, long timestamp) {
-        super(fingerprint, timestamp);
+public class KeyMaterialContext implements Serializable {
+    private static final long serialVersionUID = 1L;
+
+    @Nonnull
+    private final FilePath baseDir;
+
+    public KeyMaterialContext(@Nonnull FilePath baseDir) {
+        this.baseDir = baseDir;
+    }
+
+    /**
+     * Returns the base directory that can be used to {@link KeyMaterialFactory#materialize()}
+     * {@link KeyMaterial} instances.
+     *
+     * @return the base directory.
+     */
+    @Nonnull
+    public FilePath getBaseDir() {
+        return baseDir;
     }
 }
