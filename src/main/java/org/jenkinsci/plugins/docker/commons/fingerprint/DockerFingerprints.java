@@ -7,6 +7,7 @@ import jenkins.model.Jenkins;
 
 import java.io.IOException;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.logging.Level;
@@ -14,7 +15,6 @@ import java.util.logging.Logger;
 import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
 import jenkins.model.FingerprintFacet;
-import org.apache.commons.collections.CollectionUtils;
 
 /**
  * Entry point into fingerprint related functionalities in Docker.
@@ -69,7 +69,7 @@ public class DockerFingerprints {
      * @return Fingerprint for the specified ID
      * @throws IOException Fingerprint load/save error
      */
-    public static @Nonnull Fingerprint makeForImage(@CheckForNull Run<?,?> run, @Nonnull String id) throws IOException {
+    public static @Nonnull Fingerprint forImage(@CheckForNull Run<?,?> run, @Nonnull String id) throws IOException {
         return Jenkins.getInstance().getFingerprintMap().getOrCreate(run, "<docker-image>", getFingerprintHash(id));
     }
     
@@ -80,7 +80,7 @@ public class DockerFingerprints {
      * @return Fingerprint for the specified ID
      * @throws IOException Fingerprint load/save error
      */
-    public static @Nonnull Fingerprint makeForContainer(@CheckForNull Run<?,?> run, @Nonnull String id) throws IOException {
+    public static @Nonnull Fingerprint forContainer(@CheckForNull Run<?,?> run, @Nonnull String id) throws IOException {
         return Jenkins.getInstance().getFingerprintMap().getOrCreate(run, "<docker-container>", getFingerprintHash(id));
     }
 
@@ -90,7 +90,8 @@ public class DockerFingerprints {
      * @param <TFacet> Facet type to be retrieved
      * @param id Docker item ID. Only 64-char full IDs are supported
      * @param facetClass Class to be retrieved
-     * @return First matching facet. Null may be returned if the loading fails
+     * @return First matching facet. Null may be returned if there is no facet
+     *      or if the loading fails
      */
     public static @CheckForNull @SuppressWarnings("unchecked")
             <TFacet extends FingerprintFacet> TFacet getFacet
@@ -111,7 +112,7 @@ public class DockerFingerprints {
     public static @Nonnull <TFacet extends FingerprintFacet> Collection<TFacet> getFacets
             (@Nonnull String id, @Nonnull Class<TFacet> facetClass) { 
         final Fingerprint fp = ofNoException(id);
-        return (fp != null) ? getFacets(fp, facetClass) : CollectionUtils.EMPTY_COLLECTION;
+        return (fp != null) ? getFacets(fp, facetClass) : Collections.<TFacet>emptySet();
     }        
     
     //TODO: deprecate and use the core's method when it's available
@@ -158,7 +159,7 @@ public class DockerFingerprints {
      */
     public static void addRunFacet(@Nonnull ContainerRecord record, @Nonnull Run<?,?> run) throws IOException {
         String imageId = record.getImageId();
-        Fingerprint f = makeForImage(run, imageId);
+        Fingerprint f = forImage(run, imageId);
         Collection<FingerprintFacet> facets = f.getFacets();
         DockerRunFingerprintFacet runFacet = null;
         for (FingerprintFacet facet : facets) {
@@ -192,7 +193,7 @@ public class DockerFingerprints {
     public static void addFromFacet(@CheckForNull String ancestorImageId, @Nonnull String descendantImageId, @Nonnull Run<?,?> run) throws IOException {
         long timestamp = System.currentTimeMillis();
         if (ancestorImageId != null) {
-            Fingerprint f = makeForImage(run, ancestorImageId);
+            Fingerprint f = forImage(run, ancestorImageId);
             Collection<FingerprintFacet> facets = f.getFacets();
             DockerDescendantFingerprintFacet descendantFacet = null;
             for (FingerprintFacet facet : facets) {
@@ -215,7 +216,7 @@ public class DockerFingerprints {
                 bc.abort();
             }
         }
-        Fingerprint f = makeForImage(run, descendantImageId);
+        Fingerprint f = forImage(run, descendantImageId);
         Collection<FingerprintFacet> facets = f.getFacets();
         DockerAncestorFingerprintFacet ancestorFacet = null;
         for (FingerprintFacet facet : facets) {
