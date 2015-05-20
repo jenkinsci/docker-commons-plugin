@@ -21,8 +21,9 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package org.jenkinsci.plugins.docker.commons;
+package org.jenkinsci.plugins.docker.commons.util;
 
+import org.jenkinsci.plugins.docker.commons.tools.DockerTool;
 import org.jenkinsci.plugins.docker.commons.credentials.KeyMaterialFactory;
 import org.jenkinsci.plugins.docker.commons.credentials.KeyMaterial;
 import org.jenkinsci.plugins.docker.commons.credentials.DockerServerEndpoint;

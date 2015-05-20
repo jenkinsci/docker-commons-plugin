@@ -24,6 +24,8 @@
 
 package org.jenkinsci.plugins.docker.commons;
 
+import org.jenkinsci.plugins.docker.commons.tools.DockerTool;
+import org.jenkinsci.plugins.docker.commons.util.SampleDockerBuilder;
 import org.jenkinsci.plugins.docker.commons.credentials.DockerServerCredentials;
 import org.jenkinsci.plugins.docker.commons.credentials.DockerServerEndpoint;
 import org.jenkinsci.plugins.docker.commons.credentials.DockerRegistryEndpoint;
