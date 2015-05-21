@@ -94,7 +94,7 @@ public class DockerFingerprintAction implements RunAction2 {
 
     @Restricted(NoExternalUse.class)
     public @CheckForNull String getFingerprintHash(@CheckForNull String imageId) {
-        return (imageId != null) ? DockerFingerprints.getImageFingerprintHash(imageId) : null;
+        return (imageId != null) ? DockerFingerprints.getFingerprintHash(imageId) : null;
     }
     
     @Restricted(NoExternalUse.class)

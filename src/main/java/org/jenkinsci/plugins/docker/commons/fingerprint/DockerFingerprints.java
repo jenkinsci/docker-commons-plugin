@@ -30,50 +30,159 @@ import jenkins.model.Jenkins;
 
 import java.io.IOException;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
 import jenkins.model.FingerprintFacet;
 
 /**
  * Entry point into fingerprint related functionalities in Docker.
+ * This class provide basic methods for both images and containers
  */
 public class DockerFingerprints {
+    
+    private static final Logger LOGGER = Logger.getLogger(DockerFingerprints.class.getName());
+    
     private DockerFingerprints() {} // no instantiation
  
     /**
-     * Gets a fingerprint hash for Docker image ID.
+     * Gets a fingerprint hash for Docker ID (image or container).
      * This method calculates image hash without retrieving a fingerprint by 
      * {@link DockerFingerprints#of(java.lang.String)}, which may be a high-cost call.
      * 
-     * @param imageId Docker image ID.
-     *      Only 64-char full image IDs are supported.
+     * @param id Docker ID (image or container).
+     *      Only 64-char full IDs are supported.
      * @return 32-char fingerprint hash
-     * @throws IllegalArgumentException Invalid image ID
+     * @throws IllegalArgumentException Invalid ID
      */
-    public static @Nonnull String getImageFingerprintHash(@Nonnull String imageId) {
-        if (imageId.length() != 64) {
-            throw new IllegalArgumentException("Expecting 64-char full image ID, but got " + imageId);
+    public static @Nonnull String getFingerprintHash(@Nonnull String id) {
+        if (id.length() != 64) {
+            throw new IllegalArgumentException("Expecting 64-char full image ID, but got " + id);
         }
-        return imageId.substring(0, 32);
+        return id.substring(0, 32);
     }
 
     /**
-     * Gets {@link Fingerprint} for a given docker image.
+     * Gets {@link Fingerprint} for a given docker ID.
+     * @param id Docker ID (image or container). Only 64-char full IDs are supported.
+     * @return Created fingerprint or null if it is not found
+     * @throws IOException Fingerprint loading error
      */
-    public static @CheckForNull Fingerprint of(@Nonnull String imageId) throws IOException {
-        return Jenkins.getInstance().getFingerprintMap().get(getImageFingerprintHash(imageId));
+    public static @CheckForNull Fingerprint of(@Nonnull String id) throws IOException {
+        return Jenkins.getInstance().getFingerprintMap().get(getFingerprintHash(id));
+    }
+    
+    private static @CheckForNull Fingerprint ofNoException(@Nonnull String id) {
+        try {
+            return of(id);
+        } catch (IOException ex) { // The error is not a hazard in CheckForNull logic
+            LOGGER.log(Level.WARNING, "Cannot retrieve a fingerprint for Docker id="+id, ex);
+        }
+        return null;
+    }
+    
+    /**
+     * Get or create a {@link Fingerprint} for the image.
+     * @param run Origin of the fingerprint (if available)
+     * @param id Image ID. Only 64-char full IDs are supported.
+     * @return Fingerprint for the specified ID
+     * @throws IOException Fingerprint load/save error
+     */
+    public static @Nonnull Fingerprint forImage(@CheckForNull Run<?,?> run, @Nonnull String id) throws IOException {
+        return Jenkins.getInstance().getFingerprintMap().getOrCreate(run, "<docker-image>", getFingerprintHash(id));
+    }
+    
+    /**
+     * Get or create a {@link Fingerprint} for the container.
+     * @param run Origin of the fingerprint (if available)
+     * @param id Image ID. Only 64-char full IDs are supported.
+     * @return Fingerprint for the specified ID
+     * @throws IOException Fingerprint load/save error
+     */
+    public static @Nonnull Fingerprint forContainer(@CheckForNull Run<?,?> run, @Nonnull String id) throws IOException {
+        return Jenkins.getInstance().getFingerprintMap().getOrCreate(run, "<docker-container>", getFingerprintHash(id));
     }
 
-    private static @Nonnull Fingerprint make(@Nonnull Run<?,?> run, @Nonnull String imageId) throws IOException {
-        return Jenkins.getInstance().getFingerprintMap().getOrCreate(run, "<docker-image>", getImageFingerprintHash(imageId));
+    /**
+     * Retrieves a facet from the {@link Fingerprint}.
+     * The method suppresses {@link IOException} if a fingerprint loading fails.
+     * @param <TFacet> Facet type to be retrieved
+     * @param id Docker item ID. Only 64-char full IDs are supported
+     * @param facetClass Class to be retrieved
+     * @return First matching facet. Null may be returned if there is no facet
+     *      or if the loading fails
+     */
+    public static @CheckForNull @SuppressWarnings("unchecked")
+            <TFacet extends FingerprintFacet> TFacet getFacet
+            (@Nonnull String id, @Nonnull Class<TFacet> facetClass) { 
+        final Fingerprint fp = ofNoException(id); 
+        return (fp != null) ? getFacet(fp, facetClass) : null;
     }
-
+            
+    /**
+     * Retrieves a facet from the {@link Fingerprint}.
+     * The method suppresses {@link IOException} if a fingerprint loading fails.
+     * @param <TFacet> Facet type to be retrieved
+     * @param id Docker item ID. Only 64-char full IDs are supported
+     * @param facetClass Class to be retrieved
+     * @return First matching facet. Null may be returned if the loading fails
+     */
+    @SuppressWarnings("unchecked")
+    public static @Nonnull <TFacet extends FingerprintFacet> Collection<TFacet> getFacets
+            (@Nonnull String id, @Nonnull Class<TFacet> facetClass) { 
+        final Fingerprint fp = ofNoException(id);
+        return (fp != null) ? getFacets(fp, facetClass) : Collections.<TFacet>emptySet();
+    }        
+    
+    //TODO: deprecate and use the core's method when it's available
+    /**
+     * Retrieves a facet from the {@link Fingerprint}.
+     * @param <TFacet> Facet type to be retrieved
+     * @param fingerprint Fingerprint, which stores facets
+     * @param facetClass Class to be retrieved
+     * @return First matching facet.
+     */
+     @SuppressWarnings("unchecked")
+    public static @CheckForNull <TFacet extends FingerprintFacet> TFacet getFacet
+            (@Nonnull Fingerprint fingerprint, @Nonnull Class<TFacet> facetClass) {  
+        for ( FingerprintFacet facet : fingerprint.getFacets()) {
+            if (facetClass.isAssignableFrom(facet.getClass())) {
+                return (TFacet)facet;
+            }
+        }
+        return null;      
+    }
+ 
+    //TODO: deprecate and use the core's method when it's available
+    /**
+     * Retrieves facets from the {@link Fingerprint}.
+     * @param <TFacet> Facet type to be retrieved
+     * @param fingerprint Fingerprint, which stores facets
+     * @param facetClass Facet class to be retrieved
+     * @return All found facets
+     */
+    public static @Nonnull @SuppressWarnings("unchecked")
+            <TFacet extends FingerprintFacet> Collection<TFacet> getFacets
+            (@Nonnull Fingerprint fingerprint, @Nonnull Class<TFacet> facetClass) { 
+        final List<TFacet> res = new LinkedList<TFacet>();
+        for ( FingerprintFacet facet : fingerprint.getFacets()) {
+            if (facetClass.isAssignableFrom(facet.getClass())) {
+                res.add((TFacet)facet);
+            }
+        }
+        return res;      
+    }
+    
     /**
      * Adds a new {@link ContainerRecord} for the specified image, creating necessary intermediate objects as it goes.
      */
     public static void addRunFacet(@Nonnull ContainerRecord record, @Nonnull Run<?,?> run) throws IOException {
         String imageId = record.getImageId();
-        Fingerprint f = make(run, imageId);
+        Fingerprint f = forImage(run, imageId);
         Collection<FingerprintFacet> facets = f.getFacets();
         DockerRunFingerprintFacet runFacet = null;
         for (FingerprintFacet facet : facets) {
@@ -107,7 +216,7 @@ public class DockerFingerprints {
     public static void addFromFacet(@CheckForNull String ancestorImageId, @Nonnull String descendantImageId, @Nonnull Run<?,?> run) throws IOException {
         long timestamp = System.currentTimeMillis();
         if (ancestorImageId != null) {
-            Fingerprint f = make(run, ancestorImageId);
+            Fingerprint f = forImage(run, ancestorImageId);
             Collection<FingerprintFacet> facets = f.getFacets();
             DockerDescendantFingerprintFacet descendantFacet = null;
             for (FingerprintFacet facet : facets) {
@@ -130,7 +239,7 @@ public class DockerFingerprints {
                 bc.abort();
             }
         }
-        Fingerprint f = make(run, descendantImageId);
+        Fingerprint f = forImage(run, descendantImageId);
         Collection<FingerprintFacet> facets = f.getFacets();
         DockerAncestorFingerprintFacet ancestorFacet = null;
         for (FingerprintFacet facet : facets) {
