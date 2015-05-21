@@ -48,7 +48,7 @@ import org.kohsuke.stapler.DataBoundConstructor;
 /**
  * An installation of Docker.
  * If nonempty, expected to have an executable file {@code bin/docker}.
- * Use {@code <d:selectDockerTool field="toolName" xmlns:d="/org/jenkinsci/plugins/docker/commons/lib"/>} to customize.
+ * Use {@code <d:selectDockerTool field="toolName" xmlns:d="/lib/docker/commons/"/>} to customize.
  */
 public class DockerTool extends ToolInstallation implements EnvironmentSpecific<DockerTool>, NodeSpecific<DockerTool> {
 
