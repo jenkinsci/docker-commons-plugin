@@ -33,12 +33,15 @@ THE SOFTWARE.
         </st:attribute>
     </st:documentation>
     <!-- TODO this is pretty generic, perhaps it should be generalized to a tag in Jenkins core -->
-    <f:entry title="${%Docker installation}">
-        <select class="setting-input" name="_.${attrs.field}">
-            <option value="">(${%Default})</option>
-            <j:forEach var="tool" items="${app.getDescriptorByName('org.jenkinsci.plugins.docker.commons.DockerTool').installations}">
-                <f:option selected="${tool.name == instance[attrs.field]}" value="${tool.name}">${tool.name}</f:option>
-            </j:forEach>
-        </select>
-    </f:entry>
+    <j:set var="installations" value="${app.getDescriptorByName('org.jenkinsci.plugins.docker.commons.DockerTool').installations}"/>
+    <j:if test="${not empty installations}">
+        <f:entry title="${%Docker installation}">
+            <select class="setting-input" name="_.${attrs.field}">
+                <option value="">(${%Default})</option>
+                <j:forEach var="tool" items="${installations}">
+                    <f:option selected="${tool.name == instance[attrs.field]}" value="${tool.name}">${tool.name}</f:option>
+                </j:forEach>
+            </select>
+        </f:entry>
+    </j:if>
 </j:jelly>
