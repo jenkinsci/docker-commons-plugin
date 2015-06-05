@@ -61,6 +61,11 @@
       <version>1.3</version>
       <scope>provided</scope>
     </dependency>
+    <dependency>
+      <groupId>org.jenkins-ci.plugins.icon-shim</groupId>
+      <artifactId>icon-shim</artifactId>
+      <version>1.0.3</version>
+    </dependency>
   </dependencies>
 
   <build>

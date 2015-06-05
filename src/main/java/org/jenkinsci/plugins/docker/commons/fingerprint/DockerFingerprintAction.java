@@ -45,7 +45,7 @@ import org.kohsuke.stapler.Facet;
  *
  * @author Oleg Nenashev
  */
-public class DockerFingerprintAction implements RunAction2 {
+public class DockerFingerprintAction implements RunAction2, org.jenkins.ui.icon.IconSpec {
 
     private final Set<String> imageIDs;
     transient Run<?, ?> run;
@@ -70,7 +70,7 @@ public class DockerFingerprintAction implements RunAction2 {
 
     @Override
     public String getIconFileName() {
-        return "fingerprint.png";
+        return "/plugin/docker-commons/images/24x24/docker.png";
     }
 
     @Override
@@ -145,5 +145,9 @@ public class DockerFingerprintAction implements RunAction2 {
                 run.save();
             } // else no need to save updates
         }
+    }
+
+    public String getIconClassName() {
+        return "icon-docker-logo icon-lg";
     }
 }
