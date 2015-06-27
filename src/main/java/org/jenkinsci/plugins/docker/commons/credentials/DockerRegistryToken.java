@@ -75,18 +75,32 @@ public final class DockerRegistryToken implements Serializable {
             public Void call() throws IOException {
                 // TODO: TF: Should this not be done via docker login (possibly preceded by a logout) ?               
 
-                File f = new File(System.getProperty("user.home"), ".dockercfg");
-                JSONObject json = new JSONObject();
+                JSONObject json;
+                JSONObject auths;
 
                 synchronized (DockerRegistryToken.class) {// feeble attempt at serializing access to ~/.dockercfg
-                    if (f.exists())
-                        json = JSONObject.fromObject(FileUtils.readFileToString(f, "UTF-8"));
 
-                    json.put(endpoint.toString(), new JSONObject()
+                    File config = new File(System.getProperty("user.home"), ".docker/config.json");
+                    if (config.exists()) {
+                        json = JSONObject.fromObject(FileUtils.readFileToString(config, "UTF-8"));
+                        auths = json.getJSONObject("auths");
+                    } else {
+                        File dockercfg = new File(System.getProperty("user.home"), ".dockercfg");
+                        if (dockercfg.exists()) {
+                            config = dockercfg;
+                            auths = json = JSONObject.fromObject(FileUtils.readFileToString(dockercfg, "UTF-8"));
+                        } else {
+                            // Use legacy .dockercfg to ensure this works well with pre-1.7 docker client
+                            // client will pick this one if .docker/config.json does not yet exists
+                            auths = json = new JSONObject();
+                        }
+                    }
+
+                    auths.put(endpoint.toString(), new JSONObject()
                             .accumulate("auth", getToken())
                             .accumulate("email", getEmail()));
 
-                    FileUtils.writeStringToFile(f, json.toString(2), "UTF-8");
+                    FileUtils.writeStringToFile(config, json.toString(2), "UTF-8");
                 }
 
                 return null;
