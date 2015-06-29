@@ -40,12 +40,16 @@ import hudson.remoting.VirtualChannel;
 import hudson.util.ListBoxModel;
 import jenkins.authentication.tokens.api.AuthenticationTokens;
 import jenkins.model.Jenkins;
+import net.sf.json.JSONObject;
+import org.apache.commons.lang.StringUtils;
 import org.jenkinsci.plugins.docker.commons.impl.ServerHostKeyMaterialFactory;
 import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
+import org.kohsuke.stapler.StaplerRequest;
 
 import javax.annotation.CheckForNull;
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.io.IOException;
 import java.util.List;
@@ -78,9 +82,18 @@ public class DockerServerEndpoint extends AbstractDescribableImpl<DockerServerEn
      *
      * <p>
      * Null to indicate whatever Docker picks by default.
+     * @deprecated use #getDockerHost
      */
     public @Nullable String getUri() {
         return uri;
+    }
+
+    /**
+     * Gets the endpoint in URI, such as "unix:///var/run/docker.sock".
+     */
+    public @Nonnull String getDockerHost() {
+        if (StringUtils.isNotBlank(uri)) return uri;
+        return getDescriptor().getDefaultDockerHost();
     }
 
     /**
@@ -166,15 +179,51 @@ public class DockerServerEndpoint extends AbstractDescribableImpl<DockerServerEn
         }
         return true;
     }
-    
+
+
+    @Override
+    public DescriptorImpl getDescriptor() {
+        return (DescriptorImpl) super.getDescriptor();
+    }
+
     @Extension
     public static class DescriptorImpl extends Descriptor<DockerServerEndpoint> {
+
+        private String defaultHost;
+
+        public String getDefaultHost() {
+            return defaultHost;
+        }
+
+        public DescriptorImpl() {
+            load();
+        }
+
+        @Override
+        public boolean configure(StaplerRequest req, JSONObject json) throws FormException {
+            defaultHost = json.getString("defaultHost");
+            save();
+            return true;
+        }
+
+        public String getDefaultDockerHost() {
+            if (StringUtils.isNotBlank(defaultHost))
+                return defaultHost;
+            String env = System.getenv("DOCKER_HOST");
+            if (env != null)
+                return env;
+            return "unix:///var/run/docker.sock";
+        }
+
         @Override
         public String getDisplayName() {
             return "Docker Daemon";
         }
 
         public ListBoxModel doFillCredentialsIdItems(@AncestorInPath Item item, @QueryParameter String uri) {
+
+            if (StringUtils.isBlank(uri)) uri = getDefaultDockerHost();
+
             List<DomainRequirement> domainRequirements = URIRequirementBuilder.fromUri(uri).build();
             domainRequirements.add(new DockerServerDomainRequirement());
             return new StandardListBoxModel()
