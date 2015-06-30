@@ -34,6 +34,7 @@ import hudson.remoting.VirtualChannel;
 import hudson.tools.ToolInstallation;
 import hudson.tools.ToolInstaller;
 import hudson.tools.ToolInstallerDescriptor;
+import hudson.util.IOUtils;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 import java.io.File;
@@ -75,7 +76,7 @@ public class DockerToolInstaller extends ToolInstaller {
             }
         });
 
-        URL url = new URL("https://get.docker.com/builds/"+os+"/docker-"+version);
+        final URL url = new URL("https://get.docker.com/builds/"+os+"/docker-"+version);
         FilePath install = preferredLocation(tool, node);
 
         // (simplified) copy/paste from FilePath as hudson.FilePath.installIfNecessaryFrom do assume the URL points to be a zip/tar archive
@@ -106,20 +107,35 @@ public class DockerToolInstaller extends ToolInstaller {
             return install;
         }
 
-        listener.getLogger().println("Downloading Docker client " + version);
-
         long sourceTimestamp = con.getLastModified();
-
         if (install.exists()) {
-            if(timestamp.exists() && sourceTimestamp ==timestamp.lastModified())
+            if (timestamp.exists() && sourceTimestamp == timestamp.lastModified())
                 return install;   // already up to date
             install.deleteContents();
         }
 
+        listener.getLogger().println("Downloading Docker client " + version);
         FilePath bin = install.child("bin");
         bin.mkdirs();
         FilePath docker = bin.child("docker");
-        docker.copyFrom(ProxyConfiguration.getInputStream(url));
+
+        if (install.isRemote()) {
+            // First try to download from the slave machine.
+            try {
+                install.act(new FilePath.FileCallable<Object>() {
+                    public Object invoke(File f, VirtualChannel channel) throws IOException, InterruptedException {
+                        IOUtils.copy(url.openStream(), f);
+                        return null;
+                    }
+                });
+            } catch (IOException x) {
+                x.printStackTrace(listener.error("Failed to download " + url + " from slave; will retry from master"));
+                docker.copyFrom(ProxyConfiguration.getInputStream(url));
+            }
+        } else {
+            docker.copyFrom(ProxyConfiguration.getInputStream(url));
+        }
+
         docker.act(new FilePath.FileCallable<Object>() {
             public Object invoke(File f, VirtualChannel channel) throws IOException, InterruptedException {
                 f.setExecutable(true);
@@ -139,4 +155,5 @@ public class DockerToolInstaller extends ToolInstaller {
             return "Install latest from docker.io";
         }
     }
+
 }
