@@ -33,7 +33,7 @@ THE SOFTWARE.
         </st:attribute>
     </st:documentation>
     <!-- TODO this is pretty generic, perhaps it should be generalized to a tag in Jenkins core -->
-    <j:set var="installations" value="${app.getDescriptorByName('org.jenkinsci.plugins.docker.commons.DockerTool').installations}"/>
+    <j:set var="installations" value="${app.getDescriptorByName('org.jenkinsci.plugins.docker.commons.tools.DockerTool').installations}"/>
     <j:if test="${not empty installations}">
         <f:entry title="${%Docker installation}">
             <select class="setting-input" name="_.${attrs.field}">
