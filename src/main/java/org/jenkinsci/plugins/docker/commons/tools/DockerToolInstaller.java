@@ -39,13 +39,14 @@ import org.kohsuke.stapler.DataBoundConstructor;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLConnection;
 
 
 /**
- * Download and install Docker CLI binary, see // see https://docs.docker.com/installation/binaries/
+ * Download and install Docker CLI binary, see https://docs.docker.com/installation/binaries/
  * @author <a href="mailto:nicolas.deloof@gmail.com">Nicolas De Loof</a>
  */
 public class DockerToolInstaller extends ToolInstaller {
@@ -82,13 +83,19 @@ public class DockerToolInstaller extends ToolInstaller {
         // (simplified) copy/paste from FilePath as hudson.FilePath.installIfNecessaryFrom do assume the URL points to be a zip/tar archive
 
         FilePath timestamp = install.child(".timestamp");
-        URLConnection con;
+        URLConnection con = null;
+        long sourceTimestamp;
         try {
             con = ProxyConfiguration.open(url);
             if (timestamp.exists()) {
                 con.setIfModifiedSince(timestamp.lastModified());
             }
             con.connect();
+            if (con instanceof HttpURLConnection
+                    && ((HttpURLConnection)con).getResponseCode() == HttpURLConnection.HTTP_NOT_MODIFIED) {
+                return install;
+            }
+            sourceTimestamp = con.getLastModified();
 
         } catch (IOException x) {
             if (install.exists()) {
@@ -100,14 +107,10 @@ public class DockerToolInstaller extends ToolInstaller {
             } else {
                 throw x;
             }
+        } finally {
+            if (con instanceof HttpURLConnection) ((HttpURLConnection) con).disconnect();
         }
 
-        if (con instanceof HttpURLConnection
-                && ((HttpURLConnection)con).getResponseCode() == HttpURLConnection.HTTP_NOT_MODIFIED) {
-            return install;
-        }
-
-        long sourceTimestamp = con.getLastModified();
         if (install.exists()) {
             if (timestamp.exists() && sourceTimestamp == timestamp.lastModified())
                 return install;   // already up to date
@@ -124,16 +127,22 @@ public class DockerToolInstaller extends ToolInstaller {
             try {
                 install.act(new FilePath.FileCallable<Object>() {
                     public Object invoke(File f, VirtualChannel channel) throws IOException, InterruptedException {
-                        IOUtils.copy(url.openStream(), f);
+                        InputStream in = url.openStream();
+                        IOUtils.copy(in, f);
+                        in.close();
                         return null;
                     }
                 });
             } catch (IOException x) {
                 x.printStackTrace(listener.error("Failed to download " + url + " from slave; will retry from master"));
-                docker.copyFrom(ProxyConfiguration.getInputStream(url));
+                InputStream in = ProxyConfiguration.getInputStream(url);
+                docker.copyFrom(in);
+                in.close();
             }
         } else {
-            docker.copyFrom(ProxyConfiguration.getInputStream(url));
+            InputStream in = ProxyConfiguration.getInputStream(url);
+            docker.copyFrom(in);
+            in.close();
         }
 
         docker.act(new FilePath.FileCallable<Object>() {
