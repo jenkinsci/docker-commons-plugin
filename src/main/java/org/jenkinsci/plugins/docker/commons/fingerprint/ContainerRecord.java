@@ -23,6 +23,8 @@
  */
 package org.jenkinsci.plugins.docker.commons.fingerprint;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+
 import javax.annotation.Nonnull;
 import java.io.Serializable;
 import java.util.Collections;
@@ -44,6 +46,7 @@ public class ContainerRecord implements Serializable {
     
     private final String host;
     private final String containerId;
+    @SuppressFBWarnings(value = "SE_TRANSIENT_FIELD_NOT_RESTORED", justification = "Restored from DockerRunFingerprintFacet.readResolve")
     private transient String imageId;
     private final String containerName;
 

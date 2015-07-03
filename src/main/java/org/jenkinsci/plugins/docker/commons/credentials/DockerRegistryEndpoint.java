@@ -31,6 +31,7 @@ import com.cloudbees.plugins.credentials.domains.DomainRequirement;
 import com.cloudbees.plugins.credentials.domains.HostnameRequirement;
 
 import hudson.Extension;
+import hudson.FilePath;
 import hudson.Util;
 import hudson.model.AbstractBuild;
 import hudson.model.AbstractDescribableImpl;
@@ -118,9 +119,9 @@ public class DockerRegistryEndpoint extends AbstractDescribableImpl<DockerRegist
             throw new IllegalArgumentException(s + " can not be parsed as URL: " + e.getMessage());
         }
         // not used, but could be
-        String namespace = matcher.group(4);
+        /*String namespace = matcher.group(4);
         String repoName = matcher.group(5);
-        String tag = matcher.group(7);
+        String tag = matcher.group(7);*/
         return new DockerRegistryEndpoint(url, credentialsId);
     }
 
@@ -184,15 +185,19 @@ public class DockerRegistryEndpoint extends AbstractDescribableImpl<DockerRegist
      * Makes the credentials available locally for the on-going build
      * and returns {@link KeyMaterialFactory} that gives you the parameters needed to access it.
      */
-    public KeyMaterialFactory newKeyMaterialFactory(AbstractBuild build) throws IOException, InterruptedException {
-        return newKeyMaterialFactory(build.getParent(), build.getWorkspace().getChannel());
+    public KeyMaterialFactory newKeyMaterialFactory(@Nonnull AbstractBuild build) throws IOException, InterruptedException {
+        final FilePath workspace = build.getWorkspace();
+        if (workspace == null) {
+            throw new IllegalStateException("Requires workspace.");
+        }
+        return newKeyMaterialFactory(build.getParent(), workspace.getChannel());
     }
 
     /**
      * Makes the credentials available locally and returns {@link KeyMaterialFactory} that gives you the parameters
      * needed to access it.
      */
-    public KeyMaterialFactory newKeyMaterialFactory(Item context, VirtualChannel target) throws IOException, InterruptedException {
+    public KeyMaterialFactory newKeyMaterialFactory(Item context, @Nonnull VirtualChannel target) throws IOException, InterruptedException {
         DockerRegistryToken token = getToken(context);
         if (token==null)    return KeyMaterialFactory.NULL;    // nothing needed to be done
 

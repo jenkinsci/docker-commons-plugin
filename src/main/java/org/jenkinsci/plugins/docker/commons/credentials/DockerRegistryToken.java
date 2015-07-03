@@ -30,6 +30,8 @@ import jenkins.authentication.tokens.api.AuthenticationTokens;
 import net.sf.json.JSONObject;
 import org.apache.commons.io.FileUtils;
 
+import javax.annotation.CheckForNull;
+import javax.annotation.Nonnull;
 import java.io.File;
 import java.io.IOException;
 import java.io.Serializable;
@@ -63,10 +65,9 @@ public final class DockerRegistryToken implements Serializable {
      * Makes the credentials available locally and returns {@link KeyMaterialFactory} that gives you the parameters
      * needed to access it.
      *
-     * <p>
      * This is done by inserting the token into {@code ~/.dockercfg}
      */
-    public KeyMaterialFactory newKeyMaterialFactory(final URL endpoint, VirtualChannel target) throws InterruptedException, IOException {
+    public KeyMaterialFactory newKeyMaterialFactory(final URL endpoint, @Nonnull VirtualChannel target) throws InterruptedException, IOException {
         target.call(new Callable<Void, IOException>() {
             /**
              * Insert the token into {@code ~/.dockercfg}
