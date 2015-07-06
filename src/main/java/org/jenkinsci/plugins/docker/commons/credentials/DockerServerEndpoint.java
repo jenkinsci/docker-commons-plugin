@@ -46,6 +46,7 @@ import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 
 import javax.annotation.CheckForNull;
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.io.IOException;
 import java.util.List;
@@ -94,15 +95,19 @@ public class DockerServerEndpoint extends AbstractDescribableImpl<DockerServerEn
      * Makes the key materials available locally for the on-going build
      * and returns {@link KeyMaterialFactory} that gives you the parameters needed to access it.
      */
-    public KeyMaterialFactory newKeyMaterialFactory(AbstractBuild build) throws IOException, InterruptedException {
-        return newKeyMaterialFactory(build.getParent(), build.getWorkspace().getChannel());
+    public KeyMaterialFactory newKeyMaterialFactory(@Nonnull AbstractBuild build) throws IOException, InterruptedException {
+        final FilePath workspace = build.getWorkspace();
+        if (workspace == null) {
+            throw new IllegalStateException("Build has no workspace");
+        }
+        return newKeyMaterialFactory(build.getParent(), workspace.getChannel());
     }
 
     /**
      * Makes the key materials available locally and returns {@link KeyMaterialFactory} that gives you the parameters
      * needed to access it.
      */
-    public KeyMaterialFactory newKeyMaterialFactory(Item context, VirtualChannel target) throws IOException, InterruptedException {
+    public KeyMaterialFactory newKeyMaterialFactory(@Nonnull Item context, @Nonnull VirtualChannel target) throws IOException, InterruptedException {
         // as a build step, your access to credentials are constrained by what the build
         // can access, hence Jenkins.getAuthentication()
         DockerServerCredentials creds=null;
@@ -124,7 +129,7 @@ public class DockerServerEndpoint extends AbstractDescribableImpl<DockerServerEn
         return newKeyMaterialFactory(dotDocker, creds);
     }
 
-    static FilePath dotDocker(VirtualChannel target) throws IOException, InterruptedException {
+    static FilePath dotDocker(@Nonnull VirtualChannel target) throws IOException, InterruptedException {
         return FilePath.getHomeDirectory(target).child(".docker");
     }
 

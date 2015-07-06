@@ -37,6 +37,7 @@ import hudson.tools.ToolInstallerDescriptor;
 import hudson.util.IOUtils;
 import org.kohsuke.stapler.DataBoundConstructor;
 
+import javax.annotation.Nonnull;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -64,16 +65,20 @@ public class DockerToolInstaller extends ToolInstaller {
     }
 
     @Override
-    public FilePath performInstallation(ToolInstallation toolInstallation, Node node, TaskListener listener) throws IOException, InterruptedException {
+    public FilePath performInstallation(ToolInstallation toolInstallation, @Nonnull Node node, TaskListener listener) throws IOException, InterruptedException {
 
-        String os = node.getChannel().call(new Callable<String, IOException>() {
+        VirtualChannel nodeChannel = node.getChannel();
+        if (nodeChannel == null) {
+            throw new IllegalStateException("Node is offline");
+        }
+        String os = nodeChannel.call(new Callable<String, IOException>() {
             public String call() throws IOException {
                 String os = System.getProperty("os.name").toLowerCase();
                 String arch = System.getProperty("os.arch").contains("64") ? "x86_64" : "i386";
-                if(os.contains("linux"))  return "Linux/"+arch;
-                if(os.contains("windows"))   return "Windows/"+arch;
-                if(os.contains("mac"))   return "Darwin/"+arch;
-                throw new IOException("Failed to determine OS architecture "+os+":"+arch);
+                if (os.contains("linux")) return "Linux/" + arch;
+                if (os.contains("windows")) return "Windows/" + arch;
+                if (os.contains("mac")) return "Darwin/" + arch;
+                throw new IOException("Failed to determine OS architecture " + os + ":" + arch);
             }
         });
 
