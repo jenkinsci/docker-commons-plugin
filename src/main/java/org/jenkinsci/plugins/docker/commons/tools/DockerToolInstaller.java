@@ -168,6 +168,11 @@ public class DockerToolInstaller extends ToolInstaller {
         public String getDisplayName() {
             return "Install latest from docker.io";
         }
+
+        @Override
+        public boolean isApplicable(Class<? extends ToolInstallation> toolType) {
+            return toolType == DockerTool.class;
+        }
     }
 
 }
