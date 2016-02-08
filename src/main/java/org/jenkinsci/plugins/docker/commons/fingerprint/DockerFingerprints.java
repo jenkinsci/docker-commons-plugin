@@ -61,6 +61,12 @@ public class DockerFingerprints {
      * @throws IllegalArgumentException Invalid ID
      */
     public static @Nonnull String getFingerprintHash(@Nonnull String id) {
+
+        // Remove the "sha256:" prefix, if it exists
+        if (id.indexOf("sha256:") == 0) {
+            id = id.substring(7);
+        }
+
         if (id.length() != 64) {
             throw new IllegalArgumentException("Expecting 64-char full image ID, but got " + id);
         }
