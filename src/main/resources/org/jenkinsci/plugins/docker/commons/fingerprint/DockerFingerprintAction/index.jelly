@@ -23,12 +23,13 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 -->
 <j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" 
-         xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form" xmlns:i="jelly:fmt">
+         xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form" xmlns:i="jelly:fmt"
+        xmlns:lsi="/shim/layout/icon">
   <l:layout title="${%title(it.run.fullDisplayName)}">
     <st:include it="${it.run}" page="sidepanel.jelly"/>
     <l:main-panel>
       <h1>
-        <l:icon class="icon-fingerprint icon-xlg"/>
+        <lsi:icon class="icon-docker-logo icon-xlg"/>
         ${%title(it.run.fullDisplayName)}
       </h1>
       <table class="sortable bigtable pane">
