@@ -34,7 +34,7 @@ import java.io.IOException;
 /**
  * {@link org.jenkinsci.plugins.docker.commons.credentials.KeyMaterialFactory} that does nothing.
  *
- * @see org.jenkinsci.plugins.docker.commons.KeyMaterial#NULL
+ * @see org.jenkinsci.plugins.docker.commons.credentials.KeyMaterial#NULL
  * @author Kohsuke Kawaguchi
  */
 @Restricted(NoExternalUse.class)

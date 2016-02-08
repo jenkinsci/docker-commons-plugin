@@ -76,7 +76,7 @@ public abstract class DockerRunPtrFingerprintFacet extends DockerFingerprintFace
     }
 
     public Hashtable<String,RangeSet> getUsages() {
-        return usages;
+        return new Hashtable<String, RangeSet>(usages);
     }
 
     /**

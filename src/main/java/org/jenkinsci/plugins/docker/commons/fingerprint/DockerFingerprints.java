@@ -38,6 +38,7 @@ import java.util.logging.Logger;
 import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
 import jenkins.model.FingerprintFacet;
+import org.apache.commons.lang.StringUtils;
 
 /**
  * Entry point into fingerprint related functionalities in Docker.
@@ -60,6 +61,12 @@ public class DockerFingerprints {
      * @throws IllegalArgumentException Invalid ID
      */
     public static @Nonnull String getFingerprintHash(@Nonnull String id) {
+
+        // Remove the "sha256:" prefix, if it exists
+        if (id.indexOf("sha256:") == 0) {
+            id = id.substring(7);
+        }
+
         if (id.length() != 64) {
             throw new IllegalArgumentException("Expecting 64-char full image ID, but got " + id);
         }
@@ -86,25 +93,58 @@ public class DockerFingerprints {
     }
     
     /**
+     * @deprecated Use {@link #forImage(hudson.model.Run, java.lang.String, java.lang.String)}
+     */
+    public static @Nonnull Fingerprint forImage(@CheckForNull Run<?,?> run, @Nonnull String id) throws IOException {
+        return forImage(run, id, null);
+    }
+    
+    /**
      * Get or create a {@link Fingerprint} for the image.
      * @param run Origin of the fingerprint (if available)
      * @param id Image ID. Only 64-char full IDs are supported.
+     * @param name Optional name of the image. If null, the image name will be
+     *      constructed using the specified ID.
      * @return Fingerprint for the specified ID
      * @throws IOException Fingerprint load/save error
+     * @since TODO
      */
-    public static @Nonnull Fingerprint forImage(@CheckForNull Run<?,?> run, @Nonnull String id) throws IOException {
-        return Jenkins.getInstance().getFingerprintMap().getOrCreate(run, "<docker-image>", getFingerprintHash(id));
+    public static @Nonnull Fingerprint forImage(@CheckForNull Run<?,?> run, 
+            @Nonnull String id, @CheckForNull String name) throws IOException {
+        return forDockerInstance(run, id, name, "Docker image ");
+    }
+    
+    /**
+     * @deprecated Use {@link #forContainer(hudson.model.Run, java.lang.String, java.lang.String)}
+     */
+    @Deprecated
+    public static @Nonnull Fingerprint forContainer(@CheckForNull Run<?,?> run, @Nonnull String id) throws IOException {
+        return forContainer(run, id, null);
     }
     
     /**
      * Get or create a {@link Fingerprint} for the container.
      * @param run Origin of the fingerprint (if available)
-     * @param id Image ID. Only 64-char full IDs are supported.
+     * @param id Container ID. Only 64-char full IDs are supported.
+     * @param name Optional name of the container. If null, the container name will be
+     *      constructed using the specified ID.
      * @return Fingerprint for the specified ID
      * @throws IOException Fingerprint load/save error
+     * @since TODO
      */
-    public static @Nonnull Fingerprint forContainer(@CheckForNull Run<?,?> run, @Nonnull String id) throws IOException {
-        return Jenkins.getInstance().getFingerprintMap().getOrCreate(run, "<docker-container>", getFingerprintHash(id));
+    public static @Nonnull Fingerprint forContainer(@CheckForNull Run<?,?> run, 
+            @Nonnull String id, @CheckForNull String name) throws IOException {
+        return forDockerInstance(run, id, name, "Docker container ");
+    }
+    
+    private static @Nonnull Fingerprint forDockerInstance(@CheckForNull Run<?,?> run, 
+            @Nonnull String id, @CheckForNull String name, @Nonnull String prefix) throws IOException {
+        final Jenkins j = Jenkins.getInstance();
+        if (j == null) {
+            throw new IOException("Jenkins instance is not ready");
+        }
+        final String imageName = prefix + (StringUtils.isNotBlank(name) ? name : id);
+        return j.getFingerprintMap().getOrCreate(run, imageName, getFingerprintHash(id));
     }
 
     /**

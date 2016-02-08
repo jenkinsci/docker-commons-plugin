@@ -96,7 +96,7 @@ public class DockerServerCredentials extends BaseStandardCredentials {
     public static class DescriptorImpl extends BaseStandardCredentialsDescriptor {
         @Override
         public String getDisplayName() {
-            return "Docker Server Certificate Authentication";
+            return "Docker Host Certificate Authentication";
         }
 
     }
