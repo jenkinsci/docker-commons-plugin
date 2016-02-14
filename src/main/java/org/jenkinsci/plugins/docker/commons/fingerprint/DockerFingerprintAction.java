@@ -34,10 +34,10 @@ import java.util.Set;
 import javax.annotation.CheckForNull;
 import jenkins.model.FingerprintFacet;
 import jenkins.model.RunAction2;
+import org.jenkins.ui.icon.IconSpec;
 import org.jenkinsci.plugins.docker.commons.Messages;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
-import org.kohsuke.stapler.Facet;
 
 /**
  * Adds a link, which provides a list of fingerprints with
@@ -45,7 +45,7 @@ import org.kohsuke.stapler.Facet;
  *
  * @author Oleg Nenashev
  */
-public class DockerFingerprintAction implements RunAction2, org.jenkins.ui.icon.IconSpec {
+public class DockerFingerprintAction implements RunAction2, IconSpec {
 
     private final Set<String> imageIDs;
     transient Run<?, ?> run;
@@ -148,6 +148,6 @@ public class DockerFingerprintAction implements RunAction2, org.jenkins.ui.icon.
     }
 
     public String getIconClassName() {
-        return "icon-docker-logo icon-lg";
+        return "icon-docker-logo";
     }
 }
