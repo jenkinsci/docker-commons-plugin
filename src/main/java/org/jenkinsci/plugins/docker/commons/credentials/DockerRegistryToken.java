@@ -48,6 +48,7 @@ public final class DockerRegistryToken implements Serializable {
     private final String email;
     private final String token;
 
+    private static final String charecterSet = "UTF-8";
     public DockerRegistryToken(String email, String token) {
         this.email = email;
         this.token = token;
@@ -83,12 +84,12 @@ public final class DockerRegistryToken implements Serializable {
 
                     File config = new File(System.getProperty("user.home"), ".docker/config.json");
                     if (config.exists()) {
-                        json = JSONObject.fromObject(FileUtils.readFileToString(config, "UTF-8"));
+                        json = JSONObject.fromObject(FileUtils.readFileToString(config, charecterSet));
                         auths = json.getJSONObject("auths");
                     } else {
                         config = new File(System.getProperty("user.home"), ".dockercfg");
                         if (config.exists()) {
-                            auths = json = JSONObject.fromObject(FileUtils.readFileToString(config, "UTF-8"));
+                            auths = json = JSONObject.fromObject(FileUtils.readFileToString(config, charecterSet));
                         } else {
                             // Use legacy .dockercfg to ensure this works well with pre-1.7 docker client
                             // client will pick this one if .docker/config.json does not yet exists
@@ -99,7 +100,7 @@ public final class DockerRegistryToken implements Serializable {
                             .accumulate("auth", getToken())
                             .accumulate("email", getEmail()));
                     
-                    FileUtils.writeStringToFile(config, json.toString(2), "UTF-8");
+                    FileUtils.writeStringToFile(config, json.toString(2), charecterSet);
                 }
                 return null;
             }
