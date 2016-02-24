@@ -38,6 +38,8 @@ import java.util.Collections;
  */
 public class DockerRunFingerprintFacetTest {
        
+    private static String IMAGE_ID = "0409d3ebf4f571d7dd2cf4b00f9d897f8af1d6d8a0f1ff791d173ba9891fd72f";
+    
     @Rule
     public JenkinsRule rule = new JenkinsRule();
     
@@ -65,5 +67,4 @@ public class DockerRunFingerprintFacetTest {
                 fpAction.getImageIDs().contains(IMAGE_ID));
     }
 
-    private static String IMAGE_ID = "0409d3ebf4f571d7dd2cf4b00f9d897f8af1d6d8a0f1ff791d173ba9891fd72f";    
 }

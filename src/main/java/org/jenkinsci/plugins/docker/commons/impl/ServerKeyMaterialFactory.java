@@ -53,6 +53,8 @@ public class ServerKeyMaterialFactory extends KeyMaterialFactory {
     private final String cert;
     @CheckForNull 
     private final String ca;
+    
+    private static final long serialVersionUID = 1L;
 
     public ServerKeyMaterialFactory(@CheckForNull final DockerServerCredentials credentials) {
         if (credentials != null) {
@@ -101,8 +103,6 @@ public class ServerKeyMaterialFactory extends KeyMaterialFactory {
         dir.child(fileName).write(content,"UTF-8");
     }
 
-    private static final long serialVersionUID = 1L;
-    
     private static final class ServerKeyMaterial extends KeyMaterial {
 
         private final FilePath[] tempDirs;

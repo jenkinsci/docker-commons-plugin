@@ -47,6 +47,11 @@ public abstract class KeyMaterial implements Closeable, Serializable {
      * Standardize serialization
      */
     private static final long serialVersionUID = 1L;
+    
+    /**
+     * {@link KeyMaterial} that does nothing.
+     */
+    public static final KeyMaterial NULL = new NullKeyMaterial();
 
     /**
      * The environment variables
@@ -71,11 +76,6 @@ public abstract class KeyMaterial implements Closeable, Serializable {
      */
     public abstract void close() throws IOException;
     
-    /**
-     * {@link KeyMaterial} that does nothing.
-     */
-    public static final KeyMaterial NULL = new NullKeyMaterial();
-
     private static final class NullKeyMaterial extends KeyMaterial implements Serializable {
         private static final long serialVersionUID = 1L;
         protected NullKeyMaterial() {
