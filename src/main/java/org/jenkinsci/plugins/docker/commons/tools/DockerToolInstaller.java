@@ -29,12 +29,13 @@ import hudson.FilePath;
 import hudson.ProxyConfiguration;
 import hudson.model.Node;
 import hudson.model.TaskListener;
-import hudson.remoting.Callable;
 import hudson.remoting.VirtualChannel;
 import hudson.tools.ToolInstallation;
 import hudson.tools.ToolInstaller;
 import hudson.tools.ToolInstallerDescriptor;
 import hudson.util.IOUtils;
+import jenkins.MasterToSlaveFileCallable;
+import jenkins.security.MasterToSlaveCallable;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 import javax.annotation.Nonnull;
@@ -71,7 +72,7 @@ public class DockerToolInstaller extends ToolInstaller {
         if (nodeChannel == null) {
             throw new IllegalStateException("Node is offline");
         }
-        String os = nodeChannel.call(new Callable<String, IOException>() {
+        String os = nodeChannel.call(new MasterToSlaveCallable<String, IOException>() {
             public String call() throws IOException {
                 String os = System.getProperty("os.name").toLowerCase();
                 String arch = System.getProperty("os.arch").contains("64") ? "x86_64" : "i386";
@@ -130,7 +131,7 @@ public class DockerToolInstaller extends ToolInstaller {
         if (install.isRemote()) {
             // First try to download from the slave machine.
             try {
-                install.act(new FilePath.FileCallable<Object>() {
+                install.act(new MasterToSlaveFileCallable<Object>() {
                     public Object invoke(File f, VirtualChannel channel) throws IOException, InterruptedException {
                         InputStream in = url.openStream();
                         IOUtils.copy(in, f);
@@ -150,7 +151,7 @@ public class DockerToolInstaller extends ToolInstaller {
             in.close();
         }
 
-        docker.act(new FilePath.FileCallable<Object>() {
+        docker.act(new MasterToSlaveFileCallable<Object>() {
             public Object invoke(File f, VirtualChannel channel) throws IOException, InterruptedException {
                 f.setExecutable(true);
                 return null;
