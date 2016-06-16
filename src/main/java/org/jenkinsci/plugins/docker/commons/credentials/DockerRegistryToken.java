@@ -24,13 +24,12 @@
 package org.jenkinsci.plugins.docker.commons.credentials;
 
 import com.cloudbees.plugins.credentials.Credentials;
-import hudson.remoting.Callable;
 import hudson.remoting.VirtualChannel;
 import jenkins.authentication.tokens.api.AuthenticationTokens;
+import jenkins.security.MasterToSlaveCallable;
 import net.sf.json.JSONObject;
 import org.apache.commons.io.FileUtils;
 
-import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
 import java.io.File;
 import java.io.IOException;
@@ -68,7 +67,7 @@ public final class DockerRegistryToken implements Serializable {
      * This is done by inserting the token into {@code ~/.dockercfg}
      */
     public KeyMaterialFactory newKeyMaterialFactory(final URL endpoint, @Nonnull VirtualChannel target) throws InterruptedException, IOException {
-        target.call(new Callable<Void, IOException>() {
+        target.call(new MasterToSlaveCallable<Void, IOException>() {
             /**
              * Insert the token into {@code ~/.dockercfg}
              */

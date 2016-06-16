@@ -30,12 +30,12 @@ import jenkins.model.FingerprintFacet;
  * Abstract class, which indicates {@link FingerprintFacet}s related to Docker.
  * This class is being used to retrieve the Docker-related data from {@link Fingerprint}s.
  * 
- * <p/>
+ * <p></p>
  * The facet may include the following optional resources (jelly, groovy, etc.):
  * <ul>
  *   <li>summary - Short summary of the facet for tables like {@link DockerFingerprintAction}
  * </ul>
- * 
+ *
  * @author Oleg Nenashev
  */
 public abstract class DockerFingerprintFacet extends FingerprintFacet {
