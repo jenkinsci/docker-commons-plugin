@@ -44,6 +44,7 @@ import java.net.URL;
  * @see AuthenticationTokens
  */
 public final class DockerRegistryToken implements Serializable {
+    private static final long serialVersionUID = 1L;
     private final String email;
     private final String token;
 
@@ -108,5 +109,4 @@ public final class DockerRegistryToken implements Serializable {
         return KeyMaterialFactory.NULL;
     }
 
-    private static final long serialVersionUID = 1L;
 }

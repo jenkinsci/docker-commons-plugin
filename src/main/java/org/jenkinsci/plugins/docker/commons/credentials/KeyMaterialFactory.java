@@ -52,6 +52,8 @@ public abstract class KeyMaterialFactory implements Serializable {
      */
     private static final long serialVersionUID = 1L;
     
+    public static final KeyMaterialFactory NULL = new NullKeyMaterialFactory();
+    
     private /* write once */ KeyMaterialContext context;
     
     protected synchronized void checkContextualized() {
@@ -105,5 +107,4 @@ public abstract class KeyMaterialFactory implements Serializable {
         return new CompositeKeyMaterialFactory(tmp.toArray(new KeyMaterialFactory[tmp.size()]));
     }
 
-    public static final KeyMaterialFactory NULL = new NullKeyMaterialFactory();
 }
