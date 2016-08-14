@@ -36,6 +36,7 @@ import hudson.tools.ToolInstallerDescriptor;
 import hudson.util.IOUtils;
 import jenkins.MasterToSlaveFileCallable;
 import jenkins.security.MasterToSlaveCallable;
+import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 import javax.annotation.Nonnull;
@@ -162,7 +163,7 @@ public class DockerToolInstaller extends ToolInstaller {
         return install;
     }
 
-    @Extension
+    @Extension @Symbol("dockerIoInstaller")
     public static class DescriptorImpl extends ToolInstallerDescriptor<DockerToolInstaller> {
 
         @Override

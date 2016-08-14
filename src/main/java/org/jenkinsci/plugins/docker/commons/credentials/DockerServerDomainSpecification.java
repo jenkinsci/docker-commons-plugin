@@ -29,6 +29,7 @@ import com.cloudbees.plugins.credentials.domains.DomainSpecification;
 import com.cloudbees.plugins.credentials.domains.DomainSpecificationDescriptor;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
+import org.jenkinsci.Symbol;
 import org.jenkinsci.plugins.docker.commons.Messages;
 import org.kohsuke.stapler.DataBoundConstructor;
 
@@ -60,7 +61,7 @@ public class DockerServerDomainSpecification extends DomainSpecification {
     }
 
     /** {@inheritDoc} */
-    @Extension
+    @Extension @Symbol("dockerServerDomain")
     public static class DescriptorImpl extends DomainSpecificationDescriptor {
 
         @Override
