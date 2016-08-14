@@ -40,6 +40,7 @@ import hudson.remoting.VirtualChannel;
 import hudson.util.ListBoxModel;
 import jenkins.authentication.tokens.api.AuthenticationTokens;
 import jenkins.model.Jenkins;
+import org.jenkinsci.Symbol;
 import org.jenkinsci.plugins.docker.commons.impl.ServerHostKeyMaterialFactory;
 import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
@@ -172,7 +173,7 @@ public class DockerServerEndpoint extends AbstractDescribableImpl<DockerServerEn
         return true;
     }
     
-    @Extension
+    @Extension @Symbol("dockerDaemonEndpoint")
     public static class DescriptorImpl extends Descriptor<DockerServerEndpoint> {
         @Override
         public String getDisplayName() {

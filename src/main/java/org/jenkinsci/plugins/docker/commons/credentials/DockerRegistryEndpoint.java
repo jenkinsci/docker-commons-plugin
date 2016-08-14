@@ -43,6 +43,7 @@ import hudson.util.ListBoxModel;
 import jenkins.authentication.tokens.api.AuthenticationTokens;
 import jenkins.model.Jenkins;
 
+import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
 
@@ -254,7 +255,7 @@ public class DockerRegistryEndpoint extends AbstractDescribableImpl<DockerRegist
         return true;
     }
     
-    @Extension
+    @Extension @Symbol("dockerHubEndpoint")
     public static class DescriptorImpl extends Descriptor<DockerRegistryEndpoint> {
         @Override
         public String getDisplayName() {
