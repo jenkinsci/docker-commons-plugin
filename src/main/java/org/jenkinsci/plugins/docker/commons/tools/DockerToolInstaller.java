@@ -24,6 +24,7 @@
 
 package org.jenkinsci.plugins.docker.commons.tools;
 
+import hudson.AbortException;
 import hudson.Extension;
 import hudson.FilePath;
 import hudson.ProxyConfiguration;
@@ -33,23 +34,16 @@ import hudson.remoting.VirtualChannel;
 import hudson.tools.ToolInstallation;
 import hudson.tools.ToolInstaller;
 import hudson.tools.ToolInstallerDescriptor;
-import hudson.util.IOUtils;
-import jenkins.MasterToSlaveFileCallable;
-import jenkins.security.MasterToSlaveCallable;
-import org.kohsuke.stapler.DataBoundConstructor;
-
-import javax.annotation.Nonnull;
-import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLConnection;
-
+import javax.annotation.Nonnull;
+import jenkins.security.MasterToSlaveCallable;
+import org.kohsuke.stapler.DataBoundConstructor;
 
 /**
- * Download and install Docker CLI binary, see https://docs.docker.com/installation/binaries/
- * @author <a href="mailto:nicolas.deloof@gmail.com">Nicolas De Loof</a>
+ * Download and install Docker CLI binary, see https://docs.docker.com/engine/installation/binaries/
  */
 public class DockerToolInstaller extends ToolInstaller {
 
@@ -72,16 +66,7 @@ public class DockerToolInstaller extends ToolInstaller {
         if (nodeChannel == null) {
             throw new IllegalStateException("Node is offline");
         }
-        String os = nodeChannel.call(new MasterToSlaveCallable<String, IOException>() {
-            public String call() throws IOException {
-                String os = System.getProperty("os.name").toLowerCase();
-                String arch = System.getProperty("os.arch").contains("64") ? "x86_64" : "i386";
-                if (os.contains("linux")) return "Linux/" + arch;
-                if (os.contains("windows")) return "Windows/" + arch;
-                if (os.contains("mac")) return "Darwin/" + arch;
-                throw new IOException("Failed to determine OS architecture " + os + ":" + arch);
-            }
-        });
+        String os = nodeChannel.call(new FindArch());
 
         final URL url = new URL("https://get.docker.com/builds/"+os+"/docker-"+version);
         FilePath install = preferredLocation(tool, node);
@@ -123,40 +108,35 @@ public class DockerToolInstaller extends ToolInstaller {
             install.deleteContents();
         }
 
-        listener.getLogger().println("Downloading Docker client " + version);
+        listener.getLogger().println(Messages.DockerToolInstaller_downloading_docker_client_(version));
         FilePath bin = install.child("bin");
-        bin.mkdirs();
         FilePath docker = bin.child("docker");
 
         if (install.isRemote()) {
-            // First try to download from the slave machine.
+            // First try to download raw Docker binary from the agent machine, as this is fastest, but only available up to 1.10.x.
+            bin.mkdirs();
             try {
-                install.act(new MasterToSlaveFileCallable<Object>() {
-                    public Object invoke(File f, VirtualChannel channel) throws IOException, InterruptedException {
-                        InputStream in = url.openStream();
-                        IOUtils.copy(in, f);
-                        in.close();
-                        return null;
-                    }
-                });
+                docker.copyFrom(url);
             } catch (IOException x) {
-                x.printStackTrace(listener.error("Failed to download " + url + " from slave; will retry from master"));
-                InputStream in = ProxyConfiguration.getInputStream(url);
-                docker.copyFrom(in);
-                in.close();
+                listener.error("Failed to download pre-1.11.x URL " + url + " from agent: " + x);
             }
-        } else {
-            InputStream in = ProxyConfiguration.getInputStream(url);
-            docker.copyFrom(in);
-            in.close();
+        }
+        if (!docker.exists()) {
+            // That did not work, or we did not even try.
+            // Fall back to downloading the tarball, which is available for all versions.
+            URL tgz = new URL(url + ".tgz");
+            // The core utility automatically tries a direct download first, followed by a download via master.
+            install.installIfNecessaryFrom(tgz, listener, "Unpacking " + tgz + " to " + install + " on " + node.getDisplayName());
+            // But it is in the wrong directory structure, and contains various server binaries we do not need.
+            bin.mkdirs(); // installIfNecessaryFrom will wipe it out
+            install.child("docker/docker").renameTo(docker);
+            if (!docker.exists()) { // TODO FilePath.renameTo does not check its return value
+                throw new AbortException(tgz + " did not contain a docker/docker entry as expected");
+            }
+            install.child("docker").deleteRecursive();
         }
 
-        docker.act(new MasterToSlaveFileCallable<Object>() {
-            public Object invoke(File f, VirtualChannel channel) throws IOException, InterruptedException {
-                f.setExecutable(true);
-                return null;
-            }
-        });
+        docker.chmod(0777);
 
         timestamp.touch(sourceTimestamp);
         return install;
@@ -174,6 +154,20 @@ public class DockerToolInstaller extends ToolInstaller {
         public boolean isApplicable(Class<? extends ToolInstallation> toolType) {
             return toolType == DockerTool.class;
         }
+    }
+
+    private static class FindArch extends MasterToSlaveCallable<String,IOException> {
+
+        @Override
+        public String call() throws IOException {
+            String os = System.getProperty("os.name").toLowerCase();
+            String arch = System.getProperty("os.arch").contains("64") ? "x86_64" : "i386";
+            if (os.contains("linux")) return "Linux/" + arch;
+            if (os.contains("windows")) return "Windows/" + arch;
+            if (os.contains("mac")) return "Darwin/" + arch;
+            throw new IOException("Failed to determine OS architecture " + os + ":" + arch);
+        }
+
     }
 
 }
