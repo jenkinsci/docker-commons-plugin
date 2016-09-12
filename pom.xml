@@ -31,8 +31,9 @@
   </scm>
 
   <properties>
-    <jenkins.version>1.580.3</jenkins.version>
+    <jenkins.version>1.596.1</jenkins.version>
     <java.level>6</java.level>
+    <workflow.version>1.7</workflow.version>
   </properties>
 
   <repositories>
@@ -57,6 +58,11 @@
     </dependency>
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
+      <artifactId>credentials-binding</artifactId>
+      <version>1.10-SNAPSHOT</version>
+    </dependency>
+    <dependency>
+      <groupId>org.jenkins-ci.plugins</groupId>
       <artifactId>authentication-tokens</artifactId>
       <version>1.1</version>
     </dependency>
@@ -71,6 +77,29 @@
       <artifactId>icon-shim</artifactId>
       <version>1.0.3</version>
     </dependency>
+
+    <!-- for Pipeline-based unit tests -->
+    <dependency>
+      <groupId>org.jenkins-ci.plugins.workflow</groupId>
+      <artifactId>workflow-aggregator</artifactId>
+      <version>${workflow.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.jenkins-ci.plugins.workflow</groupId>
+      <artifactId>workflow-step-api</artifactId>
+      <version>${workflow.version}</version>
+      <classifier>tests</classifier>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.jenkins-ci.plugins.workflow</groupId>
+      <artifactId>workflow-support</artifactId>
+      <version>${workflow.version}</version>
+      <classifier>tests</classifier>
+      <scope>test</scope>
+    </dependency>
+
   </dependencies>
 
 </project>
