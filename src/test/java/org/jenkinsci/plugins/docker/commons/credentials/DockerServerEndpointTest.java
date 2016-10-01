@@ -50,6 +50,7 @@ import static org.junit.Assert.assertThat;
  */
 public class DockerServerEndpointTest {
     
+	private static final String missing = "missing";
     @Rule
     public JenkinsRule j = new JenkinsRule();
 
@@ -72,10 +73,10 @@ public class DockerServerEndpointTest {
         KeyMaterial keyMaterial = factory.materialize();
         FilePath path = null;
         try {
-            assertThat(keyMaterial.env().get("DOCKER_HOST", "missing"), is("tcp://localhost:2736"));
-            assertThat(keyMaterial.env().get("DOCKER_TLS_VERIFY", "missing"), is("1"));
-            assertThat(keyMaterial.env().get("DOCKER_CERT_PATH", "missing"), not("missing"));
-            path = new FilePath(channel, keyMaterial.env().get("DOCKER_CERT_PATH", "missing"));
+            assertThat(keyMaterial.env().get("DOCKER_HOST", missing), is("tcp://localhost:2736"));
+            assertThat(keyMaterial.env().get("DOCKER_TLS_VERIFY", missing), is("1"));
+            assertThat(keyMaterial.env().get("DOCKER_CERT_PATH", missing), not(missing));
+            path = new FilePath(channel, keyMaterial.env().get("DOCKER_CERT_PATH", missing));
             assertThat(path.child("key.pem").readToString(), is("a"));
             assertThat(path.child("cert.pem").readToString(), is("b"));
             assertThat(path.child("ca.pem").readToString(), is("c"));

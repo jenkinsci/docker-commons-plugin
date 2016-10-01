@@ -34,22 +34,25 @@ import org.junit.Test;
  */
 public class DockerRegistryEndpointTest {
 
+	private static final String indexUrl = "https://index.docker.io/v1/";
+	private static final String dockerUrl = "https://docker.acme.com";
+	
     @Test
     public void testParse() throws Exception {
-        assertRegistry("https://index.docker.io/v1/", "acme/test");
-        assertRegistry("https://index.docker.io/v1/", "busybox");
+        assertRegistry(indexUrl, "acme/test");
+        assertRegistry(indexUrl, "busybox");
         assertRegistry("https://docker.acme.com:8080", "docker.acme.com:8080/acme/test");
-        assertRegistry("https://docker.acme.com", "docker.acme.com/acme/test");
-        assertRegistry("https://docker.acme.com", "docker.acme.com/busybox");
+        assertRegistry(dockerUrl, "docker.acme.com/acme/test");
+        assertRegistry(dockerUrl, "docker.acme.com/busybox");
     }
 
     @Test
     public void testParseWithTags() throws Exception {
-        assertRegistry("https://index.docker.io/v1/", "acme/test:tag");
-        assertRegistry("https://index.docker.io/v1/", "busybox:tag");
+        assertRegistry(indexUrl, "acme/test:tag");
+        assertRegistry(indexUrl, "busybox:tag");
         assertRegistry("https://docker.acme.com:8080", "docker.acme.com:8080/acme/test:tag");
-        assertRegistry("https://docker.acme.com", "docker.acme.com/acme/test:tag");
-        assertRegistry("https://docker.acme.com", "docker.acme.com/busybox:tag");
+        assertRegistry(dockerUrl, "docker.acme.com/acme/test:tag");
+        assertRegistry(dockerUrl, "docker.acme.com/busybox:tag");
     }
 
     private void assertRegistry(String url, String repo) throws IOException {
