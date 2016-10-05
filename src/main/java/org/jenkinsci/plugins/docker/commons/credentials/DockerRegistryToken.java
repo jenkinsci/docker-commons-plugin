@@ -24,6 +24,8 @@
 package org.jenkinsci.plugins.docker.commons.credentials;
 
 import com.cloudbees.plugins.credentials.Credentials;
+import hudson.Launcher;
+import hudson.model.TaskListener;
 import hudson.remoting.VirtualChannel;
 import jenkins.authentication.tokens.api.AuthenticationTokens;
 import jenkins.security.MasterToSlaveCallable;
@@ -35,6 +37,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.Serializable;
 import java.net.URL;
+import javax.annotation.CheckForNull;
 
 /**
  * Represents an authentication token that docker(1) understands when pushing/pulling
@@ -62,12 +65,20 @@ public final class DockerRegistryToken implements Serializable {
     }
 
     /**
+     * @deprecated Call {@link #newKeyMaterialFactory(URL, VirtualChannel, Launcher, TaskListener)}
+     */
+    @Deprecated
+    public KeyMaterialFactory newKeyMaterialFactory(final URL endpoint, @Nonnull VirtualChannel target) throws InterruptedException, IOException {
+        return newKeyMaterialFactory(endpoint, target, null, TaskListener.NULL);
+    }
+
+    /**
      * Makes the credentials available locally and returns {@link KeyMaterialFactory} that gives you the parameters
      * needed to access it.
      *
      * This is done by inserting the token into {@code ~/.dockercfg}
      */
-    public KeyMaterialFactory newKeyMaterialFactory(final URL endpoint, @Nonnull VirtualChannel target) throws InterruptedException, IOException {
+    public KeyMaterialFactory newKeyMaterialFactory(final @Nonnull URL endpoint, @Nonnull VirtualChannel target, @CheckForNull Launcher launcher, final @Nonnull TaskListener listener) throws InterruptedException, IOException {
         target.call(new MasterToSlaveCallable<Void, IOException>() {
             /**
              * Insert the token into {@code ~/.dockercfg}
@@ -100,6 +111,7 @@ public final class DockerRegistryToken implements Serializable {
                             .accumulate("email", getEmail()));
                     
                     FileUtils.writeStringToFile(config, json.toString(2), "UTF-8");
+                    listener.getLogger().println("Wrote authentication to " + config);
                 }
                 return null;
             }
