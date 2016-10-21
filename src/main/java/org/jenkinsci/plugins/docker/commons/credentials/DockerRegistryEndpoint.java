@@ -236,6 +236,9 @@ public class DockerRegistryEndpoint extends AbstractDescribableImpl<DockerRegist
         if (effectiveUrl.getPort() > 0 && effectiveUrl.getDefaultPort() != effectiveUrl.getPort()) {
             s.append(':').append(effectiveUrl.getPort());
         }
+        if (userAndRepo.startsWith(String.valueOf(s))) {
+            return userAndRepo;
+        }
         return s.append('/').append(userAndRepo).toString();
     }
 

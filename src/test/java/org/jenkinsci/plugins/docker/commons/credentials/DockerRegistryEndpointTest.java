@@ -52,6 +52,12 @@ public class DockerRegistryEndpointTest {
         assertRegistry("https://docker.acme.com", "docker.acme.com/busybox:tag");
     }
 
+    @Test
+    public void testParseFullyQualifiedImageName() throws Exception {
+        assertEquals("private-repo:5000/test-image", new DockerRegistryEndpoint("http://private-repo:5000/", null).imageName("private-repo:5000/test-image"));
+        assertEquals("private-repo:5000/test-image", new DockerRegistryEndpoint("http://private-repo:5000/", null).imageName("test-image"));
+    }
+
     private void assertRegistry(String url, String repo) throws IOException {
         assertEquals(url, DockerRegistryEndpoint.fromImageName(repo, null).getEffectiveUrl().toString());
     }
