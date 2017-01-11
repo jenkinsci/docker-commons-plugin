@@ -28,6 +28,7 @@ import static org.junit.Assert.*;
 import java.io.IOException;
 
 import org.junit.Test;
+import org.jvnet.hudson.test.Issue;
 
 /**
  * @author Carlos Sanchez <carlos@apache.org>
@@ -50,6 +51,25 @@ public class DockerRegistryEndpointTest {
         assertRegistry("https://docker.acme.com:8080", "docker.acme.com:8080/acme/test:tag");
         assertRegistry("https://docker.acme.com", "docker.acme.com/acme/test:tag");
         assertRegistry("https://docker.acme.com", "docker.acme.com/busybox:tag");
+    }
+
+    @Issue("JENKINS-39181")
+    @Test
+    public void testParseFullyQualifiedImageName() throws Exception {
+        assertEquals("private-repo:5000/test-image", new DockerRegistryEndpoint("http://private-repo:5000/", null).imageName("private-repo:5000/test-image"));
+        assertEquals("private-repo:5000/test-image", new DockerRegistryEndpoint("http://private-repo:5000/", null).imageName("test-image"));
+    }
+
+    @Issue("JENKINS-39181")
+    @Test(expected = IllegalArgumentException.class)
+    public void testParseNullImageName() throws Exception {
+        new DockerRegistryEndpoint("http://private-repo:5000/", null).imageName(null);
+    }
+
+    @Issue("JENKINS-39181")
+    @Test(expected = IllegalArgumentException.class)
+    public void testParseNullUrlAndImageName() throws Exception {
+        new DockerRegistryEndpoint(null, null).imageName(null);
     }
 
     private void assertRegistry(String url, String repo) throws IOException {

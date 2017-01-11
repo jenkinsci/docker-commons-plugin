@@ -228,13 +228,21 @@ public class DockerRegistryEndpoint extends AbstractDescribableImpl<DockerRegist
      * @return the full registry:port/namespace/name string
      * @throws IOException
      */
-    public String imageName(String userAndRepo) throws IOException {
-        if (url==null)    return userAndRepo;
+    public String imageName(@Nonnull String userAndRepo) throws IOException {
+        if (userAndRepo == null) {
+            throw new IllegalArgumentException("Image name cannot be null.");
+        }
+        if (url == null) {
+            return userAndRepo;
+        }
         URL effectiveUrl = getEffectiveUrl();
 
         StringBuilder s = new StringBuilder(effectiveUrl.getHost());
         if (effectiveUrl.getPort() > 0 && effectiveUrl.getDefaultPort() != effectiveUrl.getPort()) {
             s.append(':').append(effectiveUrl.getPort());
+        }
+        if (userAndRepo.startsWith(String.valueOf(s))) {
+            return userAndRepo;
         }
         return s.append('/').append(userAndRepo).toString();
     }
