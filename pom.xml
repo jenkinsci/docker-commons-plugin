@@ -31,7 +31,7 @@
   </scm>
 
   <properties>
-    <jenkins.version>1.580.3</jenkins.version>
+    <jenkins.version>1.590</jenkins.version>
     <java.level>6</java.level>
   </properties>
 
@@ -54,6 +54,11 @@
       <groupId>org.jenkins-ci.plugins</groupId>
       <artifactId>credentials</artifactId>
       <version>2.1.11</version>
+    </dependency>
+    <dependency>
+      <groupId>args4j</groupId>
+      <artifactId>args4j</artifactId>
+      <version>2.0.31</version>
     </dependency>
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
