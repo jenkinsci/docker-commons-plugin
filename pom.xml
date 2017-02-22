@@ -31,7 +31,7 @@
   </scm>
 
   <properties>
-    <jenkins.version>1.590</jenkins.version>
+    <jenkins.version>1.609.3</jenkins.version>
     <java.level>6</java.level>
   </properties>
 
