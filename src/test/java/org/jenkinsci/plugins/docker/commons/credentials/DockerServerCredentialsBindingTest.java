@@ -24,12 +24,13 @@
 
 package org.jenkinsci.plugins.docker.commons.credentials;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.Collections;
 
+import org.apache.commons.io.IOUtils;
 import org.jenkinsci.plugins.credentialsbinding.MultiBinding;
 import org.jenkinsci.plugins.credentialsbinding.impl.BindingStep;
-import org.jenkinsci.plugins.docker.commons.credentials.DockerServerCredentials;
-import org.jenkinsci.plugins.docker.commons.credentials.DockerServerDomainSpecification;
 import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
@@ -42,14 +43,14 @@ import org.junit.runners.model.Statement;
 import org.jvnet.hudson.test.BuildWatcher;
 import org.jvnet.hudson.test.RestartableJenkinsRule;
 
-import hudson.Functions;
-
 import com.cloudbees.plugins.credentials.CredentialsProvider;
 import com.cloudbees.plugins.credentials.CredentialsScope;
 import com.cloudbees.plugins.credentials.CredentialsStore;
 import com.cloudbees.plugins.credentials.SystemCredentialsProvider;
 import com.cloudbees.plugins.credentials.domains.Domain;
 import com.cloudbees.plugins.credentials.domains.DomainSpecification;
+
+import hudson.FilePath;
 
 import static org.hamcrest.Matchers.instanceOf;
 import static org.junit.Assert.*;
@@ -92,81 +93,16 @@ public class DockerServerCredentialsBindingTest {
                         "docker-client-cert", "desc", "clientKey", "clientCertificate", "serverCaCertificate");
                 CredentialsProvider.lookupStores(story.j.jenkins).iterator().next().addCredentials(Domain.global(), c);
                 WorkflowJob p = story.j.jenkins.createProject(WorkflowJob.class, "p");
-                final String shellStep1, shellStep2;
-                if (Functions.isWindows()) {
-                    shellStep1 = ""
-                            + "    bat '''\n"
-                            + "      REM check existence of the credentials dir\n"
-                            + "      if not exist %DOCKER_CERT_PATH% exit /B 1\n"
-                            + "\n"
-                            + "      REM check existence of the certificate files\n"
-                            + "      if not exist %DOCKER_CERT_PATH%\\\\key.pem exit /B 1\n"
-                            + "      if not exist %DOCKER_CERT_PATH%\\\\cert.pem exit /B 1\n"
-                            + "      if not exist %DOCKER_CERT_PATH%\\\\ca.pem exit /B 1\n"
-                            + "\n"
-                            + "      REM keep location of the certificate dir for the next step\n"
-                            + "      echo %DOCKER_CERT_PATH% > cert-path\n"
-                            + "    '''\n";
-                    shellStep2 = ""
-                            + "  bat '''\n"
-                            + "    REM get path of the certificate directory\n"
-                            + "    if not exist cert-path exit /B 1\n"
-                            + "    set /p cert_path=<cert-path\n"
-                            + "\n"
-                            + "    REM check it has been deleted\n"
-                            + "    if exist %cert_path% exit /B 1\n"
-                            + "  '''\n";
-                } else {
-                    shellStep1 = ""
-                            + "    sh '''\n"
-                            + "      set -e -x\n"
-                            + "\n"
-                            + "      # check permissions on the credentials dir and its parent\n"
-                            + "      [ $(stat -c %a \"$DOCKER_CERT_PATH\")    = 700 ]\n"
-                            + "      [ $(stat -c %a \"$DOCKER_CERT_PATH\"/..) = 700 ]\n"
-                            + "\n"
-                            + "      # check permissions and content of the certificate files\n"
-                            + "      [ $(stat -c %a \"$DOCKER_CERT_PATH/key.pem\")  = 600 ]\n"
-                            + "      [ $(stat -c %a \"$DOCKER_CERT_PATH/cert.pem\") = 600 ]\n"
-                            + "      [ $(stat -c %a \"$DOCKER_CERT_PATH/ca.pem\")   = 600 ]\n"
-                            + "      [ $(stat -c %s \"$DOCKER_CERT_PATH/key.pem\")  = 9 ]\n"
-                            + "      [ $(stat -c %s \"$DOCKER_CERT_PATH/cert.pem\") = 17 ]\n"
-                            + "      [ $(stat -c %s \"$DOCKER_CERT_PATH/ca.pem\")   = 19 ]\n"
-                            + "\n"
-                            + "      # keep location of the certificate dir for the next step\n"
-                            + "      echo \"$DOCKER_CERT_PATH\" > cert-path\n"
-                            + "    '''\n";
-                    shellStep2 = ""
-                            + "  sh '''\n"
-                            + "    set -e -x\n"
-                            + "\n"
-                            + "    # get path of the certificate directory\n"
-                            + "    cert_path=$(cat cert-path)\n"
-                            + "\n"
-                            + "    # check it was where we would expect it to be\n"
-                            + "    echo \"$cert_path\" | grep -q \"/workspace/p@tmp/secretFiles/[-0-9a-f]\\\\{36\\\\}$\"\n"
-                            + "\n"
-                            + "    # check it has been deleted\n"
-                            + "    if [ -e \"$cert_path\" ] ; then\n"
-                            + "      echo \"$cert_path still exists!!!\" >&2\n"
-                            + "      exit 1\n"
-                            + "    fi\n"
-                            + "  '''\n";
-                }
-                p.setDefinition(new CpsFlowDefinition(""
-                        + "node {\n"
-                        + "  withCredentials([dockerCert(\n"
-                        + "                    variable: 'DOCKER_CERT_PATH',\n"
-                        + "                    credentialsId: 'docker-client-cert')]) {\n"
-                        + "    semaphore 'basics'\n"
-                        + "\n"
-                        + shellStep1
-                        + "  }\n"
-                        + "\n"
-                        + shellStep2
-                        + "}", true));
+                String pipelineScript = IOUtils.toString(getTestResourceInputStream("basics-Jenkinsfile"));
+                p.setDefinition(new CpsFlowDefinition(pipelineScript, true));
                 WorkflowRun b = p.scheduleBuild2(0).waitForStart();
                 SemaphoreStep.waitForStart("basics/1", b);
+                // copy some test scripts into the workspace
+                FilePath workspace = story.j.jenkins.getWorkspaceFor(p);
+                copyTestResourceIntoWorkspace(workspace, "basics-step1.bat", 0755);
+                copyTestResourceIntoWorkspace(workspace, "basics-step2.bat", 0755);
+                copyTestResourceIntoWorkspace(workspace, "basics-step1.sh", 0755);
+                copyTestResourceIntoWorkspace(workspace, "basics-step2.sh", 0755);
             }
         });
         story.addStep(new Statement() {
@@ -181,6 +117,19 @@ public class DockerServerCredentialsBindingTest {
                 story.j.assertBuildStatusSuccess(b);
             }
         });
+    }
+
+    private InputStream getTestResourceInputStream(String fileName) {
+        return getClass().getResourceAsStream(getClass().getSimpleName() + "/" + fileName);
+    }
+
+    private FilePath copyTestResourceIntoWorkspace(FilePath workspace, String fileName, int mask)
+            throws IOException, InterruptedException {
+        InputStream in = getTestResourceInputStream(fileName);
+        FilePath f = workspace.child(fileName);
+        f.copyFrom(in);
+        f.chmod(mask);
+        return f;
     }
 
 }
