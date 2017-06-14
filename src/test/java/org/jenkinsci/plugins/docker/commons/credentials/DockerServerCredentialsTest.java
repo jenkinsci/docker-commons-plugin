@@ -57,7 +57,8 @@ public class DockerServerCredentialsTest {
                 Collections.<DomainSpecification>singletonList(new DockerServerDomainSpecification()));
         DockerServerCredentials credentials = new DockerServerCredentials(CredentialsScope.GLOBAL, "foo", "desc", "", "", "");
         store.addDomain(domain, credentials);
-        j.submit(j.createWebClient().goTo("credential-store/domain/" + domain.getName() + "/credential/"+credentials.getId()+"/update")
+
+        j.submit(j.createWebClient().goTo("credentials/store/system/domain/" + domain.getName() + "/credential/"+credentials.getId()+"/update")
                 .getFormByName("update"));
         
         j.assertEqualDataBoundBeans(credentials, CredentialsMatchers.firstOrNull(CredentialsProvider.lookupCredentials(IdCredentials.class, j.getInstance(),
@@ -72,7 +73,8 @@ public class DockerServerCredentialsTest {
                 Collections.<DomainSpecification>singletonList(new DockerServerDomainSpecification()));
         DockerServerCredentials credentials = new DockerServerCredentials(CredentialsScope.GLOBAL, "foo", "desc", "a", "b", "c");
         store.addDomain(domain, credentials);
-        j.submit(j.createWebClient().goTo("credential-store/domain/" + domain.getName() + "/credential/"+credentials.getId()+"/update")
+
+        j.submit(j.createWebClient().goTo("credentials/store/system/domain/" + domain.getName() + "/credential/"+credentials.getId()+"/update")
                 .getFormByName("update"));
         
         j.assertEqualDataBoundBeans(credentials, CredentialsMatchers.firstOrNull(CredentialsProvider.lookupCredentials(IdCredentials.class, j.getInstance(),

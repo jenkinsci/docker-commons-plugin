@@ -52,7 +52,8 @@ public class DockerServerDomainSpecificationTest {
         Domain domain = new Domain("docker", "A domain for docker credentials",
                 Collections.<DomainSpecification>singletonList(new DockerServerDomainSpecification()));
         store.addDomain(domain);
-        j.submit(j.createWebClient().goTo("credential-store/domain/" + domain.getName() + "/configure")
+
+        j.submit(j.createWebClient().goTo("credentials/store/system/domain/" + domain.getName() + "/configure")
                 .getFormByName("config"));
         
         j.assertEqualDataBoundBeans(domain, byName(store.getDomains(),domain.getName()));

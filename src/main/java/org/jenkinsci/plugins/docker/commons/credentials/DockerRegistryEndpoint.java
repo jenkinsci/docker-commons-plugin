@@ -59,6 +59,9 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import static com.cloudbees.plugins.credentials.CredentialsMatchers.*;
+import hudson.AbortException;
+import hudson.Launcher;
+import hudson.model.TaskListener;
 
 /**
  * Encapsulates the endpoint of DockerHub and how to interact with it.
@@ -182,9 +185,9 @@ public class DockerRegistryEndpoint extends AbstractDescribableImpl<DockerRegist
     }
 
     /**
-     * Makes the credentials available locally for the on-going build
-     * and returns {@link KeyMaterialFactory} that gives you the parameters needed to access it.
+     * @deprecated Call {@link #newKeyMaterialFactory(Item, VirtualChannel, Launcher, TaskListener)}
      */
+    @Deprecated
     public KeyMaterialFactory newKeyMaterialFactory(@Nonnull AbstractBuild build) throws IOException, InterruptedException {
         final FilePath workspace = build.getWorkspace();
         if (workspace == null) {
@@ -194,14 +197,26 @@ public class DockerRegistryEndpoint extends AbstractDescribableImpl<DockerRegist
     }
 
     /**
+     * @deprecated Call {@link #newKeyMaterialFactory(Item, VirtualChannel, Launcher, TaskListener)}
+     */
+    @Deprecated
+    public KeyMaterialFactory newKeyMaterialFactory(Item context, @Nonnull VirtualChannel target) throws IOException, InterruptedException {
+        return newKeyMaterialFactory(context, target, null, TaskListener.NULL);
+    }
+
+    /**
      * Makes the credentials available locally and returns {@link KeyMaterialFactory} that gives you the parameters
      * needed to access it.
      */
-    public KeyMaterialFactory newKeyMaterialFactory(Item context, @Nonnull VirtualChannel target) throws IOException, InterruptedException {
+    public KeyMaterialFactory newKeyMaterialFactory(@CheckForNull Item context, @Nonnull VirtualChannel target, @CheckForNull Launcher launcher, @Nonnull TaskListener listener) throws IOException, InterruptedException {
+        if (credentialsId == null) {
+            return KeyMaterialFactory.NULL; // nothing needed to be done
+        }
         DockerRegistryToken token = getToken(context);
-        if (token==null)    return KeyMaterialFactory.NULL;    // nothing needed to be done
-
-        return token.newKeyMaterialFactory(getEffectiveUrl(), target);
+        if (token == null) {
+            throw new AbortException("Could not find credentials matching " + credentialsId);
+        }
+        return token.newKeyMaterialFactory(getEffectiveUrl(), target, launcher, listener);
     }
 
     /**
@@ -213,13 +228,21 @@ public class DockerRegistryEndpoint extends AbstractDescribableImpl<DockerRegist
      * @return the full registry:port/namespace/name string
      * @throws IOException
      */
-    public String imageName(String userAndRepo) throws IOException {
-        if (url==null)    return userAndRepo;
+    public String imageName(@Nonnull String userAndRepo) throws IOException {
+        if (userAndRepo == null) {
+            throw new IllegalArgumentException("Image name cannot be null.");
+        }
+        if (url == null) {
+            return userAndRepo;
+        }
         URL effectiveUrl = getEffectiveUrl();
 
         StringBuilder s = new StringBuilder(effectiveUrl.getHost());
-        if (effectiveUrl.getPort() > 0 && effectiveUrl.getDefaultPort() != effectiveUrl.getPort()) {
+        if (effectiveUrl.getPort() > 0 ) {
             s.append(':').append(effectiveUrl.getPort());
+        }
+        if (userAndRepo.startsWith(String.valueOf(s))) {
+            return userAndRepo;
         }
         return s.append('/').append(userAndRepo).toString();
     }
