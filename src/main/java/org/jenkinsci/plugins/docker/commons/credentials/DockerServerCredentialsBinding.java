@@ -2,6 +2,7 @@ package org.jenkinsci.plugins.docker.commons.credentials;
 
 import java.io.IOException;
 
+import org.jenkinsci.Symbol;
 import org.jenkinsci.plugins.credentialsbinding.BindingDescriptor;
 import org.jenkinsci.plugins.credentialsbinding.impl.AbstractOnDiskBinding;
 import org.jenkinsci.plugins.docker.commons.Messages;
@@ -39,7 +40,8 @@ public class DockerServerCredentialsBinding extends AbstractOnDiskBinding<Docker
         return dir;
     }
 
-    @Extension(optional = true)
+    @Extension
+    @Symbol("dockerCert")
     public static class DescriptorImpl extends BindingDescriptor<DockerServerCredentials> {
 
         @Override

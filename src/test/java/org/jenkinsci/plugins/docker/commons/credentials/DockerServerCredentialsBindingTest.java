@@ -35,9 +35,11 @@ import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
 import org.jenkinsci.plugins.workflow.steps.StepConfigTester;
 import org.jenkinsci.plugins.workflow.test.steps.SemaphoreStep;
+import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runners.model.Statement;
+import org.jvnet.hudson.test.BuildWatcher;
 import org.jvnet.hudson.test.RestartableJenkinsRule;
 
 import hudson.Functions;
@@ -54,6 +56,8 @@ import static org.junit.Assert.*;
 
 public class DockerServerCredentialsBindingTest {
 
+    @ClassRule
+    public static BuildWatcher buildWatcher = new BuildWatcher();
     @Rule
     public RestartableJenkinsRule story = new RestartableJenkinsRule();
 
@@ -151,9 +155,9 @@ public class DockerServerCredentialsBindingTest {
                 }
                 p.setDefinition(new CpsFlowDefinition(""
                         + "node {\n"
-                        + "  withCredentials([[$class: 'DockerServerCredentialsBinding',\n"
+                        + "  withCredentials([dockerCert(\n"
                         + "                    variable: 'DOCKER_CERT_PATH',\n"
-                        + "                    credentialsId: 'docker-client-cert']]) {\n"
+                        + "                    credentialsId: 'docker-client-cert')]) {\n"
                         + "    semaphore 'basics'\n"
                         + "\n"
                         + shellStep1
