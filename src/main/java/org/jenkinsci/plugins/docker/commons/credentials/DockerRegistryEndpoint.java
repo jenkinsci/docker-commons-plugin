@@ -285,6 +285,10 @@ public class DockerRegistryEndpoint extends AbstractDescribableImpl<DockerRegist
         }
 
         public ListBoxModel doFillCredentialsIdItems(@AncestorInPath Item item) {
+            if (item == null && !Jenkins.getActiveInstance().hasPermission(Jenkins.ADMINISTER) ||
+                item != null && !item.hasPermission(Item.EXTENDED_READ)) {
+                return new StandardListBoxModel();
+            }
             // TODO may also need to specify a specific authentication and domain requirements
             return new StandardListBoxModel()
                     .withEmptySelection()

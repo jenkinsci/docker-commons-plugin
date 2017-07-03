@@ -180,6 +180,10 @@ public class DockerServerEndpoint extends AbstractDescribableImpl<DockerServerEn
         }
 
         public ListBoxModel doFillCredentialsIdItems(@AncestorInPath Item item, @QueryParameter String uri) {
+            if (item == null && !Jenkins.getActiveInstance().hasPermission(Jenkins.ADMINISTER) ||
+                item != null && !item.hasPermission(Item.EXTENDED_READ)) {
+                return new StandardListBoxModel();
+            }
             List<DomainRequirement> domainRequirements = URIRequirementBuilder.fromUri(uri).build();
             domainRequirements.add(new DockerServerDomainRequirement());
             return new StandardListBoxModel()
