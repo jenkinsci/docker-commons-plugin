@@ -76,12 +76,12 @@ public final class DockerRegistryToken implements Serializable {
      * Makes the credentials available locally and returns {@link KeyMaterialFactory} that gives you the parameters
      * needed to access it.
      *
-     * This is done by inserting the token into {@code ~/.dockercfg}
+     * This is done by inserting the token into {@code ~/.dockercfg} or {@code ~/.docker/config.json}
      */
     public KeyMaterialFactory newKeyMaterialFactory(final @Nonnull URL endpoint, @Nonnull VirtualChannel target, @CheckForNull Launcher launcher, final @Nonnull TaskListener listener) throws InterruptedException, IOException {
         target.call(new MasterToSlaveCallable<Void, IOException>() {
             /**
-             * Insert the token into {@code ~/.dockercfg}
+             * Insert the token into {@code ~/.dockercfg} or {@code ~/.docker/config.json}
              */
             @Override
             public Void call() throws IOException {
@@ -96,6 +96,11 @@ public final class DockerRegistryToken implements Serializable {
                     if (config.exists()) {
                         json = JSONObject.fromObject(FileUtils.readFileToString(config, "UTF-8"));
                         auths = json.getJSONObject("auths");
+                        if (auths.isNullObject()) {
+                            auths = new JSONObject();
+                            json.put("auths", auths);
+                            FileUtils.writeStringToFile(config, json.toString(2), "UTF-8");
+                        }
                     } else {
                         config = new File(System.getProperty("user.home"), ".dockercfg");
                         if (config.exists()) {
