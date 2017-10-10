@@ -33,7 +33,7 @@
   <properties>
     <jenkins.version>1.642.4</jenkins.version>
     <java.level>7</java.level>
-    <jenkins-test-harness.version>2.30-20171010.153224-1</jenkins-test-harness.version> <!-- TODO https://github.com/jenkinsci/jenkins-test-harness/pull/78 -->
+    <jenkins-test-harness.version>2.30</jenkins-test-harness.version>
   </properties>
 
   <repositories>
