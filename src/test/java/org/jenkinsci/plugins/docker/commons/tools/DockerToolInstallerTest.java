@@ -24,6 +24,7 @@
 package org.jenkinsci.plugins.docker.commons.tools;
 
 import hudson.FilePath;
+import hudson.Functions;
 import hudson.model.TaskListener;
 import hudson.slaves.DumbSlave;
 import hudson.tools.InstallSourceProperty;
@@ -49,6 +50,7 @@ public class DockerToolInstallerTest {
     @Issue({"JENKINS-36082", "JENKINS-32790"})
     @Test
     public void smokes() throws Exception {
+        Assume.assumeFalse(Functions.isWindows());
         try {
             new URL("https://get.docker.com/").openStream().close();
         } catch (IOException x) {
