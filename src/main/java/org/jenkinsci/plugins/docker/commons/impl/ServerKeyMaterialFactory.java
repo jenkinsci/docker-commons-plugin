@@ -81,9 +81,10 @@ public class ServerKeyMaterialFactory extends KeyMaterialFactory {
 
         if (key != null && cert != null && ca != null) {
             final FilePath tempCredsDir = new FilePath(getContext().getBaseDir(), UUID.randomUUID().toString());
+            tempCredsDir.mkdirs();
 
             // protect this information from prying eyes
-            tempCredsDir.chmod(0600);
+            tempCredsDir.chmod(0700);
 
             // these file names are defined by convention by docker
             copyInto(tempCredsDir, "key.pem", key);

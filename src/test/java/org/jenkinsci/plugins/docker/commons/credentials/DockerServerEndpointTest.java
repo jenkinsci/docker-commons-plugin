@@ -30,6 +30,7 @@ import com.cloudbees.plugins.credentials.SystemCredentialsProvider;
 import com.cloudbees.plugins.credentials.domains.Domain;
 import com.cloudbees.plugins.credentials.domains.DomainSpecification;
 import hudson.FilePath;
+import hudson.Functions;
 import hudson.model.FreeStyleProject;
 import hudson.remoting.VirtualChannel;
 import hudson.slaves.DumbSlave;
@@ -76,6 +77,9 @@ public class DockerServerEndpointTest {
             assertThat(keyMaterial.env().get("DOCKER_TLS_VERIFY", "missing"), is("1"));
             assertThat(keyMaterial.env().get("DOCKER_CERT_PATH", "missing"), not("missing"));
             path = new FilePath(channel, keyMaterial.env().get("DOCKER_CERT_PATH", "missing"));
+            if (!Functions.isWindows()) {
+                assertThat(path.mode() & 0777, is(0700));
+            }
             assertThat(path.child("key.pem").readToString(), is("a"));
             assertThat(path.child("cert.pem").readToString(), is("b"));
             assertThat(path.child("ca.pem").readToString(), is("c"));
