@@ -34,7 +34,9 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 import org.apache.commons.io.output.TeeOutputStream;
 import static org.hamcrest.Matchers.*;
 import org.junit.Test;
@@ -76,18 +78,23 @@ public class DockerToolInstallerTest {
         } catch (IOException x) {
             Assume.assumeNoException("Cannot contact download sites, perhaps test machine is not online", x);
         }
-        r.jenkins.getDescriptorByType(DockerTool.DescriptorImpl.class).setInstallations(
-            new DockerTool("latest", "", Collections.singletonList(new InstallSourceProperty(Collections.singletonList(new DockerToolInstaller("", "latest"))))),
-            new DockerTool("1.10.0", "", Collections.singletonList(new InstallSourceProperty(Collections.singletonList(new DockerToolInstaller("", "1.10.0"))))),
-            new DockerTool("17.09.1-ce", "", Collections.singletonList(new InstallSourceProperty(Collections.singletonList(new DockerToolInstaller("", "17.09.1-ce"))))));
+        String[] testedVersions = {"17.09.1-ce", "1.12.6", "1.10.0", "latest"};
+        DockerTool[] installations = new DockerTool[testedVersions.length];
+        for (int i = 0; i < testedVersions.length; i++) {
+            String v = testedVersions[i];
+            installations[i] = new DockerTool(v, "", Collections.singletonList(new InstallSourceProperty(Collections.singletonList(new DockerToolInstaller("", v)))));
+        }
+        r.jenkins.getDescriptorByType(DockerTool.DescriptorImpl.class).setInstallations(installations);
         DumbSlave slave = r.createOnlineSlave();
         FilePath toolDir = slave.getRootPath().child("tools/org.jenkinsci.plugins.docker.commons.tools.DockerTool");
 
-        FilePath exe10 = downloadDocker(slave, toolDir, "1.10.0");
-        FilePath exeLatest = downloadDocker(slave, toolDir, "latest");
-        FilePath exe17 = downloadDocker(slave, toolDir, "17.09.1-ce");
-
-        assertThat("we do not have any extra files in here", toolDir.list("**"), arrayContainingInAnyOrder(exe10, toolDir.child("1.10.0/.timestamp"), exeLatest, toolDir.child("latest/.timestamp"), exe17, toolDir.child("17.09.1-ce/.timestamp")));
+        List<FilePath> files = new ArrayList<>();
+        for (String v : testedVersions) {
+            FilePath exe = downloadDocker(slave, toolDir, v);
+            files.add(exe);
+            files.add(toolDir.child(v + "/.timestamp"));
+        }
+        assertThat("we do not have any extra files in here", toolDir.list("**"), arrayContainingInAnyOrder(files.toArray(new FilePath[files.size()])));
     }
 
     private FilePath downloadDocker(DumbSlave slave, FilePath toolDir, String version) throws IOException, InterruptedException {
