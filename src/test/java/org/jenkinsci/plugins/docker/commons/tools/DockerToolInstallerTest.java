@@ -45,6 +45,7 @@ import org.junit.Assume;
 import org.junit.Rule;
 import org.jvnet.hudson.test.Issue;
 import org.jvnet.hudson.test.JenkinsRule;
+import org.jvnet.hudson.test.WithoutJenkins;
 
 public class DockerToolInstallerTest {
 
@@ -52,6 +53,7 @@ public class DockerToolInstallerTest {
     public JenkinsRule r = new JenkinsRule();
 
     @Issue({"JENKINS-48674"})
+    @WithoutJenkins
     @Test
     public void testImageUrl() throws MalformedURLException {
         assertEquals(new URL("https://get.docker.com/builds/Linux/x86_64/docker-1.10.0"), DockerToolInstaller.getDockerImageUrl("linux/static/stable/x86_64", "1.10.0"));
