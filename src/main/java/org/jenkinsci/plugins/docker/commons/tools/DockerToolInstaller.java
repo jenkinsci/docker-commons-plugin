@@ -172,7 +172,7 @@ public class DockerToolInstaller extends ToolInstaller {
 
         @Override
         public String getDisplayName() {
-            return "Install latest from docker.io";
+            return "Download from docker.com";
         }
 
         @Override
