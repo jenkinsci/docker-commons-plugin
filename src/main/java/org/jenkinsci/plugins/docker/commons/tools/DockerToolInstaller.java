@@ -34,10 +34,14 @@ import hudson.remoting.VirtualChannel;
 import hudson.tools.ToolInstallation;
 import hudson.tools.ToolInstaller;
 import hudson.tools.ToolInstallerDescriptor;
+import hudson.util.VersionNumber;
 import java.io.IOException;
 import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import javax.annotation.Nonnull;
 import jenkins.security.MasterToSlaveCallable;
 import org.kohsuke.stapler.DataBoundConstructor;
@@ -68,7 +72,7 @@ public class DockerToolInstaller extends ToolInstaller {
         }
         String os = nodeChannel.call(new FindArch());
 
-        final URL url = new URL("https://get.docker.com/builds/"+os+"/docker-"+version);
+        final URL url = getDockerImageUrl(os, version);
         FilePath install = preferredLocation(tool, node);
 
         // (simplified) copy/paste from FilePath as hudson.FilePath.installIfNecessaryFrom do assume the URL points to be a zip/tar archive
@@ -142,6 +146,27 @@ public class DockerToolInstaller extends ToolInstaller {
         return install;
     }
 
+    static URL getDockerImageUrl(String os, String version) throws MalformedURLException {
+        if (parseVersion(version).isNewerThan(parseVersion("17.05.0-ce")))
+            return new URL("https://download.docker.com/" + os + "/docker-" + version);
+
+        String osName="";
+        if (os.startsWith("linux")) osName = "Linux";
+        if (os.startsWith("win")) osName = "Windows";
+        if (os.startsWith("mac")) osName = "Darwin";
+        return new URL("https://get.docker.com/builds/" + osName + os.substring(os.lastIndexOf("/")) + "/docker-" + version);
+    }
+
+    private static VersionNumber parseVersion(String version) {
+        // any version that sorts before 17.05.0-ce
+        if (version.equals("latest")) return new VersionNumber("0");
+
+        final Matcher matcher = Pattern.compile("(\\d+\\.\\d+\\.\\d+).*").matcher(version);
+        if (matcher.matches()) return new VersionNumber(matcher.group(1));
+
+        throw new IllegalArgumentException("Failed to parse version " + version);
+    }
+
     @Extension
     public static class DescriptorImpl extends ToolInstallerDescriptor<DockerToolInstaller> {
 
@@ -162,9 +187,9 @@ public class DockerToolInstaller extends ToolInstaller {
         public String call() throws IOException {
             String os = System.getProperty("os.name").toLowerCase();
             String arch = System.getProperty("os.arch").contains("64") ? "x86_64" : "i386";
-            if (os.contains("linux")) return "Linux/" + arch;
-            if (os.contains("windows")) return "Windows/" + arch;
-            if (os.contains("mac")) return "Darwin/" + arch;
+            if (os.contains("linux")) return "linux/static/stable/" + arch;
+            if (os.contains("windows")) return "win/static/stable/" + arch;
+            if (os.contains("mac")) return "mac/static/stable/" + arch;
             throw new IOException("Failed to determine OS architecture " + os + ":" + arch);
         }
 
