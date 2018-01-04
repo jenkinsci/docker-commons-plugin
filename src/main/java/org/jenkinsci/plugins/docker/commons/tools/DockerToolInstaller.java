@@ -147,14 +147,12 @@ public class DockerToolInstaller extends ToolInstaller {
     }
 
     static URL getDockerImageUrl(String os, String version) throws MalformedURLException {
-        if (parseVersion(version).isNewerThan(parseVersion("17.05.0-ce")))
-            return new URL("https://download.docker.com/" + os + "/docker-" + version);
+        final int i = os.indexOf("/");
+        if (parseVersion(version).isNewerThan(parseVersion("17.05.0-ce"))) {
+            return new URL("https://download.docker.com/" + os.substring(0, i) + "/static/edge/"+ os.substring(i + 1) + "/docker-" + version);
+        }
 
-        String osName="";
-        if (os.startsWith("linux")) osName = "Linux";
-        if (os.startsWith("win")) osName = "Windows";
-        if (os.startsWith("mac")) osName = "Darwin";
-        return new URL("https://get.docker.com/builds/" + osName + os.substring(os.lastIndexOf("/")) + "/docker-" + version);
+        return new URL("https://get.docker.com/builds/" + FindArch.asGetDockerArchName(os) + os.substring(i +1) + "/docker-" + version);
     }
 
     private static VersionNumber parseVersion(String version) {
@@ -183,16 +181,22 @@ public class DockerToolInstaller extends ToolInstaller {
 
     private static class FindArch extends MasterToSlaveCallable<String,IOException> {
 
+        private static String asGetDockerArchName(String os) {
+            if (os.startsWith("linux")) return "Linux/";
+            if (os.startsWith("win")) return "Windows/";
+            if (os.startsWith("mac")) return "Darwin/";
+            throw new IllegalArgumentException("Failed to recognize OS architecture " + os );
+        }
+
         @Override
         public String call() throws IOException {
             String os = System.getProperty("os.name").toLowerCase();
             String arch = System.getProperty("os.arch").contains("64") ? "x86_64" : "i386";
-            if (os.contains("linux")) return "linux/static/stable/" + arch;
-            if (os.contains("windows")) return "win/static/stable/" + arch;
-            if (os.contains("mac")) return "mac/static/stable/" + arch;
+            if (os.contains("linux")) return "linux/" + arch;
+            if (os.contains("windows")) return "win/" + arch;
+            if (os.contains("mac")) return "mac/" + arch;
             throw new IOException("Failed to determine OS architecture " + os + ":" + arch);
         }
-
     }
 
 }

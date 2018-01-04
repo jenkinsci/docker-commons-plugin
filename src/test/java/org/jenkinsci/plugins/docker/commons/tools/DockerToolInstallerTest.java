@@ -56,18 +56,18 @@ public class DockerToolInstallerTest {
     @WithoutJenkins
     @Test
     public void testImageUrl() throws MalformedURLException {
-        assertEquals(new URL("https://get.docker.com/builds/Linux/x86_64/docker-1.10.0"), DockerToolInstaller.getDockerImageUrl("linux/static/stable/x86_64", "1.10.0"));
-        assertEquals(new URL("https://get.docker.com/builds/Windows/x86_64/docker-1.10.0"), DockerToolInstaller.getDockerImageUrl("win/static/stable/x86_64","1.10.0"));
-        assertEquals(new URL("https://get.docker.com/builds/Darwin/x86_64/docker-1.10.0"), DockerToolInstaller.getDockerImageUrl("mac/static/stable/x86_64","1.10.0"));
-        assertEquals(new URL("https://get.docker.com/builds/Linux/x86_64/docker-17.05.0-ce"), DockerToolInstaller.getDockerImageUrl("linux/static/stable/x86_64", "17.05.0-ce"));
-        assertEquals(new URL("https://get.docker.com/builds/Windows/x86_64/docker-17.05.0-ce"), DockerToolInstaller.getDockerImageUrl("win/static/stable/x86_64","17.05.0-ce"));
-        assertEquals(new URL("https://get.docker.com/builds/Darwin/x86_64/docker-17.05.0-ce"), DockerToolInstaller.getDockerImageUrl("mac/static/stable/x86_64","17.05.0-ce"));
-        assertEquals(new URL("https://get.docker.com/builds/Linux/x86_64/docker-latest"), DockerToolInstaller.getDockerImageUrl("linux/static/stable/x86_64", "latest"));
-        assertEquals(new URL("https://get.docker.com/builds/Windows/x86_64/docker-latest"), DockerToolInstaller.getDockerImageUrl("win/static/stable/x86_64","latest"));
-        assertEquals(new URL("https://get.docker.com/builds/Darwin/x86_64/docker-latest"), DockerToolInstaller.getDockerImageUrl("mac/static/stable/x86_64","latest"));
-        assertEquals(new URL("https://download.docker.com/linux/static/stable/x86_64/docker-17.09.0-ce"), DockerToolInstaller.getDockerImageUrl("linux/static/stable/x86_64", "17.09.0-ce"));
-        assertEquals(new URL("https://download.docker.com/win/static/stable/x86_64/docker-17.09.0-ce"), DockerToolInstaller.getDockerImageUrl("win/static/stable/x86_64","17.09.0-ce"));
-        assertEquals(new URL("https://download.docker.com/mac/static/stable/x86_64/docker-17.09.0-ce"), DockerToolInstaller.getDockerImageUrl("mac/static/stable/x86_64","17.09.0-ce"));
+        assertEquals(new URL("https://get.docker.com/builds/Linux/x86_64/docker-1.10.0"), DockerToolInstaller.getDockerImageUrl("linux/x86_64", "1.10.0"));
+        assertEquals(new URL("https://get.docker.com/builds/Windows/x86_64/docker-1.10.0"), DockerToolInstaller.getDockerImageUrl("win/x86_64","1.10.0"));
+        assertEquals(new URL("https://get.docker.com/builds/Darwin/x86_64/docker-1.10.0"), DockerToolInstaller.getDockerImageUrl("mac/x86_64","1.10.0"));
+        assertEquals(new URL("https://get.docker.com/builds/Linux/x86_64/docker-17.05.0-ce"), DockerToolInstaller.getDockerImageUrl("linux/x86_64", "17.05.0-ce"));
+        assertEquals(new URL("https://get.docker.com/builds/Windows/x86_64/docker-17.05.0-ce"), DockerToolInstaller.getDockerImageUrl("win/x86_64","17.05.0-ce"));
+        assertEquals(new URL("https://get.docker.com/builds/Darwin/x86_64/docker-17.05.0-ce"), DockerToolInstaller.getDockerImageUrl("mac/x86_64","17.05.0-ce"));
+        assertEquals(new URL("https://get.docker.com/builds/Linux/x86_64/docker-latest"), DockerToolInstaller.getDockerImageUrl("linux/x86_64", "latest"));
+        assertEquals(new URL("https://get.docker.com/builds/Windows/x86_64/docker-latest"), DockerToolInstaller.getDockerImageUrl("win/x86_64","latest"));
+        assertEquals(new URL("https://get.docker.com/builds/Darwin/x86_64/docker-latest"), DockerToolInstaller.getDockerImageUrl("mac/x86_64","latest"));
+        assertEquals(new URL("https://download.docker.com/linux/static/edge/x86_64/docker-17.09.0-ce"), DockerToolInstaller.getDockerImageUrl("linux/x86_64", "17.09.0-ce"));
+        assertEquals(new URL("https://download.docker.com/win/static/edge/x86_64/docker-17.09.0-ce"), DockerToolInstaller.getDockerImageUrl("win/x86_64","17.09.0-ce"));
+        assertEquals(new URL("https://download.docker.com/mac/static/edge/x86_64/docker-17.09.0-ce"), DockerToolInstaller.getDockerImageUrl("mac/x86_64","17.09.0-ce"));
     }
 
     @Issue({"JENKINS-36082", "JENKINS-32790", "JENKINS-48674"})
