@@ -25,6 +25,7 @@ package org.jenkinsci.plugins.docker.commons.tools;
 
 import hudson.FilePath;
 import hudson.Functions;
+import hudson.console.PlainTextConsoleOutputStream;
 import hudson.model.TaskListener;
 import hudson.slaves.DumbSlave;
 import hudson.tools.InstallSourceProperty;
@@ -71,18 +72,14 @@ public class DockerToolInstallerTest {
         Assume.assumeFalse(Functions.isWindows());
         try {
             new URL("https://get.docker.com/").openStream().close();
-        } catch (IOException x) {
-            Assume.assumeNoException("Cannot contact get.docker.com, perhaps test machine is not online", x);
-        }
-        try {
             new URL("https://download.docker.com/").openStream().close();
         } catch (IOException x) {
-            Assume.assumeNoException("Cannot contact download.docker.com, perhaps test machine is not online", x);
+            Assume.assumeNoException("Cannot contact download sites, perhaps test machine is not online", x);
         }
         r.jenkins.getDescriptorByType(DockerTool.DescriptorImpl.class).setInstallations(
             new DockerTool("latest", "", Collections.singletonList(new InstallSourceProperty(Collections.singletonList(new DockerToolInstaller("", "latest"))))),
             new DockerTool("1.10.0", "", Collections.singletonList(new InstallSourceProperty(Collections.singletonList(new DockerToolInstaller("", "1.10.0"))))),
-            new DockerTool("17.09.1-ce", "", Collections.singletonList(new InstallSourceProperty(Collections.singletonList(new DockerToolInstaller("", "17.09.1-ce.tgz"))))));
+            new DockerTool("17.09.1-ce", "", Collections.singletonList(new InstallSourceProperty(Collections.singletonList(new DockerToolInstaller("", "17.09.1-ce"))))));
         DumbSlave slave = r.createOnlineSlave();
         FilePath toolDir = slave.getRootPath().child("tools/org.jenkinsci.plugins.docker.commons.tools.DockerTool");
 
@@ -95,7 +92,8 @@ public class DockerToolInstallerTest {
 
     private FilePath downloadDocker(DumbSlave slave, FilePath toolDir, String version) throws IOException, InterruptedException {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        TaskListener l = new StreamTaskListener(new TeeOutputStream(baos, System.err));
+        TeeOutputStream tee = new TeeOutputStream(baos, new PlainTextConsoleOutputStream(System.err));
+        TaskListener l = new StreamTaskListener(tee);
 
         FilePath exe = toolDir.child(version+"/bin/docker");
         // Download for first time:
@@ -107,6 +105,12 @@ public class DockerToolInstallerTest {
         assertEquals(exe.getRemote(), DockerTool.getExecutable(version, slave, l, null));
         assertTrue(exe.exists());
         assertThat(baos.toString(), not(containsString(Messages.DockerToolInstaller_downloading_docker_client_(version))));
+        // Version check:
+        baos.reset();
+        assertEquals(0, slave.createLauncher(l).launch().cmds(exe.getRemote(), "version", "--format", "{{.Client.Version}}").quiet(true).stdout(tee).stderr(System.err).join());
+        if (!version.equals("latest")) {
+            assertEquals(version, baos.toString().trim());
+        }
         return exe;
     }
 
