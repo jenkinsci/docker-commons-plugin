@@ -23,6 +23,7 @@
  */
 package org.jenkinsci.plugins.docker.commons.fingerprint;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.BulkChange;
 import hudson.model.Fingerprint;
 import hudson.model.Run;
@@ -79,8 +80,9 @@ public class DockerFingerprints {
      * @return Created fingerprint or null if it is not found
      * @throws IOException Fingerprint loading error
      */
+    @SuppressFBWarnings("RCN_REDUNDANT_NULLCHECK_OF_NONNULL_VALUE")
     public static @CheckForNull Fingerprint of(@Nonnull String id) throws IOException {
-        final Jenkins jenkins = Jenkins.getInstance(); // should be not null
+        final Jenkins jenkins = Jenkins.getInstance(); // should be not null, but technically can be
         return jenkins != null ? jenkins.getFingerprintMap().get(getFingerprintHash(id)) : null;
     }
     
