@@ -80,8 +80,7 @@ public class DockerFingerprints {
      * @throws IOException Fingerprint loading error
      */
     public static @CheckForNull Fingerprint of(@Nonnull String id) throws IOException {
-        final Jenkins jenkins = Jenkins.getInstance(); // should be not null
-        return jenkins != null ? jenkins.getFingerprintMap().get(getFingerprintHash(id)) : null;
+        return Jenkins.getInstance().getFingerprintMap().get(getFingerprintHash(id));
     }
     
     private static @CheckForNull Fingerprint ofNoException(@Nonnull String id) {
