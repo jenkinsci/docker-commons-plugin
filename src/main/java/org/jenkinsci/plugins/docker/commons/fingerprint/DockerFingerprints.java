@@ -23,7 +23,6 @@
  */
 package org.jenkinsci.plugins.docker.commons.fingerprint;
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.BulkChange;
 import hudson.model.Fingerprint;
 import hudson.model.Run;
