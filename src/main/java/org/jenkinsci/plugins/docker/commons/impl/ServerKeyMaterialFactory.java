@@ -33,7 +33,6 @@ import org.kohsuke.accmod.restrictions.NoExternalUse;
 
 import javax.annotation.CheckForNull;
 import java.io.IOException;
-import java.util.UUID;
 
 /**
  * {@link org.jenkinsci.plugins.docker.commons.credentials.KeyMaterialFactory} for talking to docker daemon.
@@ -80,11 +79,7 @@ public class ServerKeyMaterialFactory extends KeyMaterialFactory {
         EnvVars e = new EnvVars();
 
         if (key != null && cert != null && ca != null) {
-            final FilePath tempCredsDir = new FilePath(getContext().getBaseDir(), UUID.randomUUID().toString());
-            tempCredsDir.mkdirs();
-
-            // protect this information from prying eyes
-            tempCredsDir.chmod(0700);
+            FilePath tempCredsDir = createSecretsDirectory();
 
             // these file names are defined by convention by docker
             copyInto(tempCredsDir, "key.pem", key);

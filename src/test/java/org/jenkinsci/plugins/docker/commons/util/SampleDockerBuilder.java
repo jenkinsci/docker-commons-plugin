@@ -75,13 +75,11 @@ public class SampleDockerBuilder extends Builder {
     @Override
     public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws InterruptedException, IOException {
         // prepare the credentials to talk to this docker and make it available for docker you'll be forking
-        KeyMaterialFactory keyMaterialFactory = server.newKeyMaterialFactory(build).plus(registry.newKeyMaterialFactory(build));
-        KeyMaterial key = keyMaterialFactory.materialize();
-        try {
+        String dockerExecutable = DockerTool.getExecutable(toolName, build.getBuiltOn(), listener, build.getEnvironment(listener));
+        KeyMaterialFactory keyMaterialFactory = server.newKeyMaterialFactory(build).plus(registry.newKeyMaterialFactory(build.getParent(), build.getWorkspace(), launcher, listener, dockerExecutable));
+        try (KeyMaterial key = keyMaterialFactory.materialize()) {
             // fork docker with appropriate environment to interact with this docker daemon
-            return launcher.launch().cmds(DockerTool.getExecutable(toolName, build.getBuiltOn(), listener, build.getEnvironment(listener)), "info").envs(key.env()).join() == 0;
-        } finally {
-            key.close();
+            return launcher.launch().cmds(dockerExecutable, "info").envs(key.env()).join() == 0;
         }
     }
 

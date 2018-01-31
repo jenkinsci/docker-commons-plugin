@@ -39,10 +39,6 @@ import java.io.IOException;
  */
 @Restricted(NoExternalUse.class)
 public class ServerHostKeyMaterialFactory extends KeyMaterialFactory{
-    /**
-     * Standardize serialization
-     */
-    private static final long serialVersionUID = 1L;
 
     /**
      * The host.

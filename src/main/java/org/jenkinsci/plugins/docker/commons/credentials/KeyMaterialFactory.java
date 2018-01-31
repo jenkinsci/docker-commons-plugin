@@ -23,6 +23,7 @@
  */
 package org.jenkinsci.plugins.docker.commons.credentials;
 
+import hudson.FilePath;
 import hudson.model.AbstractBuild;
 import org.jenkinsci.plugins.docker.commons.impl.CompositeKeyMaterialFactory;
 import org.jenkinsci.plugins.docker.commons.impl.NullKeyMaterialFactory;
@@ -30,9 +31,9 @@ import org.jenkinsci.plugins.docker.commons.impl.NullKeyMaterialFactory;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.io.IOException;
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 /**
  * Represents a locally extracted credentials information.
@@ -45,13 +46,8 @@ import java.util.List;
  * @see DockerServerEndpoint#newKeyMaterialFactory(AbstractBuild)
  * @see DockerRegistryEndpoint#newKeyMaterialFactory(AbstractBuild)
  */
-public abstract class KeyMaterialFactory implements Serializable {
+public abstract class KeyMaterialFactory {
 
-    /**
-     * Ensure consistent serialization.
-     */
-    private static final long serialVersionUID = 1L;
-    
     public static final KeyMaterialFactory NULL = new NullKeyMaterialFactory();
     
     private /* write once */ KeyMaterialContext context;
@@ -91,6 +87,17 @@ public abstract class KeyMaterialFactory implements Serializable {
      * information to be removed from the disk.
      */
     public abstract KeyMaterial materialize() throws IOException, InterruptedException;
+
+    /**
+     * Creates a read-protected directory inside {@link KeyMaterialContext#getBaseDir} suitable for storing secret files.
+     * Be sure to {@link FilePath#deleteRecursive} this in {@link KeyMaterial#close}.
+     */
+    protected final FilePath createSecretsDirectory() throws IOException, InterruptedException {
+        FilePath dir = new FilePath(getContext().getBaseDir(), UUID.randomUUID().toString());
+        dir.mkdirs();
+        dir.chmod(0700);
+        return dir;
+    }
 
     /**
      * Merge additional {@link KeyMaterialFactory}s into one.

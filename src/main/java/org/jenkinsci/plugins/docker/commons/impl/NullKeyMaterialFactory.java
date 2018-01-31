@@ -40,8 +40,6 @@ import java.io.IOException;
 @Restricted(NoExternalUse.class)
 public final class NullKeyMaterialFactory extends KeyMaterialFactory {
 
-    private static final long serialVersionUID = 1L;
-
     @Override
     public KeyMaterial materialize() throws IOException, InterruptedException {
         return KeyMaterial.NULL;
