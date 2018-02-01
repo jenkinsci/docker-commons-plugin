@@ -71,7 +71,7 @@ public final class DockerRegistryToken implements Serializable {
     }
 
     /**
-     * @deprecated use {@link #newKeyMaterialFactory(URL, Launcher, TaskListener, String)}
+     * @deprecated use {@link #newKeyMaterialFactory(URL, FilePath, Launcher, TaskListener, String)}
      */
     @Deprecated
     public KeyMaterialFactory newKeyMaterialFactory(final URL endpoint, @Nonnull VirtualChannel target) throws InterruptedException, IOException {
@@ -103,7 +103,7 @@ public final class DockerRegistryToken implements Serializable {
      * needed to access it.
      *
      * This is done by inserting the token into {@code ~/.dockercfg}
-     * @deprecated use {@link #newKeyMaterialFactory(URL, Launcher, TaskListener, String)}
+     * @deprecated use {@link #newKeyMaterialFactory(URL, FilePath, Launcher, TaskListener, String)}
      */
     @Deprecated
     public KeyMaterialFactory newKeyMaterialFactory(final @Nonnull URL endpoint, @Nonnull VirtualChannel target, @CheckForNull Launcher launcher, final @Nonnull TaskListener listener) throws InterruptedException, IOException {
