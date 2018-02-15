@@ -62,6 +62,8 @@ import static com.cloudbees.plugins.credentials.CredentialsMatchers.*;
 import hudson.AbortException;
 import hudson.Launcher;
 import hudson.model.TaskListener;
+import hudson.slaves.WorkspaceList;
+import org.jenkinsci.plugins.docker.commons.tools.DockerTool;
 
 /**
  * Encapsulates the endpoint of DockerHub and how to interact with it.
@@ -185,7 +187,7 @@ public class DockerRegistryEndpoint extends AbstractDescribableImpl<DockerRegist
     }
 
     /**
-     * @deprecated Call {@link #newKeyMaterialFactory(Item, VirtualChannel, Launcher, TaskListener)}
+     * @deprecated Call {@link #newKeyMaterialFactory(Item, FilePath, Launcher, TaskListener, String)}
      */
     @Deprecated
     public KeyMaterialFactory newKeyMaterialFactory(@Nonnull AbstractBuild build) throws IOException, InterruptedException {
@@ -197,7 +199,7 @@ public class DockerRegistryEndpoint extends AbstractDescribableImpl<DockerRegist
     }
 
     /**
-     * @deprecated Call {@link #newKeyMaterialFactory(Item, VirtualChannel, Launcher, TaskListener)}
+     * @deprecated Call {@link #newKeyMaterialFactory(Item, FilePath, Launcher, TaskListener, String)}
      */
     @Deprecated
     public KeyMaterialFactory newKeyMaterialFactory(Item context, @Nonnull VirtualChannel target) throws IOException, InterruptedException {
@@ -205,9 +207,9 @@ public class DockerRegistryEndpoint extends AbstractDescribableImpl<DockerRegist
     }
 
     /**
-     * Makes the credentials available locally and returns {@link KeyMaterialFactory} that gives you the parameters
-     * needed to access it.
+     * @deprecated Call {@link #newKeyMaterialFactory(Item, FilePath, Launcher, TaskListener, String)}
      */
+    @Deprecated
     public KeyMaterialFactory newKeyMaterialFactory(@CheckForNull Item context, @Nonnull VirtualChannel target, @CheckForNull Launcher launcher, @Nonnull TaskListener listener) throws IOException, InterruptedException {
         if (credentialsId == null) {
             return KeyMaterialFactory.NULL; // nothing needed to be done
@@ -217,6 +219,23 @@ public class DockerRegistryEndpoint extends AbstractDescribableImpl<DockerRegist
             throw new AbortException("Could not find credentials matching " + credentialsId);
         }
         return token.newKeyMaterialFactory(getEffectiveUrl(), target, launcher, listener);
+    }
+
+    /**
+     * Makes the credentials available locally and returns {@link KeyMaterialFactory} that gives you the parameters
+     * needed to access it.
+     * @param workspace a workspace being used for operations ({@link WorkspaceList#tempDir} will be applied)
+     * @param dockerExecutable as in {@link DockerTool#getExecutable}, with a 1.8+ client
+     */
+    public KeyMaterialFactory newKeyMaterialFactory(@CheckForNull Item context, @Nonnull FilePath workspace, @Nonnull Launcher launcher, @Nonnull TaskListener listener, @Nonnull String dockerExecutable) throws IOException, InterruptedException {
+        if (credentialsId == null) {
+            return KeyMaterialFactory.NULL; // nothing needed to be done
+        }
+        DockerRegistryToken token = getToken(context);
+        if (token == null) {
+            throw new AbortException("Could not find credentials matching " + credentialsId);
+        }
+        return token.newKeyMaterialFactory(getEffectiveUrl(), workspace, launcher, listener, dockerExecutable);
     }
 
     /**

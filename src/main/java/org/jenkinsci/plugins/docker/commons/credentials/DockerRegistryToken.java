@@ -24,20 +24,26 @@
 package org.jenkinsci.plugins.docker.commons.credentials;
 
 import com.cloudbees.plugins.credentials.Credentials;
+import hudson.FilePath;
 import hudson.Launcher;
 import hudson.model.TaskListener;
 import hudson.remoting.VirtualChannel;
-import jenkins.authentication.tokens.api.AuthenticationTokens;
-import jenkins.security.MasterToSlaveCallable;
-import net.sf.json.JSONObject;
-import org.apache.commons.io.FileUtils;
-
-import javax.annotation.Nonnull;
+import hudson.slaves.WorkspaceList;
 import java.io.File;
 import java.io.IOException;
 import java.io.Serializable;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
+import java.util.Base64;
 import javax.annotation.CheckForNull;
+import javax.annotation.Nonnull;
+import jenkins.authentication.tokens.api.AuthenticationTokens;
+import jenkins.security.MasterToSlaveCallable;
+import net.sf.json.JSONObject;
+import org.apache.commons.io.FileUtils;
+import org.jenkinsci.plugins.docker.commons.impl.RegistryKeyMaterialFactory;
+import org.jenkinsci.plugins.docker.commons.tools.DockerTool;
 
 /**
  * Represents an authentication token that docker(1) understands when pushing/pulling
@@ -65,7 +71,7 @@ public final class DockerRegistryToken implements Serializable {
     }
 
     /**
-     * @deprecated Call {@link #newKeyMaterialFactory(URL, VirtualChannel, Launcher, TaskListener)}
+     * @deprecated use {@link #newKeyMaterialFactory(URL, FilePath, Launcher, TaskListener, String)}
      */
     @Deprecated
     public KeyMaterialFactory newKeyMaterialFactory(final URL endpoint, @Nonnull VirtualChannel target) throws InterruptedException, IOException {
@@ -73,11 +79,33 @@ public final class DockerRegistryToken implements Serializable {
     }
 
     /**
+     * Sets up an environment logged in to the specified Docker registry.
+     * @param dockerExecutable as in {@link DockerTool#getExecutable}, with a 1.8+ client
+     */
+    public KeyMaterialFactory newKeyMaterialFactory(@Nonnull URL endpoint, @Nonnull FilePath workspace, @Nonnull Launcher launcher, @Nonnull TaskListener listener, @Nonnull String dockerExecutable) throws InterruptedException, IOException {
+        try {
+            // see UsernamePasswordDockerRegistryTokenSource for example
+            String usernameColonPassword = new String(Base64.getDecoder().decode(token), StandardCharsets.UTF_8);
+            int colon = usernameColonPassword.indexOf(':');
+            if (colon > 0) {
+                return new RegistryKeyMaterialFactory(usernameColonPassword.substring(0, colon), usernameColonPassword.substring(colon + 1), endpoint, launcher, listener, dockerExecutable).
+                    contextualize(new KeyMaterialContext(WorkspaceList.tempDir(workspace)));
+            }
+        } catch (IllegalArgumentException x) {
+            // not Base64-encoded
+        }
+        listener.getLogger().println("Warning: authentication token does not look like a username:password; falling back to direct manipulation of Docker configuration files");
+        return newKeyMaterialFactory(endpoint, workspace.getChannel(), launcher, listener);
+    }
+
+    /**
      * Makes the credentials available locally and returns {@link KeyMaterialFactory} that gives you the parameters
      * needed to access it.
      *
      * This is done by inserting the token into {@code ~/.dockercfg}
+     * @deprecated use {@link #newKeyMaterialFactory(URL, FilePath, Launcher, TaskListener, String)}
      */
+    @Deprecated
     public KeyMaterialFactory newKeyMaterialFactory(final @Nonnull URL endpoint, @Nonnull VirtualChannel target, @CheckForNull Launcher launcher, final @Nonnull TaskListener listener) throws InterruptedException, IOException {
         target.call(new MasterToSlaveCallable<Void, IOException>() {
             /**
@@ -85,8 +113,6 @@ public final class DockerRegistryToken implements Serializable {
              */
             @Override
             public Void call() throws IOException {
-                // TODO: TF: Should this not be done via docker login (possibly preceded by a logout) ?               
-
                 JSONObject json;
                 JSONObject auths;
 

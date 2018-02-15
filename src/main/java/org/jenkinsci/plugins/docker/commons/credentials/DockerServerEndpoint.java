@@ -130,6 +130,7 @@ public class DockerServerEndpoint extends AbstractDescribableImpl<DockerServerEn
     }
 
     static FilePath dotDocker(@Nonnull VirtualChannel target) throws IOException, InterruptedException {
+        // TODO this is wrong, should be using WorkspaceList.tempDir
         return FilePath.getHomeDirectory(target).child(".docker");
     }
 
