@@ -38,13 +38,16 @@ import hudson.model.AbstractDescribableImpl;
 import hudson.model.Describable;
 import hudson.model.Descriptor;
 import hudson.model.Item;
+import hudson.model.Queue;
 import hudson.model.Run;
 import hudson.model.TaskListener;
+import hudson.model.queue.Tasks;
 import hudson.remoting.VirtualChannel;
 import hudson.util.ListBoxModel;
 import jenkins.authentication.tokens.api.AuthenticationTokens;
 import jenkins.model.Jenkins;
 
+import org.acegisecurity.Authentication;
 import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
 
@@ -184,7 +187,7 @@ public class DockerRegistryEndpoint extends AbstractDescribableImpl<DockerRegist
 
         // look for subtypes that know how to create a token, such as Google Container Registry
         return AuthenticationTokens.convert(DockerRegistryToken.class, firstOrNull(CredentialsProvider.lookupCredentials(
-                IdCredentials.class, context, Jenkins.getAuthentication(),requirements),
+                IdCredentials.class, context, Jenkins.getAuthentication(), requirements),
                 allOf(AuthenticationTokens.matcher(DockerRegistryToken.class), withId(credentialsId))));
     }
 
