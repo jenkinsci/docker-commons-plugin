@@ -31,11 +31,7 @@ import com.cloudbees.plugins.credentials.domains.DomainRequirement;
 import com.cloudbees.plugins.credentials.domains.URIRequirementBuilder;
 import hudson.Extension;
 import hudson.FilePath;
-import hudson.model.AbstractBuild;
-import hudson.model.AbstractDescribableImpl;
-import hudson.model.Describable;
-import hudson.model.Descriptor;
-import hudson.model.Item;
+import hudson.model.*;
 import hudson.remoting.VirtualChannel;
 import hudson.util.ListBoxModel;
 import jenkins.authentication.tokens.api.AuthenticationTokens;
@@ -120,6 +116,26 @@ public class DockerServerEndpoint extends AbstractDescribableImpl<DockerServerEn
                             domainRequirements),
                     CredentialsMatchers.withId(credentialsId)
             );
+        }
+
+        // the directory needs to be outside workspace to avoid prying eyes
+        FilePath dotDocker = dotDocker(target);
+        dotDocker.mkdirs();
+        // ServerKeyMaterialFactory.materialize creates a random subdir if one is needed:
+        return newKeyMaterialFactory(dotDocker, creds);
+    }
+
+    /**
+     * Makes the key materials available locally and returns {@link KeyMaterialFactory} that gives you the parameters
+     * needed to access it.
+     */
+    public KeyMaterialFactory newKeyMaterialFactory(@Nonnull Run context, @Nonnull VirtualChannel target) throws IOException, InterruptedException {
+        DockerServerCredentials creds=null;
+        if (credentialsId!=null) {
+            List<DomainRequirement> domainRequirements = URIRequirementBuilder.fromUri(getUri()).build();
+            domainRequirements.add(new DockerServerDomainRequirement());
+            creds = CredentialsProvider.findCredentialById(credentialsId, DockerServerCredentials.class, context,
+                    domainRequirements);
         }
 
         // the directory needs to be outside workspace to avoid prying eyes
