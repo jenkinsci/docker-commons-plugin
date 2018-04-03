@@ -96,20 +96,20 @@ public class DockerFingerprintAction implements RunAction2, IconSpec {
     public @CheckForNull String getFingerprintHash(@CheckForNull String imageId) {
         return (imageId != null) ? DockerFingerprints.getFingerprintHash(imageId) : null;
     }
-    
+
     @Restricted(NoExternalUse.class)
     public @CheckForNull Fingerprint getFingerprint(@CheckForNull String imageId) {
         if (imageId == null) {
             return null;
         }
-        
+
         try {
             return DockerFingerprints.of(imageId);
         } catch (IOException ex) {
             return null; // nothing to do in web UI - return null as well
         }
     }
-    
+
     public List<DockerFingerprintFacet> getDockerFacets(String imageId) {
         List<DockerFingerprintFacet> res = new LinkedList<DockerFingerprintFacet>();
         final Fingerprint fp = getFingerprint(imageId);
@@ -125,9 +125,9 @@ public class DockerFingerprintAction implements RunAction2, IconSpec {
 
     /**
      * Adds an action with a reference to fingerprint if required. It's
-     * recommended to call the method from {
+     * recommended to call the method from {@link hudson.BulkChange}
+     * transaction to avoid saving the {@link Run} multiple times.
      *
-     * @BulkChange} transaction to avoid saving the {@link Run} multiple times.
      * @param fp Fingerprint
      * @param imageId ID of the docker image
      * @param run Run to be updated
@@ -140,7 +140,7 @@ public class DockerFingerprintAction implements RunAction2, IconSpec {
                 action = new DockerFingerprintAction();
                 run.addAction(action);
             }
-            
+
             if (action.imageIDs.add(imageId)) {
                 run.save();
             } // else no need to save updates
