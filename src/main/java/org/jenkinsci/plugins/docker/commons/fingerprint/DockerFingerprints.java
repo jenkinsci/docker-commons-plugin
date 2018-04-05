@@ -26,12 +26,8 @@ package org.jenkinsci.plugins.docker.commons.fingerprint;
 import hudson.BulkChange;
 import hudson.model.Fingerprint;
 import hudson.model.Run;
-import jenkins.model.FingerprintFacet;
 import jenkins.model.Jenkins;
-import org.apache.commons.lang.StringUtils;
 
-import javax.annotation.CheckForNull;
-import javax.annotation.Nonnull;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.Collections;
@@ -39,6 +35,10 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.annotation.CheckForNull;
+import javax.annotation.Nonnull;
+import jenkins.model.FingerprintFacet;
+import org.apache.commons.lang.StringUtils;
 
 /**
  * Entry point into fingerprint related functionalities in Docker.
@@ -254,56 +254,54 @@ public class DockerFingerprints {
      * @param run the build in which the image building occurred
      */
     public static void addFromFacet(@CheckForNull String ancestorImageId, @Nonnull String descendantImageId, @Nonnull Run<?,?> run) throws IOException {
-        synchronized (run.getParent()) {
-            long timestamp = System.currentTimeMillis();
-            if (ancestorImageId != null) {
-                Fingerprint f = forImage(run, ancestorImageId);
-                Collection<FingerprintFacet> facets = f.getFacets();
-                DockerDescendantFingerprintFacet descendantFacet = null;
-                for (FingerprintFacet facet : facets) {
-                    if (facet instanceof DockerDescendantFingerprintFacet) {
-                        descendantFacet = (DockerDescendantFingerprintFacet) facet;
-                        break;
-                    }
-                }
-                BulkChange bc = new BulkChange(f);
-                try {
-                    if (descendantFacet == null) {
-                        descendantFacet = new DockerDescendantFingerprintFacet(f, timestamp, ancestorImageId);
-                        facets.add(descendantFacet);
-                    }
-                    descendantFacet.addDescendantImageId(descendantImageId);
-                    descendantFacet.addFor(run);
-                    DockerFingerprintAction.addToRun(f, ancestorImageId, run);
-                    bc.commit();
-                } finally {
-                    bc.abort();
-                }
-            }
-            Fingerprint f = forImage(run, descendantImageId);
+        long timestamp = System.currentTimeMillis();
+        if (ancestorImageId != null) {
+            Fingerprint f = forImage(run, ancestorImageId);
             Collection<FingerprintFacet> facets = f.getFacets();
-            DockerAncestorFingerprintFacet ancestorFacet = null;
+            DockerDescendantFingerprintFacet descendantFacet = null;
             for (FingerprintFacet facet : facets) {
-                if (facet instanceof DockerAncestorFingerprintFacet) {
-                    ancestorFacet = (DockerAncestorFingerprintFacet) facet;
+                if (facet instanceof DockerDescendantFingerprintFacet) {
+                    descendantFacet = (DockerDescendantFingerprintFacet) facet;
                     break;
                 }
             }
             BulkChange bc = new BulkChange(f);
             try {
-                if (ancestorFacet == null) {
-                    ancestorFacet = new DockerAncestorFingerprintFacet(f, timestamp, descendantImageId);
-                    facets.add(ancestorFacet);
+                if (descendantFacet == null) {
+                    descendantFacet = new DockerDescendantFingerprintFacet(f, timestamp, ancestorImageId);
+                    facets.add(descendantFacet);
                 }
-                if (ancestorImageId != null) {
-                    ancestorFacet.addAncestorImageId(ancestorImageId);
-                }
-                ancestorFacet.addFor(run);
-                DockerFingerprintAction.addToRun(f, descendantImageId, run);
+                descendantFacet.addDescendantImageId(descendantImageId);
+                descendantFacet.addFor(run);
+                DockerFingerprintAction.addToRun(f, ancestorImageId, run);
                 bc.commit();
             } finally {
                 bc.abort();
             }
+        }
+        Fingerprint f = forImage(run, descendantImageId);
+        Collection<FingerprintFacet> facets = f.getFacets();
+        DockerAncestorFingerprintFacet ancestorFacet = null;
+        for (FingerprintFacet facet : facets) {
+            if (facet instanceof DockerAncestorFingerprintFacet) {
+                ancestorFacet = (DockerAncestorFingerprintFacet) facet;
+                break;
+            }
+        }
+        BulkChange bc = new BulkChange(f);
+        try {
+            if (ancestorFacet == null) {
+                ancestorFacet = new DockerAncestorFingerprintFacet(f, timestamp, descendantImageId);
+                facets.add(ancestorFacet);
+            }
+            if (ancestorImageId != null) {
+                ancestorFacet.addAncestorImageId(ancestorImageId);
+            }
+            ancestorFacet.addFor(run);
+            DockerFingerprintAction.addToRun(f, descendantImageId, run);
+            bc.commit();
+        } finally {
+            bc.abort();
         }
     }
 
