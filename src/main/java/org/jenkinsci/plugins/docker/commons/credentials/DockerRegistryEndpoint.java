@@ -43,6 +43,7 @@ import hudson.model.Run;
 import hudson.model.TaskListener;
 import hudson.model.queue.Tasks;
 import hudson.remoting.VirtualChannel;
+import hudson.security.ACL;
 import hudson.util.ListBoxModel;
 import jenkins.authentication.tokens.api.AuthenticationTokens;
 import jenkins.model.Jenkins;
@@ -58,6 +59,7 @@ import javax.annotation.Nullable;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.regex.Matcher;
@@ -164,6 +166,9 @@ public class DockerRegistryEndpoint extends AbstractDescribableImpl<DockerRegist
      * Plugins that want to refer to a {@link IdCredentials} should do so via ID string,
      * and use this method to resolve it and convert to {@link DockerRegistryToken}.
      *
+     * Implements the logic {@link CredentialsProvider#findCredentialById(String, Class, Run, DomainRequirement...)}
+     * but for an {@link Item}.
+     *
      * @param context
      *       If you are a build step trying to access DockerHub in the context of a build/job,
      *       specify that job. Otherwise null. If you are scoped to something else, you might
@@ -185,9 +190,16 @@ public class DockerRegistryEndpoint extends AbstractDescribableImpl<DockerRegist
             // shrug off this error and move on. We are matching with ID anyway.
         }
 
+        Authentication runAuth = context instanceof Queue.Task ?
+                Tasks.getAuthenticationOf((Queue.Task) context) : ACL.SYSTEM;
+        List<IdCredentials> candidates = new ArrayList();
+        candidates.addAll(CredentialsProvider.lookupCredentials(IdCredentials.class, context, runAuth, requirements));
+        if (runAuth != ACL.SYSTEM && context.getACL().hasPermission(runAuth, CredentialsProvider.USE_ITEM)) {
+            candidates.addAll(CredentialsProvider.lookupCredentials(IdCredentials.class, context, ACL.SYSTEM, requirements));
+        }
+
         // look for subtypes that know how to create a token, such as Google Container Registry
-        return AuthenticationTokens.convert(DockerRegistryToken.class, firstOrNull(CredentialsProvider.lookupCredentials(
-                IdCredentials.class, context, Jenkins.getAuthentication(), requirements),
+        return AuthenticationTokens.convert(DockerRegistryToken.class, firstOrNull(candidates,
                 allOf(AuthenticationTokens.matcher(DockerRegistryToken.class), withId(credentialsId))));
     }
 
