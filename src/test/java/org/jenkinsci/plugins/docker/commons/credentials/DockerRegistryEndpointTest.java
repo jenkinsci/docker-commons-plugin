@@ -27,13 +27,30 @@ import static org.junit.Assert.*;
 
 import java.io.IOException;
 
+import com.cloudbees.plugins.credentials.CredentialsProvider;
+import com.cloudbees.plugins.credentials.CredentialsScope;
+import com.cloudbees.plugins.credentials.common.IdCredentials;
+import com.cloudbees.plugins.credentials.domains.Domain;
+import com.cloudbees.plugins.credentials.impl.UsernamePasswordCredentialsImpl;
+import hudson.model.*;
+import jenkins.model.Jenkins;
+import org.acegisecurity.context.SecurityContextHolder;
+import org.apache.commons.codec.binary.Base64;
+import org.apache.commons.io.Charsets;
+import org.junit.Assert;
+import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.Issue;
+import org.jvnet.hudson.test.JenkinsRule;
+import org.jvnet.hudson.test.MockAuthorizationStrategy;
 
 /**
  * @author Carlos Sanchez <carlos@apache.org>
  */
 public class DockerRegistryEndpointTest {
+
+    @Rule
+    public JenkinsRule j = new JenkinsRule();
 
     @Test
     public void testParse() throws Exception {
@@ -70,6 +87,56 @@ public class DockerRegistryEndpointTest {
     @Test(expected = IllegalArgumentException.class)
     public void testParseNullUrlAndImageName() throws Exception {
         new DockerRegistryEndpoint(null, null).imageName(null);
+    }
+
+    @Issue("JENKINS-48437")
+    @Test
+    public void testGetTokenForItem() throws IOException {
+        j.jenkins.setSecurityRealm(j.createDummySecurityRealm());
+        MockAuthorizationStrategy auth = new MockAuthorizationStrategy()
+                .grant(Jenkins.READ).everywhere().to("alice")
+                .grant(Computer.BUILD).everywhere().to("alice")
+                .grant(Item.CONFIGURE).everywhere().to("alice");
+        j.jenkins.setAuthorizationStrategy(auth);
+
+        String globalCredentialsId = "global-creds";
+        IdCredentials credentials = new UsernamePasswordCredentialsImpl(CredentialsScope.GLOBAL,
+                globalCredentialsId, "test-global-creds", "user", "password");
+        CredentialsProvider.lookupStores(j.jenkins).iterator().next().addCredentials(Domain.global(), credentials);
+
+        FreeStyleProject item = j.createFreeStyleProject("testGetToken");
+        SecurityContextHolder.getContext().setAuthentication(User.get("alice").impersonate());
+
+        DockerRegistryToken token = new DockerRegistryEndpoint("https://index.docker.io/v1/", globalCredentialsId).getToken(item);
+        Assert.assertNotNull(token);
+        Assert.assertEquals("user", token.getEmail());
+        Assert.assertEquals(Base64.encodeBase64String("user:password".getBytes(Charsets.UTF_8)), token.getToken());
+    }
+
+    @Issue("JENKINS-48437")
+    @Test
+    public void testGetTokenForRun() throws IOException {
+        j.jenkins.setSecurityRealm(j.createDummySecurityRealm());
+        MockAuthorizationStrategy auth = new MockAuthorizationStrategy()
+                .grant(Jenkins.READ).everywhere().to("alice")
+                .grant(Computer.BUILD).everywhere().to("alice")
+                .grant(Item.CONFIGURE).everywhere().to("alice");
+        j.jenkins.setAuthorizationStrategy(auth);
+
+        String globalCredentialsId = "global-creds";
+        IdCredentials credentials = new UsernamePasswordCredentialsImpl(CredentialsScope.GLOBAL,
+                globalCredentialsId, "test-global-creds", "user", "password");
+        CredentialsProvider.lookupStores(j.jenkins).iterator().next().addCredentials(Domain.global(), credentials);
+
+        FreeStyleProject item = j.createFreeStyleProject("testGetToken");
+
+        SecurityContextHolder.getContext().setAuthentication(User.get("alice").impersonate());
+
+        DockerRegistryToken token = new DockerRegistryEndpoint("https://index.docker.io/v1/",
+                globalCredentialsId).getToken(new FreeStyleBuild(item));
+        Assert.assertNotNull(token);
+        Assert.assertEquals("user", token.getEmail());
+        Assert.assertEquals(Base64.encodeBase64String("user:password".getBytes(Charsets.UTF_8)), token.getToken());
     }
 
     private void assertRegistry(String url, String repo) throws IOException {
