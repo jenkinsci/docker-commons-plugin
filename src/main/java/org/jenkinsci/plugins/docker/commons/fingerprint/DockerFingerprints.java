@@ -257,6 +257,7 @@ public class DockerFingerprints {
         long timestamp = System.currentTimeMillis();
         if (ancestorImageId != null) {
             Fingerprint f = forImage(run, ancestorImageId);
+            synchronized (f) {
             Collection<FingerprintFacet> facets = f.getFacets();
             DockerDescendantFingerprintFacet descendantFacet = null;
             for (FingerprintFacet facet : facets) {
@@ -278,8 +279,10 @@ public class DockerFingerprints {
             } finally {
                 bc.abort();
             }
+            }
         }
         Fingerprint f = forImage(run, descendantImageId);
+        synchronized (f) {
         Collection<FingerprintFacet> facets = f.getFacets();
         DockerAncestorFingerprintFacet ancestorFacet = null;
         for (FingerprintFacet facet : facets) {
@@ -302,6 +305,7 @@ public class DockerFingerprints {
             bc.commit();
         } finally {
             bc.abort();
+        }
         }
     }
 
