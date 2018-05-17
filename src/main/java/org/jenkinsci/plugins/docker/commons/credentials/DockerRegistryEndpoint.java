@@ -188,7 +188,7 @@ public class DockerRegistryEndpoint extends AbstractDescribableImpl<DockerRegist
     }
 
     /**
-     * @deprecated Call {@link #newKeyMaterialFactory(Item, FilePath, Launcher, TaskListener, String)}
+     * @deprecated Call {@link #newKeyMaterialFactory(Item, FilePath, Launcher, EnvVars, TaskListener, String)}
      */
     @Deprecated
     public KeyMaterialFactory newKeyMaterialFactory(@Nonnull AbstractBuild build) throws IOException, InterruptedException {
@@ -200,7 +200,7 @@ public class DockerRegistryEndpoint extends AbstractDescribableImpl<DockerRegist
     }
 
     /**
-     * @deprecated Call {@link #newKeyMaterialFactory(Item, FilePath, Launcher, TaskListener, String)}
+     * @deprecated Call {@link #newKeyMaterialFactory(Item, FilePath, Launcher, EnvVars, TaskListener, String)}
      */
     @Deprecated
     public KeyMaterialFactory newKeyMaterialFactory(Item context, @Nonnull VirtualChannel target) throws IOException, InterruptedException {
