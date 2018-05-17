@@ -24,6 +24,7 @@
 package org.jenkinsci.plugins.docker.commons.credentials;
 
 import com.cloudbees.plugins.credentials.Credentials;
+import hudson.EnvVars;
 import hudson.FilePath;
 import hudson.Launcher;
 import hudson.model.TaskListener;
@@ -71,7 +72,7 @@ public final class DockerRegistryToken implements Serializable {
     }
 
     /**
-     * @deprecated use {@link #newKeyMaterialFactory(URL, FilePath, Launcher, TaskListener, String)}
+     * @deprecated use {@link #newKeyMaterialFactory(URL, FilePath, Launcher, EnvVars, TaskListener, String)}
      */
     @Deprecated
     public KeyMaterialFactory newKeyMaterialFactory(final URL endpoint, @Nonnull VirtualChannel target) throws InterruptedException, IOException {
@@ -79,22 +80,36 @@ public final class DockerRegistryToken implements Serializable {
     }
 
     /**
+     * @deprecated use {@link #newKeyMaterialFactory(URL, FilePath, Launcher, EnvVars, TaskListener, String)}
+     */
+    @Deprecated
+    public KeyMaterialFactory newKeyMaterialFactory(@Nonnull URL endpoint, @Nonnull FilePath workspace, @Nonnull Launcher launcher, @Nonnull TaskListener listener, @Nonnull String dockerExecutable) throws InterruptedException, IOException {
+        return newKeyMaterialFactory(endpoint, workspace, launcher, new EnvVars(), listener, dockerExecutable);
+    }
+
+    /** Kill switch in case {@code docker login} via {@link RegistryKeyMaterialFactory} does not work. */
+    @SuppressWarnings("FieldMayBeFinal")
+    private static /* not final */ boolean USE_CUSTOM_LOGIN = Boolean.getBoolean(DockerRegistryToken.class.getName() + ".USE_CUSTOM_LOGIN");
+
+    /**
      * Sets up an environment logged in to the specified Docker registry.
      * @param dockerExecutable as in {@link DockerTool#getExecutable}, with a 1.8+ client
      */
-    public KeyMaterialFactory newKeyMaterialFactory(@Nonnull URL endpoint, @Nonnull FilePath workspace, @Nonnull Launcher launcher, @Nonnull TaskListener listener, @Nonnull String dockerExecutable) throws InterruptedException, IOException {
-        try {
-            // see UsernamePasswordDockerRegistryTokenSource for example
-            String usernameColonPassword = new String(Base64.getDecoder().decode(token), StandardCharsets.UTF_8);
-            int colon = usernameColonPassword.indexOf(':');
-            if (colon > 0) {
-                return new RegistryKeyMaterialFactory(usernameColonPassword.substring(0, colon), usernameColonPassword.substring(colon + 1), endpoint, launcher, listener, dockerExecutable).
-                    contextualize(new KeyMaterialContext(WorkspaceList.tempDir(workspace)));
+    public KeyMaterialFactory newKeyMaterialFactory(@Nonnull URL endpoint, @Nonnull FilePath workspace, @Nonnull Launcher launcher, @Nonnull EnvVars env, @Nonnull TaskListener listener, @Nonnull String dockerExecutable) throws InterruptedException, IOException {
+        if (!USE_CUSTOM_LOGIN) {
+            try {
+                // see UsernamePasswordDockerRegistryTokenSource for example
+                String usernameColonPassword = new String(Base64.getDecoder().decode(token), StandardCharsets.UTF_8);
+                int colon = usernameColonPassword.indexOf(':');
+                if (colon > 0) {
+                    return new RegistryKeyMaterialFactory(usernameColonPassword.substring(0, colon), usernameColonPassword.substring(colon + 1), endpoint, launcher, env, listener, dockerExecutable).
+                        contextualize(new KeyMaterialContext(WorkspaceList.tempDir(workspace)));
+                }
+            } catch (IllegalArgumentException x) {
+                // not Base64-encoded
             }
-        } catch (IllegalArgumentException x) {
-            // not Base64-encoded
+            listener.getLogger().println("Warning: authentication token does not look like a username:password; falling back to direct manipulation of Docker configuration files");
         }
-        listener.getLogger().println("Warning: authentication token does not look like a username:password; falling back to direct manipulation of Docker configuration files");
         return newKeyMaterialFactory(endpoint, workspace.getChannel(), launcher, listener);
     }
 

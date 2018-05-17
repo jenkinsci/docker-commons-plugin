@@ -60,6 +60,7 @@ import java.util.regex.Pattern;
 
 import static com.cloudbees.plugins.credentials.CredentialsMatchers.*;
 import hudson.AbortException;
+import hudson.EnvVars;
 import hudson.Launcher;
 import hudson.model.TaskListener;
 import hudson.slaves.WorkspaceList;
@@ -207,7 +208,7 @@ public class DockerRegistryEndpoint extends AbstractDescribableImpl<DockerRegist
     }
 
     /**
-     * @deprecated Call {@link #newKeyMaterialFactory(Item, FilePath, Launcher, TaskListener, String)}
+     * @deprecated Call {@link #newKeyMaterialFactory(Item, FilePath, Launcher, EnvVars, TaskListener, String)}
      */
     @Deprecated
     public KeyMaterialFactory newKeyMaterialFactory(@CheckForNull Item context, @Nonnull VirtualChannel target, @CheckForNull Launcher launcher, @Nonnull TaskListener listener) throws IOException, InterruptedException {
@@ -222,12 +223,20 @@ public class DockerRegistryEndpoint extends AbstractDescribableImpl<DockerRegist
     }
 
     /**
+     * @deprecated Call {@link #newKeyMaterialFactory(Item, FilePath, Launcher, EnvVars, TaskListener, String)}
+     */
+    @Deprecated
+    public KeyMaterialFactory newKeyMaterialFactory(@CheckForNull Item context, @Nonnull FilePath workspace, @Nonnull Launcher launcher, @Nonnull TaskListener listener, @Nonnull String dockerExecutable) throws IOException, InterruptedException {
+        return newKeyMaterialFactory(context, workspace, launcher, new EnvVars(), listener, dockerExecutable);
+    }
+
+    /**
      * Makes the credentials available locally and returns {@link KeyMaterialFactory} that gives you the parameters
      * needed to access it.
      * @param workspace a workspace being used for operations ({@link WorkspaceList#tempDir} will be applied)
      * @param dockerExecutable as in {@link DockerTool#getExecutable}, with a 1.8+ client
      */
-    public KeyMaterialFactory newKeyMaterialFactory(@CheckForNull Item context, @Nonnull FilePath workspace, @Nonnull Launcher launcher, @Nonnull TaskListener listener, @Nonnull String dockerExecutable) throws IOException, InterruptedException {
+    public KeyMaterialFactory newKeyMaterialFactory(@CheckForNull Item context, @Nonnull FilePath workspace, @Nonnull Launcher launcher, @Nonnull EnvVars env, @Nonnull TaskListener listener, @Nonnull String dockerExecutable) throws IOException, InterruptedException {
         if (credentialsId == null) {
             return KeyMaterialFactory.NULL; // nothing needed to be done
         }
@@ -235,7 +244,7 @@ public class DockerRegistryEndpoint extends AbstractDescribableImpl<DockerRegist
         if (token == null) {
             throw new AbortException("Could not find credentials matching " + credentialsId);
         }
-        return token.newKeyMaterialFactory(getEffectiveUrl(), workspace, launcher, listener, dockerExecutable);
+        return token.newKeyMaterialFactory(getEffectiveUrl(), workspace, launcher, env, listener, dockerExecutable);
     }
 
     /**
