@@ -5,17 +5,17 @@
   <parent>
     <groupId>org.jenkins-ci.plugins</groupId>
     <artifactId>plugin</artifactId>
-    <version>3.2</version>
+    <version>3.12</version>
     <relativePath />
   </parent>
   <groupId>org.jenkins-ci.plugins</groupId>
   <artifactId>docker-commons</artifactId>
-  <version>1.13-SNAPSHOT</version>
+  <version>${revision}${changelist}</version>
   <packaging>hpi</packaging>
 
   <name>Docker Commons Plugin</name>
   <description>APIs useful to Docker-based plugins.</description>
-  <url>https://wiki.jenkins-ci.org/display/JENKINS/Docker+Commons+Plugin</url>
+  <url>https://wiki.jenkins.io/display/JENKINS/Docker+Commons+Plugin</url>
   <licenses>
     <license>
       <name>MIT License</name>
@@ -27,10 +27,12 @@
     <connection>scm:git:git://github.com/jenkinsci/${project.artifactId}-plugin.git</connection>
     <developerConnection>scm:git:git@github.com:jenkinsci/${project.artifactId}-plugin.git</developerConnection>
     <url>http://github.com/jenkinsci/${project.artifactId}-plugin</url>
-    <tag>HEAD</tag>
+    <tag>${scmTag}</tag>
   </scm>
 
   <properties>
+    <revision>1.13</revision>
+    <changelist>-SNAPSHOT</changelist>
     <jenkins.version>2.60.3</jenkins.version>
     <java.level>8</java.level>
   </properties>
