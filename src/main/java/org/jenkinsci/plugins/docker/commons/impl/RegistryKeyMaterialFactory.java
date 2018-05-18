@@ -48,14 +48,16 @@ public class RegistryKeyMaterialFactory extends KeyMaterialFactory {
     private final @Nonnull String password;
     private final @Nonnull URL endpoint;
     private final @Nonnull Launcher launcher;
+    private final @Nonnull EnvVars env;
     private final @Nonnull TaskListener listener;
     private final @Nonnull String dockerExecutable;
 
-    public RegistryKeyMaterialFactory(@Nonnull String username, @Nonnull String password, @Nonnull URL endpoint, @Nonnull Launcher launcher, @Nonnull TaskListener listener, @Nonnull String dockerExecutable) {
+    public RegistryKeyMaterialFactory(@Nonnull String username, @Nonnull String password, @Nonnull URL endpoint, @Nonnull Launcher launcher, @Nonnull EnvVars env, @Nonnull TaskListener listener, @Nonnull String dockerExecutable) {
         this.username = username;
         this.password = password;
         this.endpoint = endpoint;
         this.launcher = launcher;
+        this.env = env;
         this.listener = listener;
         this.dockerExecutable = dockerExecutable;
     }
@@ -64,7 +66,10 @@ public class RegistryKeyMaterialFactory extends KeyMaterialFactory {
     public KeyMaterial materialize() throws IOException, InterruptedException {
         FilePath dockerConfig = createSecretsDirectory();
         try {
-            if (launcher.launch().cmds(new ArgumentListBuilder(dockerExecutable, "login", "-u", username, "-p").add(password, true).add(endpoint)).envs("DOCKER_CONFIG=" + dockerConfig).stdout(listener).join() != 0) {
+            // TODO on Docker 17.07+ use --password-stdin
+            EnvVars envWithConfig = new EnvVars(env);
+            envWithConfig.put("DOCKER_CONFIG", dockerConfig.getRemote());
+            if (launcher.launch().cmds(new ArgumentListBuilder(dockerExecutable, "login", "-u", username, "-p").add(password, true).add(endpoint)).envs(envWithConfig).stdout(listener).join() != 0) {
                 throw new AbortException("docker login failed");
             }
         } catch (IOException | InterruptedException x) {
