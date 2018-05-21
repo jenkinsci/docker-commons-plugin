@@ -295,7 +295,7 @@ public class DockerRegistryEndpoint extends AbstractDescribableImpl<DockerRegist
      * @param workspace a workspace being used for operations ({@link WorkspaceList#tempDir} will be applied)
      * @param dockerExecutable as in {@link DockerTool#getExecutable}, with a 1.8+ client
      */
-    public KeyMaterialFactory newKeyMaterialFactory(@CheckForNull Run context, @Nonnull FilePath workspace, @Nonnull Launcher launcher, @Nonnull TaskListener listener, @Nonnull String dockerExecutable) throws IOException, InterruptedException {
+    public KeyMaterialFactory newKeyMaterialFactory(@CheckForNull Run context, @Nonnull FilePath workspace, @Nonnull Launcher launcher, @Nonnull EnvVars env, @Nonnull TaskListener listener, @Nonnull String dockerExecutable) throws IOException, InterruptedException {
         if (credentialsId == null) {
             return KeyMaterialFactory.NULL; // nothing needed to be done
         }
@@ -303,7 +303,7 @@ public class DockerRegistryEndpoint extends AbstractDescribableImpl<DockerRegist
         if (token == null) {
             throw new AbortException("Could not find credentials matching " + credentialsId);
         }
-        return token.newKeyMaterialFactory(getEffectiveUrl(), workspace, launcher, listener, dockerExecutable);
+        return token.newKeyMaterialFactory(getEffectiveUrl(), workspace, launcher, env, listener, dockerExecutable);
     }
 
     /**
