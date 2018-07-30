@@ -30,7 +30,7 @@ import java.nio.charset.StandardCharsets;
 
 import javax.annotation.Nonnull;
 
-import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang.StringUtils;
 import org.jenkinsci.plugins.docker.commons.credentials.KeyMaterial;
 import org.jenkinsci.plugins.docker.commons.credentials.KeyMaterialFactory;
 import org.kohsuke.accmod.Restricted;
