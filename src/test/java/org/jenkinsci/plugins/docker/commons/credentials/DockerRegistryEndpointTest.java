@@ -98,31 +98,6 @@ public class DockerRegistryEndpointTest {
 
     @Issue("JENKINS-48437")
     @Test
-    public void testGetTokenForItem() throws IOException {
-        j.jenkins.setSecurityRealm(j.createDummySecurityRealm());
-        MockAuthorizationStrategy auth = new MockAuthorizationStrategy()
-                .grant(Jenkins.READ).everywhere().to("alice")
-                .grant(Computer.BUILD).everywhere().to("alice")
-                .grant(Item.CONFIGURE).everywhere().to("alice");
-        j.jenkins.setAuthorizationStrategy(auth);
-
-        String globalCredentialsId = "global-creds";
-        IdCredentials credentials = new UsernamePasswordCredentialsImpl(CredentialsScope.GLOBAL,
-                globalCredentialsId, "test-global-creds", "user", "password");
-        CredentialsProvider.lookupStores(j.jenkins).iterator().next().addCredentials(Domain.global(), credentials);
-
-        FreeStyleProject item = j.createFreeStyleProject("testGetToken");
-
-        try (ACLContext as = ACL.as(User.getById("alice", false))) {
-            DockerRegistryToken token = new DockerRegistryEndpoint("https://index.docker.io/v1/", globalCredentialsId).getToken(item);
-            Assert.assertNotNull(token);
-            Assert.assertEquals("user", token.getEmail());
-            Assert.assertEquals(Base64.getEncoder().encodeToString("user:password".getBytes(Charsets.UTF_8)), token.getToken());
-        }
-    }
-
-    @Issue("JENKINS-48437")
-    @Test
     public void testGetTokenForRun() throws IOException {
         j.jenkins.setSecurityRealm(j.createDummySecurityRealm());
         MockAuthorizationStrategy auth = new MockAuthorizationStrategy()
@@ -136,7 +111,7 @@ public class DockerRegistryEndpointTest {
                 globalCredentialsId, "test-global-creds", "user", "password");
         CredentialsProvider.lookupStores(j.jenkins).iterator().next().addCredentials(Domain.global(), credentials);
 
-        FreeStyleProject item = j.createFreeStyleProject("testGetToken");
+        FreeStyleProject item = j.createFreeStyleProject();
 
         try (ACLContext as = ACL.as(User.getById("alice", false))) {
             DockerRegistryToken token = new DockerRegistryEndpoint("https://index.docker.io/v1/",
