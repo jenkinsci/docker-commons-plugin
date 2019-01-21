@@ -44,6 +44,7 @@ import org.junit.Test;
 import org.jvnet.hudson.test.Issue;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.MockAuthorizationStrategy;
+import org.jvnet.hudson.test.WithoutJenkins;
 
 /**
  * @author Carlos Sanchez <carlos@apache.org>
@@ -54,6 +55,7 @@ public class DockerRegistryEndpointTest {
     public JenkinsRule j = new JenkinsRule();
 
     @Test
+    @WithoutJenkins
     public void testParse() throws Exception {
         assertRegistry("https://index.docker.io/v1/", "acme/test");
         assertRegistry("https://index.docker.io/v1/", "busybox");
@@ -63,6 +65,7 @@ public class DockerRegistryEndpointTest {
     }
 
     @Test
+    @WithoutJenkins
     public void testParseWithTags() throws Exception {
         assertRegistry("https://index.docker.io/v1/", "acme/test:tag");
         assertRegistry("https://index.docker.io/v1/", "busybox:tag");
@@ -73,6 +76,7 @@ public class DockerRegistryEndpointTest {
 
     @Issue("JENKINS-39181")
     @Test
+    @WithoutJenkins
     public void testParseFullyQualifiedImageName() throws Exception {
         assertEquals("private-repo:5000/test-image", new DockerRegistryEndpoint("http://private-repo:5000/", null).imageName("private-repo:5000/test-image"));
         assertEquals("private-repo:5000/test-image", new DockerRegistryEndpoint("http://private-repo:5000/", null).imageName("test-image"));
@@ -80,12 +84,14 @@ public class DockerRegistryEndpointTest {
 
     @Issue("JENKINS-39181")
     @Test(expected = IllegalArgumentException.class)
+    @WithoutJenkins
     public void testParseNullImageName() throws Exception {
         new DockerRegistryEndpoint("http://private-repo:5000/", null).imageName(null);
     }
 
     @Issue("JENKINS-39181")
     @Test(expected = IllegalArgumentException.class)
+    @WithoutJenkins
     public void testParseNullUrlAndImageName() throws Exception {
         new DockerRegistryEndpoint(null, null).imageName(null);
     }
