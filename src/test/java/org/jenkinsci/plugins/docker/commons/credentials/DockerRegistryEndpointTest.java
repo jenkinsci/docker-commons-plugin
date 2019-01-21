@@ -26,6 +26,7 @@ package org.jenkinsci.plugins.docker.commons.credentials;
 import static org.junit.Assert.*;
 
 import java.io.IOException;
+import java.util.Base64;
 
 import com.cloudbees.plugins.credentials.CredentialsProvider;
 import com.cloudbees.plugins.credentials.CredentialsScope;
@@ -36,7 +37,6 @@ import hudson.model.*;
 import hudson.security.ACL;
 import hudson.security.ACLContext;
 import jenkins.model.Jenkins;
-import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.io.Charsets;
 import org.junit.Assert;
 import org.junit.Rule;
@@ -111,7 +111,7 @@ public class DockerRegistryEndpointTest {
             DockerRegistryToken token = new DockerRegistryEndpoint("https://index.docker.io/v1/", globalCredentialsId).getToken(item);
             Assert.assertNotNull(token);
             Assert.assertEquals("user", token.getEmail());
-            Assert.assertEquals(Base64.encodeBase64String("user:password".getBytes(Charsets.UTF_8)), token.getToken());
+            Assert.assertEquals(Base64.getEncoder().encodeToString("user:password".getBytes(Charsets.UTF_8)), token.getToken());
         }
     }
 
@@ -137,7 +137,7 @@ public class DockerRegistryEndpointTest {
                     globalCredentialsId).getToken(new FreeStyleBuild(item));
             Assert.assertNotNull(token);
             Assert.assertEquals("user", token.getEmail());
-            Assert.assertEquals(Base64.encodeBase64String("user:password".getBytes(Charsets.UTF_8)), token.getToken());
+            Assert.assertEquals(Base64.getEncoder().encodeToString("user:password".getBytes(Charsets.UTF_8)), token.getToken());
         }
     }
 
