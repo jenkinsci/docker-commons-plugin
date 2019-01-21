@@ -102,7 +102,10 @@ public class DockerServerEndpoint extends AbstractDescribableImpl<DockerServerEn
     /**
      * Makes the key materials available locally and returns {@link KeyMaterialFactory} that gives you the parameters
      * needed to access it.
+     * 
+     * @deprecated Call {@link #newKeyMaterialFactory(Run, VirtualChannel)}
      */
+    @Deprecated
     public KeyMaterialFactory newKeyMaterialFactory(@Nonnull Item context, @Nonnull VirtualChannel target) throws IOException, InterruptedException {
         // as a build step, your access to credentials are constrained by what the build
         // can access, hence Jenkins.getAuthentication()
