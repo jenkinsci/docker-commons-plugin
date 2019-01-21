@@ -33,8 +33,9 @@ import com.cloudbees.plugins.credentials.common.IdCredentials;
 import com.cloudbees.plugins.credentials.domains.Domain;
 import com.cloudbees.plugins.credentials.impl.UsernamePasswordCredentialsImpl;
 import hudson.model.*;
+import hudson.security.ACL;
+import hudson.security.ACLContext;
 import jenkins.model.Jenkins;
-import org.acegisecurity.context.SecurityContextHolder;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.io.Charsets;
 import org.junit.Assert;
@@ -105,12 +106,13 @@ public class DockerRegistryEndpointTest {
         CredentialsProvider.lookupStores(j.jenkins).iterator().next().addCredentials(Domain.global(), credentials);
 
         FreeStyleProject item = j.createFreeStyleProject("testGetToken");
-        SecurityContextHolder.getContext().setAuthentication(User.get("alice").impersonate());
 
-        DockerRegistryToken token = new DockerRegistryEndpoint("https://index.docker.io/v1/", globalCredentialsId).getToken(item);
-        Assert.assertNotNull(token);
-        Assert.assertEquals("user", token.getEmail());
-        Assert.assertEquals(Base64.encodeBase64String("user:password".getBytes(Charsets.UTF_8)), token.getToken());
+        try (ACLContext as = ACL.as(User.getById("alice", false))) {
+            DockerRegistryToken token = new DockerRegistryEndpoint("https://index.docker.io/v1/", globalCredentialsId).getToken(item);
+            Assert.assertNotNull(token);
+            Assert.assertEquals("user", token.getEmail());
+            Assert.assertEquals(Base64.encodeBase64String("user:password".getBytes(Charsets.UTF_8)), token.getToken());
+        }
     }
 
     @Issue("JENKINS-48437")
@@ -130,13 +132,13 @@ public class DockerRegistryEndpointTest {
 
         FreeStyleProject item = j.createFreeStyleProject("testGetToken");
 
-        SecurityContextHolder.getContext().setAuthentication(User.get("alice").impersonate());
-
-        DockerRegistryToken token = new DockerRegistryEndpoint("https://index.docker.io/v1/",
-                globalCredentialsId).getToken(new FreeStyleBuild(item));
-        Assert.assertNotNull(token);
-        Assert.assertEquals("user", token.getEmail());
-        Assert.assertEquals(Base64.encodeBase64String("user:password".getBytes(Charsets.UTF_8)), token.getToken());
+        try (ACLContext as = ACL.as(User.getById("alice", false))) {
+            DockerRegistryToken token = new DockerRegistryEndpoint("https://index.docker.io/v1/",
+                    globalCredentialsId).getToken(new FreeStyleBuild(item));
+            Assert.assertNotNull(token);
+            Assert.assertEquals("user", token.getEmail());
+            Assert.assertEquals(Base64.encodeBase64String("user:password".getBytes(Charsets.UTF_8)), token.getToken());
+        }
     }
 
     private void assertRegistry(String url, String repo) throws IOException {
