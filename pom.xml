@@ -67,6 +67,11 @@
       <artifactId>authentication-tokens</artifactId>
       <version>1.3</version>
     </dependency>
+    <dependency>
+      <groupId>io.jenkins.temp.jelly</groupId>
+      <artifactId>multiline-secrets-ui</artifactId>
+      <version>1.0</version>
+    </dependency>
 
     <!-- for Pipeline-based unit tests -->
     <dependency>
