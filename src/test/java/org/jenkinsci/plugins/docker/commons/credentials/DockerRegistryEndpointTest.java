@@ -33,10 +33,17 @@ import com.cloudbees.plugins.credentials.CredentialsScope;
 import com.cloudbees.plugins.credentials.common.IdCredentials;
 import com.cloudbees.plugins.credentials.domains.Domain;
 import com.cloudbees.plugins.credentials.impl.UsernamePasswordCredentialsImpl;
-import hudson.model.*;
+import hudson.model.FreeStyleProject;
+import hudson.model.Item;
+import hudson.model.Job;
+import hudson.model.User;
 import hudson.security.ACL;
 import hudson.security.ACLContext;
+import java.util.HashMap;
+import java.util.Map;
 import jenkins.model.Jenkins;
+import jenkins.security.QueueItemAuthenticatorConfiguration;
+import org.acegisecurity.Authentication;
 import org.apache.commons.io.Charsets;
 import org.junit.Assert;
 import org.junit.Rule;
@@ -44,6 +51,7 @@ import org.junit.Test;
 import org.jvnet.hudson.test.Issue;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.MockAuthorizationStrategy;
+import org.jvnet.hudson.test.MockQueueItemAuthenticator;
 import org.jvnet.hudson.test.WithoutJenkins;
 
 /**
@@ -98,11 +106,13 @@ public class DockerRegistryEndpointTest {
 
     @Issue("JENKINS-48437")
     @Test
-    public void testGetTokenForRun() throws IOException {
+    public void testGetTokenForRun() throws Exception {
         j.jenkins.setSecurityRealm(j.createDummySecurityRealm());
         MockAuthorizationStrategy auth = new MockAuthorizationStrategy()
-                .grant(Jenkins.READ).everywhere().to("alice")
-                .grant(Computer.BUILD).everywhere().to("alice")
+                .grant(Jenkins.READ).everywhere().to("alice", "bob")
+                .grant(Job.BUILD).everywhere().to("alice", "bob")
+                // Item.CONFIGURE implies Credentials.USE_ITEM, which is what CredentialsProvider.findCredentialById
+                // uses when determining whether to include item-scope credentials in the search.
                 .grant(Item.CONFIGURE).everywhere().to("alice");
         j.jenkins.setAuthorizationStrategy(auth);
 
@@ -111,14 +121,26 @@ public class DockerRegistryEndpointTest {
                 globalCredentialsId, "test-global-creds", "user", "password");
         CredentialsProvider.lookupStores(j.jenkins).iterator().next().addCredentials(Domain.global(), credentials);
 
-        FreeStyleProject item = j.createFreeStyleProject();
+        FreeStyleProject p1 = j.createFreeStyleProject();
+        FreeStyleProject p2 = j.createFreeStyleProject();
+
+        Map<String, Authentication> jobsToAuths = new HashMap<>();
+        jobsToAuths.put(p1.getFullName(), User.getById("alice", true).impersonate());
+        jobsToAuths.put(p2.getFullName(), User.getById("bob", true).impersonate());
+        QueueItemAuthenticatorConfiguration.get().getAuthenticators().replace(new MockQueueItemAuthenticator(jobsToAuths));
 
         try (ACLContext as = ACL.as(User.getById("alice", false))) {
-            DockerRegistryToken token = new DockerRegistryEndpoint("https://index.docker.io/v1/",
-                    globalCredentialsId).getToken(new FreeStyleBuild(item));
-            Assert.assertNotNull(token);
+            DockerRegistryToken token = new DockerRegistryEndpoint("https://index.docker.io/v1/", globalCredentialsId)
+                    .getToken(j.buildAndAssertSuccess(p1));
+            Assert.assertNotNull("Alice has Credentials.USE_ITEM and should be able to use the credential", token);
             Assert.assertEquals("user", token.getEmail());
             Assert.assertEquals(Base64.getEncoder().encodeToString("user:password".getBytes(Charsets.UTF_8)), token.getToken());
+        }
+
+        try (ACLContext as = ACL.as(User.getById("bob", false))) {
+            DockerRegistryToken token = new DockerRegistryEndpoint("https://index.docker.io/v1/", globalCredentialsId)
+                    .getToken(j.buildAndAssertSuccess(p2));
+            Assert.assertNull("Bob does not have Credentials.USE_ITEM and should not be able to use the credential", token);
         }
     }
 

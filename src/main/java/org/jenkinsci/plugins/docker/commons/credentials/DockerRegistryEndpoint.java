@@ -189,6 +189,7 @@ public class DockerRegistryEndpoint extends AbstractDescribableImpl<DockerRegist
             requirements = Collections.<DomainRequirement>singletonList(new HostnameRequirement(getEffectiveUrl().getHost()));
         } catch (IOException e) {
             // shrug off this error and move on. We are matching with ID anyway.
+            LOGGER.log(Level.FINE, "Unable to add domain requirement for endpoint URL", e);
         }
 
         // look for subtypes that know how to create a token, such as Google Container Registry
@@ -215,7 +216,7 @@ public class DockerRegistryEndpoint extends AbstractDescribableImpl<DockerRegist
         try {
             requirements = Collections.<DomainRequirement>singletonList(new HostnameRequirement(getEffectiveUrl().getHost()));
         } catch (IOException e) {
-            LOGGER.log(Level.WARNING, "Could not initiliaze registry URL: ", e);
+            LOGGER.log(Level.FINE, "Unable to add domain requirement for endpoint URL", e);
         }
 
         return AuthenticationTokens.convert(DockerRegistryToken.class,

@@ -31,7 +31,12 @@ import com.cloudbees.plugins.credentials.domains.DomainRequirement;
 import com.cloudbees.plugins.credentials.domains.URIRequirementBuilder;
 import hudson.Extension;
 import hudson.FilePath;
-import hudson.model.*;
+import hudson.model.AbstractBuild;
+import hudson.model.AbstractDescribableImpl;
+import hudson.model.Describable;
+import hudson.model.Descriptor;
+import hudson.model.Item;
+import hudson.model.Run;
 import hudson.remoting.VirtualChannel;
 import hudson.util.ListBoxModel;
 import jenkins.authentication.tokens.api.AuthenticationTokens;
@@ -96,7 +101,7 @@ public class DockerServerEndpoint extends AbstractDescribableImpl<DockerServerEn
         if (workspace == null) {
             throw new IllegalStateException("Build has no workspace");
         }
-        return newKeyMaterialFactory(build.getParent(), workspace.getChannel());
+        return newKeyMaterialFactory(build, workspace.getChannel());
     }
 
     /**
