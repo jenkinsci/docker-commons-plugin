@@ -33,9 +33,9 @@ import com.cloudbees.plugins.credentials.CredentialsScope;
 import com.cloudbees.plugins.credentials.common.IdCredentials;
 import com.cloudbees.plugins.credentials.domains.Domain;
 import com.cloudbees.plugins.credentials.impl.UsernamePasswordCredentialsImpl;
+import hudson.model.Computer;
 import hudson.model.FreeStyleProject;
 import hudson.model.Item;
-import hudson.model.Job;
 import hudson.model.User;
 import hudson.security.ACL;
 import hudson.security.ACLContext;
@@ -110,7 +110,7 @@ public class DockerRegistryEndpointTest {
         j.jenkins.setSecurityRealm(j.createDummySecurityRealm());
         MockAuthorizationStrategy auth = new MockAuthorizationStrategy()
                 .grant(Jenkins.READ).everywhere().to("alice", "bob")
-                .grant(Job.BUILD).everywhere().to("alice", "bob")
+                .grant(Computer.BUILD).everywhere().to("alice", "bob")
                 // Item.CONFIGURE implies Credentials.USE_ITEM, which is what CredentialsProvider.findCredentialById
                 // uses when determining whether to include item-scope credentials in the search.
                 .grant(Item.CONFIGURE).everywhere().to("alice");
@@ -125,8 +125,8 @@ public class DockerRegistryEndpointTest {
         FreeStyleProject p2 = j.createFreeStyleProject();
 
         Map<String, Authentication> jobsToAuths = new HashMap<>();
-        jobsToAuths.put(p1.getFullName(), User.getById("alice", true).impersonate());
-        jobsToAuths.put(p2.getFullName(), User.getById("bob", true).impersonate());
+        jobsToAuths.put(p1.getName(), User.getById("alice", true).impersonate());
+        jobsToAuths.put(p2.getName(), User.getById("bob", true).impersonate());
         QueueItemAuthenticatorConfiguration.get().getAuthenticators().replace(new MockQueueItemAuthenticator(jobsToAuths));
 
         try (ACLContext as = ACL.as(User.getById("alice", false))) {

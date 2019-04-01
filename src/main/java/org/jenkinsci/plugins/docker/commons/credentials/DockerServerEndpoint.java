@@ -95,7 +95,10 @@ public class DockerServerEndpoint extends AbstractDescribableImpl<DockerServerEn
     /**
      * Makes the key materials available locally for the on-going build
      * and returns {@link KeyMaterialFactory} that gives you the parameters needed to access it.
+     *
+     * @deprecated Call {@link #newKeyMaterialFactory(Run, VirtualChannel)}
      */
+    @Deprecated
     public KeyMaterialFactory newKeyMaterialFactory(@Nonnull AbstractBuild build) throws IOException, InterruptedException {
         final FilePath workspace = build.getWorkspace();
         if (workspace == null) {
