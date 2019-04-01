@@ -34,6 +34,7 @@ import com.cloudbees.plugins.credentials.common.IdCredentials;
 import com.cloudbees.plugins.credentials.domains.Domain;
 import com.cloudbees.plugins.credentials.impl.UsernamePasswordCredentialsImpl;
 import hudson.model.Computer;
+import hudson.model.FreeStyleBuild;
 import hudson.model.FreeStyleProject;
 import hudson.model.Item;
 import hudson.model.User;
@@ -125,21 +126,21 @@ public class DockerRegistryEndpointTest {
         FreeStyleProject p2 = j.createFreeStyleProject();
 
         Map<String, Authentication> jobsToAuths = new HashMap<>();
-        jobsToAuths.put(p1.getName(), User.getById("alice", true).impersonate());
-        jobsToAuths.put(p2.getName(), User.getById("bob", true).impersonate());
+        jobsToAuths.put(p1.getFullName(), User.getById("alice", true).impersonate());
+        jobsToAuths.put(p2.getFullName(), User.getById("bob", true).impersonate());
         QueueItemAuthenticatorConfiguration.get().getAuthenticators().replace(new MockQueueItemAuthenticator(jobsToAuths));
 
+        FreeStyleBuild r1 = j.buildAndAssertSuccess(p1);
         try (ACLContext as = ACL.as(User.getById("alice", false))) {
-            DockerRegistryToken token = new DockerRegistryEndpoint("https://index.docker.io/v1/", globalCredentialsId)
-                    .getToken(j.buildAndAssertSuccess(p1));
+            DockerRegistryToken token = new DockerRegistryEndpoint("https://index.docker.io/v1/", globalCredentialsId).getToken(r1);
             Assert.assertNotNull("Alice has Credentials.USE_ITEM and should be able to use the credential", token);
             Assert.assertEquals("user", token.getEmail());
             Assert.assertEquals(Base64.getEncoder().encodeToString("user:password".getBytes(Charsets.UTF_8)), token.getToken());
         }
 
+        FreeStyleBuild r2 = j.buildAndAssertSuccess(p2);
         try (ACLContext as = ACL.as(User.getById("bob", false))) {
-            DockerRegistryToken token = new DockerRegistryEndpoint("https://index.docker.io/v1/", globalCredentialsId)
-                    .getToken(j.buildAndAssertSuccess(p2));
+            DockerRegistryToken token = new DockerRegistryEndpoint("https://index.docker.io/v1/", globalCredentialsId).getToken(r2);
             Assert.assertNull("Bob does not have Credentials.USE_ITEM and should not be able to use the credential", token);
         }
     }
