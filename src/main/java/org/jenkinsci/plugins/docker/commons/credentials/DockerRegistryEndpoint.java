@@ -38,6 +38,8 @@ import hudson.model.AbstractDescribableImpl;
 import hudson.model.Describable;
 import hudson.model.Descriptor;
 import hudson.model.Item;
+import hudson.model.Run;
+import hudson.model.TaskListener;
 import hudson.remoting.VirtualChannel;
 import hudson.util.ListBoxModel;
 import jenkins.authentication.tokens.api.AuthenticationTokens;
@@ -55,6 +57,8 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Collections;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -62,7 +66,6 @@ import static com.cloudbees.plugins.credentials.CredentialsMatchers.*;
 import hudson.AbortException;
 import hudson.EnvVars;
 import hudson.Launcher;
-import hudson.model.TaskListener;
 import hudson.slaves.WorkspaceList;
 import org.jenkinsci.plugins.docker.commons.tools.DockerTool;
 
@@ -87,6 +90,8 @@ public class DockerRegistryEndpoint extends AbstractDescribableImpl<DockerRegist
      */
     private static final Pattern DOCKER_REGISTRY_PATTERN = Pattern
             .compile("(([^/]+\\.[^/]+)/)?(([a-z0-9_]+)/)?([a-zA-Z0-9-_\\.]+)(:([a-z0-9-_\\.]+))?");
+
+    private static final Logger LOGGER = Logger.getLogger(DockerRegistryEndpoint.class.getName());
 
     /**
      * Null if this is on the public docker hub.
@@ -160,13 +165,18 @@ public class DockerRegistryEndpoint extends AbstractDescribableImpl<DockerRegist
      * Plugins that want to refer to a {@link IdCredentials} should do so via ID string,
      * and use this method to resolve it and convert to {@link DockerRegistryToken}.
      *
+     * Implements the logic {@link CredentialsProvider#findCredentialById(String, Class, Run, DomainRequirement...)}
+     * but for an {@link Item}.
+     *
      * @param context
      *       If you are a build step trying to access DockerHub in the context of a build/job,
      *       specify that job. Otherwise null. If you are scoped to something else, you might
      *       have to interact with {@link CredentialsProvider} directly.
+     *
+     * @deprecated Call {@link #getToken(Run)}
      */
-    public @CheckForNull
-    DockerRegistryToken getToken(Item context) {
+    @Deprecated
+    public @CheckForNull DockerRegistryToken getToken(Item context) {
         if (credentialsId == null) {
             return null;
         }
@@ -179,16 +189,42 @@ public class DockerRegistryEndpoint extends AbstractDescribableImpl<DockerRegist
             requirements = Collections.<DomainRequirement>singletonList(new HostnameRequirement(getEffectiveUrl().getHost()));
         } catch (IOException e) {
             // shrug off this error and move on. We are matching with ID anyway.
+            LOGGER.log(Level.FINE, "Unable to add domain requirement for endpoint URL", e);
         }
 
         // look for subtypes that know how to create a token, such as Google Container Registry
         return AuthenticationTokens.convert(DockerRegistryToken.class, firstOrNull(CredentialsProvider.lookupCredentials(
-                IdCredentials.class, context, Jenkins.getAuthentication(),requirements),
+                IdCredentials.class, context, Jenkins.getAuthentication(), requirements),
                 allOf(AuthenticationTokens.matcher(DockerRegistryToken.class), withId(credentialsId))));
     }
 
     /**
-     * @deprecated Call {@link #newKeyMaterialFactory(Item, FilePath, Launcher, EnvVars, TaskListener, String)}
+     * Plugins that want to refer to a {@link IdCredentials} should do so via ID string,
+     * and use this method to resolve it and convert to {@link DockerRegistryToken}.
+     *
+     * @param context
+     *       If you are a build step trying to access DockerHub in the context of a build/job,
+     *       specify that build. Otherwise null. If you are scoped to something else, you might
+     *       have to interact with {@link CredentialsProvider} directly.
+     */
+    @CheckForNull DockerRegistryToken getToken(@CheckForNull Run context) {
+        if (credentialsId == null) {
+            return null;
+        }
+
+        List<DomainRequirement> requirements = Collections.emptyList();
+        try {
+            requirements = Collections.<DomainRequirement>singletonList(new HostnameRequirement(getEffectiveUrl().getHost()));
+        } catch (IOException e) {
+            LOGGER.log(Level.FINE, "Unable to add domain requirement for endpoint URL", e);
+        }
+
+        return AuthenticationTokens.convert(DockerRegistryToken.class,
+                CredentialsProvider.findCredentialById(credentialsId, IdCredentials.class, context, requirements));
+    }
+
+    /**
+     * @deprecated Call {@link #newKeyMaterialFactory(Run, FilePath, Launcher, EnvVars, TaskListener, String)}
      */
     @Deprecated
     public KeyMaterialFactory newKeyMaterialFactory(@Nonnull AbstractBuild build) throws IOException, InterruptedException {
@@ -200,7 +236,7 @@ public class DockerRegistryEndpoint extends AbstractDescribableImpl<DockerRegist
     }
 
     /**
-     * @deprecated Call {@link #newKeyMaterialFactory(Item, FilePath, Launcher, EnvVars, TaskListener, String)}
+     * @deprecated Call {@link #newKeyMaterialFactory(Run, FilePath, Launcher, EnvVars, TaskListener, String)}
      */
     @Deprecated
     public KeyMaterialFactory newKeyMaterialFactory(Item context, @Nonnull VirtualChannel target) throws IOException, InterruptedException {
@@ -208,7 +244,7 @@ public class DockerRegistryEndpoint extends AbstractDescribableImpl<DockerRegist
     }
 
     /**
-     * @deprecated Call {@link #newKeyMaterialFactory(Item, FilePath, Launcher, EnvVars, TaskListener, String)}
+     * @deprecated Call {@link #newKeyMaterialFactory(Run, FilePath, Launcher, EnvVars, TaskListener, String)}
      */
     @Deprecated
     public KeyMaterialFactory newKeyMaterialFactory(@CheckForNull Item context, @Nonnull VirtualChannel target, @CheckForNull Launcher launcher, @Nonnull TaskListener listener) throws IOException, InterruptedException {
@@ -223,7 +259,7 @@ public class DockerRegistryEndpoint extends AbstractDescribableImpl<DockerRegist
     }
 
     /**
-     * @deprecated Call {@link #newKeyMaterialFactory(Item, FilePath, Launcher, EnvVars, TaskListener, String)}
+     * @deprecated Call {@link #newKeyMaterialFactory(Run, FilePath, Launcher, EnvVars, TaskListener, String)}
      */
     @Deprecated
     public KeyMaterialFactory newKeyMaterialFactory(@CheckForNull Item context, @Nonnull FilePath workspace, @Nonnull Launcher launcher, @Nonnull TaskListener listener, @Nonnull String dockerExecutable) throws IOException, InterruptedException {
@@ -231,12 +267,28 @@ public class DockerRegistryEndpoint extends AbstractDescribableImpl<DockerRegist
     }
 
     /**
+     * @deprecated Call {@link #newKeyMaterialFactory(Run, FilePath, Launcher, EnvVars, TaskListener, String)}
+     */
+    @Deprecated
+    public KeyMaterialFactory newKeyMaterialFactory(@CheckForNull Item context, @Nonnull FilePath workspace, @Nonnull Launcher launcher, @Nonnull EnvVars env, @Nonnull TaskListener listener, @Nonnull String dockerExecutable) throws IOException, InterruptedException {
+        if (credentialsId == null) {
+            return KeyMaterialFactory.NULL; // nothing needed to be done
+        }
+        DockerRegistryToken token = getToken(context);
+        if (token == null) {
+            throw new AbortException("Could not find credentials matching " + credentialsId);
+        }
+        return token.newKeyMaterialFactory(getEffectiveUrl(), workspace, launcher, env, listener, dockerExecutable);
+    }
+
+    /**
      * Makes the credentials available locally and returns {@link KeyMaterialFactory} that gives you the parameters
      * needed to access it.
+     * @param context The build trying to access DockerHub
      * @param workspace a workspace being used for operations ({@link WorkspaceList#tempDir} will be applied)
      * @param dockerExecutable as in {@link DockerTool#getExecutable}, with a 1.8+ client
      */
-    public KeyMaterialFactory newKeyMaterialFactory(@CheckForNull Item context, @Nonnull FilePath workspace, @Nonnull Launcher launcher, @Nonnull EnvVars env, @Nonnull TaskListener listener, @Nonnull String dockerExecutable) throws IOException, InterruptedException {
+    public KeyMaterialFactory newKeyMaterialFactory(@CheckForNull Run context, @Nonnull FilePath workspace, @Nonnull Launcher launcher, @Nonnull EnvVars env, @Nonnull TaskListener listener, @Nonnull String dockerExecutable) throws IOException, InterruptedException {
         if (credentialsId == null) {
             return KeyMaterialFactory.NULL; // nothing needed to be done
         }

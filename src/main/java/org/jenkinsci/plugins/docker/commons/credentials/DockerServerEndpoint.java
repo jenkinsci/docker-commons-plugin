@@ -36,6 +36,7 @@ import hudson.model.AbstractDescribableImpl;
 import hudson.model.Describable;
 import hudson.model.Descriptor;
 import hudson.model.Item;
+import hudson.model.Run;
 import hudson.remoting.VirtualChannel;
 import hudson.util.ListBoxModel;
 import jenkins.authentication.tokens.api.AuthenticationTokens;
@@ -94,19 +95,25 @@ public class DockerServerEndpoint extends AbstractDescribableImpl<DockerServerEn
     /**
      * Makes the key materials available locally for the on-going build
      * and returns {@link KeyMaterialFactory} that gives you the parameters needed to access it.
+     *
+     * @deprecated Call {@link #newKeyMaterialFactory(Run, VirtualChannel)}
      */
+    @Deprecated
     public KeyMaterialFactory newKeyMaterialFactory(@Nonnull AbstractBuild build) throws IOException, InterruptedException {
         final FilePath workspace = build.getWorkspace();
         if (workspace == null) {
             throw new IllegalStateException("Build has no workspace");
         }
-        return newKeyMaterialFactory(build.getParent(), workspace.getChannel());
+        return newKeyMaterialFactory(build, workspace.getChannel());
     }
 
     /**
      * Makes the key materials available locally and returns {@link KeyMaterialFactory} that gives you the parameters
      * needed to access it.
+     * 
+     * @deprecated Call {@link #newKeyMaterialFactory(Run, VirtualChannel)}
      */
+    @Deprecated
     public KeyMaterialFactory newKeyMaterialFactory(@Nonnull Item context, @Nonnull VirtualChannel target) throws IOException, InterruptedException {
         // as a build step, your access to credentials are constrained by what the build
         // can access, hence Jenkins.getAuthentication()
@@ -120,6 +127,26 @@ public class DockerServerEndpoint extends AbstractDescribableImpl<DockerServerEn
                             domainRequirements),
                     CredentialsMatchers.withId(credentialsId)
             );
+        }
+
+        // the directory needs to be outside workspace to avoid prying eyes
+        FilePath dotDocker = dotDocker(target);
+        dotDocker.mkdirs();
+        // ServerKeyMaterialFactory.materialize creates a random subdir if one is needed:
+        return newKeyMaterialFactory(dotDocker, creds);
+    }
+
+    /**
+     * Makes the key materials available locally and returns {@link KeyMaterialFactory} that gives you the parameters
+     * needed to access it.
+     */
+    public KeyMaterialFactory newKeyMaterialFactory(@Nonnull Run context, @Nonnull VirtualChannel target) throws IOException, InterruptedException {
+        DockerServerCredentials creds=null;
+        if (credentialsId!=null) {
+            List<DomainRequirement> domainRequirements = URIRequirementBuilder.fromUri(getUri()).build();
+            domainRequirements.add(new DockerServerDomainRequirement());
+            creds = CredentialsProvider.findCredentialById(credentialsId, DockerServerCredentials.class, context,
+                    domainRequirements);
         }
 
         // the directory needs to be outside workspace to avoid prying eyes
