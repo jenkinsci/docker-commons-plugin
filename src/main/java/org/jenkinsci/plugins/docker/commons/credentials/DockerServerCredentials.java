@@ -28,8 +28,6 @@ import com.cloudbees.plugins.credentials.impl.BaseStandardCredentials;
 import hudson.Extension;
 import hudson.Util;
 import hudson.util.Secret;
-import org.kohsuke.accmod.Restricted;
-import org.kohsuke.accmod.restrictions.NoExternalUse;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 import javax.annotation.CheckForNull;
@@ -52,7 +50,7 @@ public class DockerServerCredentials extends BaseStandardCredentials {
     @CheckForNull 
     private final Secret serverCaCertificate;
 
-    @DataBoundConstructor
+    @Deprecated
     public DockerServerCredentials(CredentialsScope scope, String id, String description,
                                    @CheckForNull String clientKey, @CheckForNull String clientCertificate,
                                    @CheckForNull String serverCaCertificate) {
@@ -62,19 +60,23 @@ public class DockerServerCredentials extends BaseStandardCredentials {
         this.serverCaCertificate = Util.fixEmptyAndTrim(serverCaCertificate) == null ? null : Secret.fromString(serverCaCertificate);
     }
 
+    @DataBoundConstructor
+    public DockerServerCredentials(CredentialsScope scope, String id, String description,
+                                   @CheckForNull Secret clientKey, @CheckForNull Secret clientCertificate,
+                                   @CheckForNull Secret serverCaCertificate) {
+        super(scope, id, description);
+        this.clientKey = clientKey;
+        this.clientCertificate = clientCertificate;
+        this.serverCaCertificate = serverCaCertificate;
+    }
+
     /**
      * Gets the PEM formatted secret key to identify the client. The {@code --tlskey} option in docker(1)
      *
      * @return null if there's no authentication
      */
     @CheckForNull
-    public String getClientKey() {
-        return clientKey == null ? null : clientKey.getPlainText();
-    }
-
-    @CheckForNull
-    @Restricted(NoExternalUse.class)
-    public Secret getClientKeySecret() {
+    public Secret getClientKey() {
         return clientKey;
     }
 
@@ -85,13 +87,7 @@ public class DockerServerCredentials extends BaseStandardCredentials {
      * @return null if there's no authentication
      */
     @CheckForNull 
-    public String getClientCertificate() {
-        return clientCertificate == null ? null : clientCertificate.getPlainText();
-    }
-
-    @CheckForNull
-    @Restricted(NoExternalUse.class)
-    public Secret getClientCertificateSecret() {
+    public Secret getClientCertificate() {
         return clientCertificate;
     }
 
@@ -102,13 +98,7 @@ public class DockerServerCredentials extends BaseStandardCredentials {
      * @return null if there's no authentication
      */
     @CheckForNull 
-    public String getServerCaCertificate() {
-        return serverCaCertificate == null ? null : serverCaCertificate.getPlainText();
-    }
-
-    @CheckForNull
-    @Restricted(NoExternalUse.class)
-    public Secret getServerCaCertificateSecret() {
+    public Secret getServerCaCertificate() {
         return serverCaCertificate;
     }
 
