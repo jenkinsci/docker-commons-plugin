@@ -25,6 +25,7 @@ package org.jenkinsci.plugins.docker.commons.impl;
 
 import hudson.EnvVars;
 import hudson.FilePath;
+import hudson.util.Secret;
 import org.jenkinsci.plugins.docker.commons.credentials.DockerServerCredentials;
 import org.jenkinsci.plugins.docker.commons.credentials.KeyMaterial;
 import org.jenkinsci.plugins.docker.commons.credentials.KeyMaterialFactory;
@@ -47,11 +48,11 @@ import java.io.IOException;
 public class ServerKeyMaterialFactory extends KeyMaterialFactory {
     
     @CheckForNull 
-    private final String key;
+    private final Secret key;
     @CheckForNull 
-    private final String cert;
+    private final Secret cert;
     @CheckForNull 
-    private final String ca;
+    private final Secret ca;
     
     private static final long serialVersionUID = 1L;
 
@@ -67,7 +68,7 @@ public class ServerKeyMaterialFactory extends KeyMaterialFactory {
         }
     }
 
-    public ServerKeyMaterialFactory(@CheckForNull String key, @CheckForNull String cert, @CheckForNull String ca) {
+    public ServerKeyMaterialFactory(@CheckForNull Secret key, @CheckForNull Secret cert, @CheckForNull Secret ca) {
         this.key = key;
         this.cert = cert;
         this.ca = ca;
@@ -82,9 +83,9 @@ public class ServerKeyMaterialFactory extends KeyMaterialFactory {
             FilePath tempCredsDir = createSecretsDirectory();
 
             // these file names are defined by convention by docker
-            copyInto(tempCredsDir, "key.pem", key);
-            copyInto(tempCredsDir,"cert.pem", cert);
-            copyInto(tempCredsDir,"ca.pem", ca);
+            copyInto(tempCredsDir, "key.pem", Secret.toString(key));
+            copyInto(tempCredsDir,"cert.pem", Secret.toString(cert));
+            copyInto(tempCredsDir,"ca.pem", Secret.toString(ca));
 
             e.put("DOCKER_TLS_VERIFY", "1");
             e.put("DOCKER_CERT_PATH", tempCredsDir.getRemote());
