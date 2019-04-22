@@ -10,6 +10,7 @@ import org.kohsuke.stapler.DataBoundConstructor;
 
 import hudson.Extension;
 import hudson.FilePath;
+import hudson.util.Secret;
 
 public class DockerServerCredentialsBinding extends AbstractOnDiskBinding<DockerServerCredentials> {
 
@@ -26,7 +27,7 @@ public class DockerServerCredentialsBinding extends AbstractOnDiskBinding<Docker
     @Override
     protected FilePath write(DockerServerCredentials credentials, FilePath dir) throws IOException, InterruptedException {
         FilePath clientKey = dir.child("key.pem");
-        clientKey.write(credentials.getClientKey(), null);
+        clientKey.write(Secret.toString(credentials.getClientKey()), null);
         clientKey.chmod(0600);
 
         FilePath clientCert = dir.child("cert.pem");

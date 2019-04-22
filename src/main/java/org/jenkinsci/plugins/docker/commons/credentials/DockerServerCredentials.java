@@ -50,12 +50,20 @@ public class DockerServerCredentials extends BaseStandardCredentials {
     @CheckForNull 
     private final String serverCaCertificate;
 
-    @DataBoundConstructor
+    @Deprecated
     public DockerServerCredentials(CredentialsScope scope, String id, String description,
                                    @CheckForNull String clientKey, @CheckForNull String clientCertificate,
                                    @CheckForNull String serverCaCertificate) {
+        this(scope, id, description, Util.fixEmptyAndTrim(clientKey) == null ? null : Secret.fromString(clientKey),
+                clientCertificate, serverCaCertificate);
+    }
+
+    @DataBoundConstructor
+    public DockerServerCredentials(CredentialsScope scope, String id, String description,
+                                   @CheckForNull Secret clientKey, @CheckForNull String clientCertificate,
+                                   @CheckForNull String serverCaCertificate) {
         super(scope, id, description);
-        this.clientKey = Util.fixEmptyAndTrim(clientKey) == null ? null : Secret.fromString(clientKey);
+        this.clientKey = clientKey;
         this.clientCertificate = Util.fixEmptyAndTrim(clientCertificate);
         this.serverCaCertificate = Util.fixEmptyAndTrim(serverCaCertificate);
     }
@@ -66,8 +74,8 @@ public class DockerServerCredentials extends BaseStandardCredentials {
      * @return null if there's no authentication
      */
     @CheckForNull
-    public String getClientKey() {
-        return clientKey == null ? null : clientKey.getPlainText();
+    public Secret getClientKey() {
+        return clientKey;
     }
 
     /**
