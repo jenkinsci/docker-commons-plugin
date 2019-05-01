@@ -73,7 +73,8 @@ public class DockerServerCredentials extends BaseStandardCredentials {
     /**
      * @deprecated use {@link #getClientKeySecret()}
      */
-    public @CheckForNull String getClientKey() {
+    @CheckForNull
+    public String getClientKey() {
         return Secret.toString(clientKey);
     }
 
