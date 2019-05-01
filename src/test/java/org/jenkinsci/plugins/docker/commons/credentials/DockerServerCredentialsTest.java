@@ -60,7 +60,7 @@ public class DockerServerCredentialsTest {
         assertThat(store, instanceOf(SystemCredentialsProvider.StoreImpl.class));
         Domain domain = new Domain("docker", "A domain for docker credentials",
                 Collections.<DomainSpecification>singletonList(new DockerServerDomainSpecification()));
-        DockerServerCredentials credentials = new DockerServerCredentials(CredentialsScope.GLOBAL, "foo", "desc", "", "", "");
+        DockerServerCredentials credentials = new DockerServerCredentials(CredentialsScope.GLOBAL, "foo", "desc", Secret.fromString(""), "", "");
         store.addDomain(domain, credentials);
 
         j.submit(j.createWebClient().goTo("credentials/store/system/domain/" + domain.getName() + "/credential/"+credentials.getId()+"/update")
@@ -76,7 +76,7 @@ public class DockerServerCredentialsTest {
         assertThat(store, instanceOf(SystemCredentialsProvider.StoreImpl.class));
         Domain domain = new Domain("docker", "A domain for docker credentials",
                 Collections.<DomainSpecification>singletonList(new DockerServerDomainSpecification()));
-        DockerServerCredentials credentials = new DockerServerCredentials(CredentialsScope.GLOBAL, "foo", "desc", "a", "b", "c");
+        DockerServerCredentials credentials = new DockerServerCredentials(CredentialsScope.GLOBAL, "foo", "desc", Secret.fromString("a"), "b", "c");
         store.addDomain(domain, credentials);
 
         j.submit(j.createWebClient().goTo("credentials/store/system/domain/" + domain.getName() + "/credential/"+credentials.getId()+"/update")
@@ -99,7 +99,7 @@ public class DockerServerCredentialsTest {
             button.click();
         }
 
-        form.getTextAreaByName("_.clientKey").setText("new key");
+        form.getTextAreaByName("_.clientKeySecret").setText("new key");
         form.getTextAreaByName("_.clientCertificate").setText("new cert");
         form.getTextAreaByName("_.serverCaCertificate").setText("new ca cert");
         j.submit(form);

@@ -44,6 +44,6 @@ public class ServerKeyMaterialFactoryFromDockerCredentials extends Authenticatio
     @NonNull
     @Override
     public KeyMaterialFactory convert(@NonNull DockerServerCredentials credential) throws AuthenticationTokenException {
-        return new ServerKeyMaterialFactory(Secret.toString(credential.getClientKey()), credential.getClientCertificate(), credential.getServerCaCertificate());
+        return new ServerKeyMaterialFactory(Secret.toString(credential.getClientKeySecret()), credential.getClientCertificate(), credential.getServerCaCertificate());
     }
 }

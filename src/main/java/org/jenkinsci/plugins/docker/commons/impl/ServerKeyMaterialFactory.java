@@ -58,7 +58,7 @@ public class ServerKeyMaterialFactory extends KeyMaterialFactory {
 
     public ServerKeyMaterialFactory(@CheckForNull final DockerServerCredentials credentials) {
         if (credentials != null) {
-            key = Secret.toString(credentials.getClientKey());
+            key = Secret.toString(credentials.getClientKeySecret());
             cert = credentials.getClientCertificate();
             ca = credentials.getServerCaCertificate();
         } else {

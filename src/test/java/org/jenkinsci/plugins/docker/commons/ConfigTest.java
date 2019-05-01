@@ -24,6 +24,7 @@
 
 package org.jenkinsci.plugins.docker.commons;
 
+import hudson.util.Secret;
 import org.jenkinsci.plugins.docker.commons.tools.DockerTool;
 import org.jenkinsci.plugins.docker.commons.util.SampleDockerBuilder;
 import org.jenkinsci.plugins.docker.commons.credentials.DockerServerCredentials;
@@ -48,7 +49,7 @@ public class ConfigTest {
 
     @Test public void configRoundTrip() throws Exception {
         CredentialsStore store = CredentialsProvider.lookupStores(r.jenkins).iterator().next();
-        IdCredentials serverCredentials = new DockerServerCredentials(CredentialsScope.GLOBAL, "serverCreds", null, "clientKey", "clientCertificate", "serverCaCertificate");
+        IdCredentials serverCredentials = new DockerServerCredentials(CredentialsScope.GLOBAL, "serverCreds", null, Secret.fromString("clientKey"), "clientCertificate", "serverCaCertificate");
         store.addCredentials(Domain.global(), serverCredentials);
         IdCredentials registryCredentials = new UsernamePasswordCredentialsImpl(CredentialsScope.GLOBAL, "registryCreds", null, "me", "pass");
         store.addCredentials(Domain.global(), registryCredentials);

@@ -28,6 +28,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Collections;
 
+import hudson.util.Secret;
 import org.apache.commons.io.IOUtils;
 import org.jenkinsci.plugins.credentialsbinding.MultiBinding;
 import org.jenkinsci.plugins.credentialsbinding.impl.BindingStep;
@@ -73,7 +74,7 @@ public class DockerServerCredentialsBindingTest {
                 Domain domain = new Domain("docker", "A domain for docker credentials",
                         Collections.<DomainSpecification> singletonList(new DockerServerDomainSpecification()));
                 DockerServerCredentials c = new DockerServerCredentials(CredentialsScope.GLOBAL,
-                        "docker-client-cert", "desc", "clientKey", "clientCertificate", "serverCaCertificate");
+                        "docker-client-cert", "desc", Secret.fromString("clientKey"), "clientCertificate", "serverCaCertificate");
                 store.addDomain(domain, c);
                 BindingStep s = new StepConfigTester(story.j)
                         .configRoundTrip(new BindingStep(Collections.<MultiBinding> singletonList(
@@ -90,7 +91,7 @@ public class DockerServerCredentialsBindingTest {
             @Override
             public void evaluate() throws Throwable {
                 DockerServerCredentials c = new DockerServerCredentials(CredentialsScope.GLOBAL,
-                        "docker-client-cert", "desc", "clientKey", "clientCertificate", "serverCaCertificate");
+                        "docker-client-cert", "desc", Secret.fromString("clientKey"), "clientCertificate", "serverCaCertificate");
                 CredentialsProvider.lookupStores(story.j.jenkins).iterator().next().addCredentials(Domain.global(), c);
                 WorkflowJob p = story.j.jenkins.createProject(WorkflowJob.class, "p");
                 String pipelineScript = IOUtils.toString(getTestResourceInputStream("basics-Jenkinsfile"));
