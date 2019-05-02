@@ -34,7 +34,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-@Extension
+@Extension(optional = true)
 public class DockerServerCredentialsHandler extends CredentialsBindingHandler<DockerServerCredentials> {
 
     @Nonnull

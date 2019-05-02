@@ -34,10 +34,11 @@
   <properties>
     <revision>1.15</revision>
     <changelist>-SNAPSHOT</changelist>
-    <revision>1.15</revision>
-    <changelist>-SNAPSHOT</changelist>
-    <jenkins.version>2.164.2</jenkins.version>
+    <jenkins.version>2.138.4</jenkins.version>
     <java.level>8</java.level>
+    <workflow-step-api.version>2.19</workflow-step-api.version>
+    <workflow-step-cps.version>2.67</workflow-step-cps.version>
+    <workflow-step-support.version>3.3</workflow-step-support.version>
   </properties>
 
   <repositories>
@@ -100,26 +101,26 @@
     <dependency>
       <groupId>org.jenkins-ci.plugins.workflow</groupId>
       <artifactId>workflow-step-api</artifactId>
-      <version>2.19</version>
+      <version>${workflow-step-api.version}</version>
       <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.jenkins-ci.plugins.workflow</groupId>
       <artifactId>workflow-step-api</artifactId>
-      <version>2.19</version>
+      <version>${workflow-step-api.version}</version>
       <classifier>tests</classifier>
       <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.jenkins-ci.plugins.workflow</groupId>
       <artifactId>workflow-cps</artifactId>
-      <version>2.67</version>
+      <version>${workflow-step-cps.version}</version>
       <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.jenkins-ci.plugins.workflow</groupId>
       <artifactId>workflow-cps</artifactId>
-      <version>2.67</version>
+      <version>${workflow-step-cps.version}</version>
       <classifier>tests</classifier>
       <scope>test</scope>
     </dependency>
@@ -144,13 +145,13 @@
     <dependency>
       <groupId>org.jenkins-ci.plugins.workflow</groupId>
       <artifactId>workflow-support</artifactId>
-      <version>3.3</version>
+      <version>${workflow-step-support.version}</version>
       <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.jenkins-ci.plugins.workflow</groupId>
       <artifactId>workflow-support</artifactId>
-      <version>3.3</version>
+      <version>${workflow-step-support.version}</version>
       <classifier>tests</classifier>
       <scope>test</scope>
     </dependency>
