@@ -25,6 +25,7 @@ package org.jenkinsci.plugins.docker.commons.impl;
 
 import hudson.EnvVars;
 import hudson.FilePath;
+import hudson.util.Secret;
 import org.jenkinsci.plugins.docker.commons.credentials.DockerServerCredentials;
 import org.jenkinsci.plugins.docker.commons.credentials.KeyMaterial;
 import org.jenkinsci.plugins.docker.commons.credentials.KeyMaterialFactory;
@@ -57,7 +58,7 @@ public class ServerKeyMaterialFactory extends KeyMaterialFactory {
 
     public ServerKeyMaterialFactory(@CheckForNull final DockerServerCredentials credentials) {
         if (credentials != null) {
-            key = credentials.getClientKey();
+            key = Secret.toString(credentials.getClientKeySecret());
             cert = credentials.getClientCertificate();
             ca = credentials.getServerCaCertificate();
         } else {

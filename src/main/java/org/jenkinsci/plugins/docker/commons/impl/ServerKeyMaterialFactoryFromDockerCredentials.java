@@ -25,6 +25,7 @@ package org.jenkinsci.plugins.docker.commons.impl;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
+import hudson.util.Secret;
 import jenkins.authentication.tokens.api.AuthenticationTokenException;
 import jenkins.authentication.tokens.api.AuthenticationTokenSource;
 import org.jenkinsci.plugins.docker.commons.credentials.DockerServerCredentials;
@@ -43,6 +44,6 @@ public class ServerKeyMaterialFactoryFromDockerCredentials extends Authenticatio
     @NonNull
     @Override
     public KeyMaterialFactory convert(@NonNull DockerServerCredentials credential) throws AuthenticationTokenException {
-        return new ServerKeyMaterialFactory(credential.getClientKey(), credential.getClientCertificate(), credential.getServerCaCertificate());
+        return new ServerKeyMaterialFactory(Secret.toString(credential.getClientKeySecret()), credential.getClientCertificate(), credential.getServerCaCertificate());
     }
 }
