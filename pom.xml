@@ -8,6 +8,7 @@
     <version>3.43</version>
     <relativePath />
   </parent>
+
   <groupId>org.jenkins-ci.plugins</groupId>
   <artifactId>docker-commons</artifactId>
   <version>${revision}${changelist}</version>
@@ -33,8 +34,11 @@
   <properties>
     <revision>1.15</revision>
     <changelist>-SNAPSHOT</changelist>
-    <jenkins.version>2.60.3</jenkins.version>
+    <jenkins.version>2.150.1</jenkins.version>
     <java.level>8</java.level>
+    <workflow-step-api.version>2.19</workflow-step-api.version>
+    <workflow-cps.version>2.67</workflow-cps.version>
+    <workflow-support.version>3.3</workflow-support.version>
   </properties>
 
   <repositories>
@@ -55,17 +59,24 @@
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
       <artifactId>credentials</artifactId>
-      <version>2.1.13</version>
+      <version>2.1.18</version>
     </dependency>
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
       <artifactId>credentials-binding</artifactId>
-      <version>1.12</version>
+      <version>1.18</version>
     </dependency>
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
       <artifactId>authentication-tokens</artifactId>
       <version>1.3</version>
+    </dependency>
+    <dependency>
+      <groupId>org.jenkinsci.plugins</groupId>
+      <artifactId>pipeline-model-extensions</artifactId>
+      <version>1.3.8</version>
+      <!-- optional because the dependency subtree is quite large -->
+      <optional>true</optional>
     </dependency>
     <!-- TODO: remove after upgrading to Jenkins 2.171+ and migrating to f:secretTextarea -->
     <dependency>
@@ -78,76 +89,107 @@
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
       <artifactId>scm-api</artifactId>
-      <version>2.1.1</version>
+      <version>2.4.1</version>
       <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
       <artifactId>structs</artifactId>
-      <version>1.8</version>
+      <version>1.18</version>
       <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.jenkins-ci.plugins.workflow</groupId>
       <artifactId>workflow-api</artifactId>
-      <version>2.18</version>
+      <version>2.33</version>
       <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.jenkins-ci.plugins.workflow</groupId>
       <artifactId>workflow-step-api</artifactId>
-      <version>2.11</version>
+      <version>${workflow-step-api.version}</version>
       <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.jenkins-ci.plugins.workflow</groupId>
       <artifactId>workflow-step-api</artifactId>
-      <version>2.11</version>
+      <version>${workflow-step-api.version}</version>
       <classifier>tests</classifier>
       <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.jenkins-ci.plugins.workflow</groupId>
       <artifactId>workflow-cps</artifactId>
-      <version>2.39</version>
+      <version>${workflow-cps.version}</version>
       <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.jenkins-ci.plugins.workflow</groupId>
       <artifactId>workflow-cps</artifactId>
-      <version>2.39</version>
+      <version>${workflow-cps.version}</version>
       <classifier>tests</classifier>
       <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.jenkins-ci.plugins.workflow</groupId>
       <artifactId>workflow-job</artifactId>
-      <version>2.12.1</version>
+      <version>2.32</version>
       <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.jenkins-ci.plugins.workflow</groupId>
       <artifactId>workflow-durable-task-step</artifactId>
-      <version>2.12</version>
+      <version>2.30</version>
       <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.jenkins-ci.plugins.workflow</groupId>
       <artifactId>workflow-basic-steps</artifactId>
-      <version>2.5</version>
+      <version>2.15</version>
       <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.jenkins-ci.plugins.workflow</groupId>
       <artifactId>workflow-support</artifactId>
-      <version>2.14</version>
+      <version>${workflow-support.version}</version>
       <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.jenkins-ci.plugins.workflow</groupId>
       <artifactId>workflow-support</artifactId>
-      <version>2.14</version>
+      <version>${workflow-support.version}</version>
       <classifier>tests</classifier>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.jenkinsci.plugins</groupId>
+      <artifactId>pipeline-model-definition</artifactId>
+      <version>1.3.8</version>
+      <scope>test</scope>
+    </dependency>
+    <!-- these dependencies are added to satisfy the enforcer rules -->
+    <dependency>
+      <groupId>org.apache.commons</groupId>
+      <artifactId>commons-lang3</artifactId>
+      <version>3.7</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.jenkins-ci.plugins</groupId>
+      <artifactId>mailer</artifactId>
+      <version>1.20</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.jenkins-ci.plugins</groupId>
+      <artifactId>ssh-credentials</artifactId>
+      <version>1.13</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.jenkins-ci.plugins.workflow</groupId>
+      <artifactId>workflow-scm-step</artifactId>
+      <version>2.6</version>
       <scope>test</scope>
     </dependency>
 
