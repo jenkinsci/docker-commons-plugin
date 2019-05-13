@@ -50,14 +50,34 @@ public class DockerServerCredentials extends BaseStandardCredentials {
     @CheckForNull 
     private final String serverCaCertificate;
 
-    @DataBoundConstructor
+    /**
+     * @deprecated use {@link #DockerServerCredentials(CredentialsScope, String, String, Secret, String, String)}
+     */
+    @Deprecated
     public DockerServerCredentials(CredentialsScope scope, String id, String description,
                                    @CheckForNull String clientKey, @CheckForNull String clientCertificate,
                                    @CheckForNull String serverCaCertificate) {
+        this(scope, id, description, Util.fixEmptyAndTrim(clientKey) == null ? null : Secret.fromString(clientKey),
+                clientCertificate, serverCaCertificate);
+    }
+
+    @DataBoundConstructor
+    public DockerServerCredentials(CredentialsScope scope, String id, String description,
+                                   @CheckForNull Secret clientKeySecret, @CheckForNull String clientCertificate,
+                                   @CheckForNull String serverCaCertificate) {
         super(scope, id, description);
-        this.clientKey = Util.fixEmptyAndTrim(clientKey) == null ? null : Secret.fromString(clientKey);
+        this.clientKey = clientKeySecret;
         this.clientCertificate = Util.fixEmptyAndTrim(clientCertificate);
         this.serverCaCertificate = Util.fixEmptyAndTrim(serverCaCertificate);
+    }
+
+    /**
+     * @deprecated use {@link #getClientKeySecret()}
+     */
+    @CheckForNull
+    @Deprecated
+    public String getClientKey() {
+        return Secret.toString(clientKey);
     }
 
     /**
@@ -66,8 +86,8 @@ public class DockerServerCredentials extends BaseStandardCredentials {
      * @return null if there's no authentication
      */
     @CheckForNull
-    public String getClientKey() {
-        return clientKey == null ? null : clientKey.getPlainText();
+    public Secret getClientKeySecret() {
+        return clientKey;
     }
 
     /**

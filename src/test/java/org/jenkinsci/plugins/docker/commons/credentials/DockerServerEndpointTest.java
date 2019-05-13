@@ -34,6 +34,7 @@ import hudson.Functions;
 import hudson.model.FreeStyleProject;
 import hudson.remoting.VirtualChannel;
 import hudson.slaves.DumbSlave;
+import hudson.util.Secret;
 import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
@@ -63,7 +64,7 @@ public class DockerServerEndpointTest {
         assertThat(store, instanceOf(SystemCredentialsProvider.StoreImpl.class));
         Domain domain = new Domain("docker", "A domain for docker credentials",
                 Collections.<DomainSpecification>singletonList(new DockerServerDomainSpecification()));
-        DockerServerCredentials credentials = new DockerServerCredentials(CredentialsScope.GLOBAL, "foo", "desc", "a", "b", "c");
+        DockerServerCredentials credentials = new DockerServerCredentials(CredentialsScope.GLOBAL, "foo", "desc", Secret.fromString("a"), "b", "c");
         store.addDomain(domain, credentials);
         DockerServerEndpoint endpoint = new DockerServerEndpoint("tcp://localhost:2736", credentials.getId());
         FilePath dotDocker = DockerServerEndpoint.dotDocker(channel);
