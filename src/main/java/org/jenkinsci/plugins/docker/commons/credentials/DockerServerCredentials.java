@@ -33,14 +33,13 @@ import org.kohsuke.stapler.DataBoundConstructor;
 import javax.annotation.CheckForNull;
 
 /**
- * Represents the connection details to talk to a docker host, which involves
+ * Represents the connection details to talk to a TLS server, which involves
  * endpoint URI, optional client secret key &amp; certificate, and optional CA certificate
  * to verify the server.
  *
  * @author Kohsuke Kawaguchi
  * @see DockerServerEndpoint
  */
-// TODO migrate to a standard type once we have a certificate type that we can migrate to
 public class DockerServerCredentials extends BaseStandardCredentials {
 
     @CheckForNull 
@@ -116,7 +115,7 @@ public class DockerServerCredentials extends BaseStandardCredentials {
     public static class DescriptorImpl extends BaseStandardCredentialsDescriptor {
         @Override
         public String getDisplayName() {
-            return "Docker Host Certificate Authentication";
+            return "X.509 Client Certificate";
         }
 
     }
