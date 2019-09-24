@@ -223,6 +223,7 @@ public class DockerFingerprints {
     public static void addRunFacet(@Nonnull ContainerRecord record, @Nonnull Run<?,?> run) throws IOException {
         String imageId = record.getImageId();
         Fingerprint f = forImage(run, imageId);
+        synchronized (f) {
         Collection<FingerprintFacet> facets = f.getFacets();
         DockerRunFingerprintFacet runFacet = null;
         for (FingerprintFacet facet : facets) {
@@ -243,6 +244,7 @@ public class DockerFingerprints {
             bc.commit();
         } finally {
             bc.abort();
+        }
         }
     }
 
