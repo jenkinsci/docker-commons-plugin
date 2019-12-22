@@ -1,7 +1,8 @@
+# Docker Commons API Plugin for Jenkins
+
 API plugin, which provides the common shared functionality for various Docker-related plugins.
 
-Summary
----
+## Summary
 
 * API for managing Docker image and container fingerprints
 * Credentials and location of Docker Registry
@@ -13,16 +14,19 @@ Summary
 
 More info is available on the plugin's [Wiki page](https://wiki.jenkins-ci.org/display/JENKINS/Docker+Commons+Plugin)
 
+## Use-cases
 
-License
----
-[MIT License](http://opensource.org/licenses/MIT)
+### Credentials and locations
 
+This allows users to configure one set of endpoint/credentials and use it across all the Docker related plugins, 
+thereby keeping configuration more [DRY](http://en.wikipedia.org/wiki/Don%27t_repeat_yourself).
 
-Declarative pipeline example
----
+See [Docker Pipeline Plugin](https://plugins.jenkins.io/docker-workflow) for the typical usage.
+
+## Declarative pipeline example
 
 An example on how to bind Docker host/daemon credentials in a declarative pipeline: 
+
 ```groovy
 pipeline {
   agent any
@@ -45,3 +49,7 @@ pipeline {
   }
 }
 ```
+
+## License
+
+[MIT License](http://opensource.org/licenses/MIT)

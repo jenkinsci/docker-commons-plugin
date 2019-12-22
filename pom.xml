@@ -16,7 +16,7 @@
 
   <name>Docker Commons Plugin</name>
   <description>APIs useful to Docker-based plugins.</description>
-  <url>https://wiki.jenkins.io/display/JENKINS/Docker+Commons+Plugin</url>
+  <url>https://github.com/jenkinsci/docker-commons-plugin</url>
   <licenses>
     <license>
       <name>MIT License</name>
