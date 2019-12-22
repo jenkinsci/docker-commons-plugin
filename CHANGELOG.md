@@ -1,5 +1,11 @@
 # Version history (archive)
 
+[![GitHub release](https://img.shields.io/github/release/jenkinsci/docker-commons-plugin.svg?label=changelog)](https://github.com/jenkinsci/docker-commons-plugin/releases/latest)
+
+### Newer versions
+
+See [GitHub Releases](https://github.com/jenkinsci/docker-commons-plugin/releases/latest).
+
 ### 1.15
 
 Release date: (May 13, 2019)
