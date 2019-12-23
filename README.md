@@ -1,7 +1,13 @@
+# Docker Commons API Plugin for Jenkins
+
+[![Join the chat at https://gitter.im/jenkinsci/docker](https://badges.gitter.im/jenkinsci/docker.svg)](https://gitter.im/jenkinsci/docker?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+[![Jenkins Plugin](https://img.shields.io/jenkins/plugin/v/docker-commons.svg)](https://plugins.jenkins.io/docker-commons)
+[![GitHub release](https://img.shields.io/github/release/jenkinsci/docker-commons-plugin.svg?label=changelog)](https://github.com/jenkinsci/docker-commons-plugin/releases/latest)
+[![Jenkins Plugin Installs](https://img.shields.io/jenkins/plugin/i/role-strategy.svg?color=blue)](https://plugins.jenkins.io/docker-commons)
+
 API plugin, which provides the common shared functionality for various Docker-related plugins.
 
-Summary
----
+## Summary
 
 * API for managing Docker image and container fingerprints
 * Credentials and location of Docker Registry
@@ -13,16 +19,19 @@ Summary
 
 More info is available on the plugin's [Wiki page](https://wiki.jenkins-ci.org/display/JENKINS/Docker+Commons+Plugin)
 
+## Use-cases
 
-License
----
-[MIT License](http://opensource.org/licenses/MIT)
+### Credentials and locations
 
+This allows users to configure one set of endpoint/credentials and use it across all the Docker related plugins, 
+thereby keeping configuration more [DRY](http://en.wikipedia.org/wiki/Don%27t_repeat_yourself).
 
-Declarative pipeline example
----
+See [Docker Pipeline Plugin](https://plugins.jenkins.io/docker-workflow) for the typical usage.
+
+## Declarative pipeline example
 
 An example on how to bind Docker host/daemon credentials in a declarative pipeline: 
+
 ```groovy
 pipeline {
   agent any
@@ -45,3 +54,12 @@ pipeline {
   }
 }
 ```
+
+## License
+
+[MIT License](http://opensource.org/licenses/MIT)
+
+## Changelog
+
+* See [GitHub Releases](https://github.com/jenkinsci/docker-commons-plugin/releases/latest) for the recent versions
+* See [the release notes archive](./CHANGELOG.md) for version `1.15` and older
