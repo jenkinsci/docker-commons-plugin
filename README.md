@@ -17,8 +17,6 @@ API plugin, which provides the common shared functionality for various Docker-re
 * Simple UI referring related image fingerprints in Docker builds
 * etc.
 
-More info is available on the plugin's [Wiki page](https://wiki.jenkins-ci.org/display/JENKINS/Docker+Commons+Plugin)
-
 ## Use-cases
 
 ### Credentials and locations
