@@ -40,6 +40,8 @@ import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
 import jenkins.model.FingerprintFacet;
 import org.apache.commons.lang.StringUtils;
+import org.kohsuke.accmod.Restricted;
+import org.kohsuke.accmod.restrictions.NoExternalUse;
 
 /**
  * Entry point into fingerprint related functionalities in Docker.
@@ -49,9 +51,14 @@ public class DockerFingerprints {
     
     private static final Logger LOGGER = Logger.getLogger(DockerFingerprints.class.getName());
 
+    /**
+     * System property, which, when set to true (default false), disables
+     * recording of new fingerprints.
+     */
     @SuppressFBWarnings(value="MS_SHOULD_BE_FINAL", justification="mutable for scripts")
+    @Restricted(NoExternalUse.class)
     public static boolean DISABLE = Boolean.getBoolean(DockerFingerprints.class.getName() + ".DISABLE");
-    
+
     private DockerFingerprints() {} // no instantiation
  
     /**
@@ -319,6 +326,15 @@ public class DockerFingerprints {
             bc.abort();
         }
         }
+    }
+
+    /**
+     * Indicates whether recording of new fingerprints are disabled.
+     *
+     * @return true if fingerprint recording is disabled, otherwise false.
+     */
+    public static boolean isFingerprintsDisabled() {
+        return DISABLE;
     }
 
 }
