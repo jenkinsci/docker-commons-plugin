@@ -28,6 +28,7 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Paths;
 
 import javax.annotation.Nonnull;
 
@@ -54,9 +55,7 @@ public class RegistryKeyMaterialFactory extends KeyMaterialFactory {
     private static final String DOCKER_CONFIG_FILENAME = "config.json";
     private static final String BLACKLISTED_PROPERTY_CREDS_STORE = "credsStore";
     private static final String BLACKLISTED_PROPERTY_AUTHS = "auths";
-    private static final String BLACKLISTED_PROPERTY_PROXIES = "proxies";
     private static final String[] BLACKLISTED_PROPERTIES = { BLACKLISTED_PROPERTY_AUTHS, BLACKLISTED_PROPERTY_CREDS_STORE };
-    private static final String[] BLACKLISTED_NESTED_PROPERTIES = { BLACKLISTED_PROPERTY_CREDS_STORE, BLACKLISTED_PROPERTY_PROXIES };
 
     private final @Nonnull String username;
     private final @Nonnull String password;
@@ -80,20 +79,25 @@ public class RegistryKeyMaterialFactory extends KeyMaterialFactory {
     public KeyMaterial materialize() throws IOException, InterruptedException {
         FilePath dockerConfig = createSecretsDirectory();
 
-        // read the existing docker config file, which might hold some important settings (e.b. proxies)
+        // read the user's home dir docker config file, which might hold some important settings (e.b. proxies)
         FilePath configJsonPath = FilePath.getHomeDirectory(this.launcher.getChannel()).child(".docker").child(DOCKER_CONFIG_FILENAME);
-        dockerConfig = UpdateDockerConfigFromSource(dockerConfig, configJsonPath, BLACKLISTED_PROPERTIES);
+        // read the current docker config which might hold some existing settings (e.b. credentials)
+        FilePath existingDockerConfigPath = new FilePath(this.launcher.getChannel(),
+                    Paths.get(this.env.get("DOCKER_CONFIG"), DOCKER_CONFIG_FILENAME).toString());
 
-        // Read the existing docker config file from a nested config block, will probably hold some previous credentials
-        String existingDockerSecretConfigPath = this.env.get("DOCKER_CONFIG");
-        if (StringUtils.isNotBlank(existingDockerSecretConfigPath)) {
-            // Can't use FilePath(File) yet as not supported till later versions of jenkins..
-            //FilePath existingDockerConfig = FilePath(new File(existingDockerSecretConfigPath, DOCKER_CONFIG_FILENAME));
-            FilePath baseDir = getContext().getBaseDir();
-            // Need to get tmp dir - get base dir length and increase by 1 to include the path separator
-            String existingTmpConfigDir = existingDockerSecretConfigPath.substring(baseDir.getRemote().length() + 1);
-            FilePath existingDockerConfigPath = baseDir.child(existingTmpConfigDir).child(DOCKER_CONFIG_FILENAME);
-            dockerConfig = updateDockerConfigFromSource(dockerConfig, existingDockerConfigPath, BLACKLISTED_NESTED_PROPERTIES);
+        String dockerConfigJson = "";
+        if (existingDockerConfigPath.exists()) {
+            this.launcher.getListener().getLogger().print("Reading the existing DOCKER_CONFIG '" +
+                    existingDockerConfigPath + "' docker config file.\n");
+            dockerConfigJson = existingDockerConfigPath.readToString();
+        } else if (configJsonPath.exists()) {
+            this.launcher.getListener().getLogger().print("Reading the existing user's home '" +
+                    configJsonPath + "' docker config file.\n");
+            dockerConfigJson = removeBlacklistedProperties(configJsonPath.readToString(), BLACKLISTED_PROPERTIES);
+        }
+
+        if (StringUtils.isNotBlank(dockerConfigJson)) {
+            dockerConfig.child(DOCKER_CONFIG_FILENAME).write(dockerConfigJson, StandardCharsets.UTF_8.name());
         }
 
         try {
@@ -114,32 +118,19 @@ public class RegistryKeyMaterialFactory extends KeyMaterialFactory {
         return new RegistryKeyMaterial(dockerConfig, new EnvVars("DOCKER_CONFIG", dockerConfig.getRemote()));
     }
 
-    /**
-     * Copy docker config source data to another docker config
-     * @param dockerConfig
-     * @param dockerConfigSourcePath
-     * @param blacklistedProperties
-     * @return FilePath dockerConfig
-     */
-    private FilePath updateDockerConfigFromSource(@Nonnull FilePath dockerConfig, @Nonnull FilePath dockerConfigSourcePath, @Nonnull String[] blacklistedProperties) throws IOException, InterruptedException {
-        // Make sure config exists
-        if (dockerConfigSourcePath.exists()) {
-            String configJson = dockerConfigSourcePath.readToString();
-            if (StringUtils.isNotBlank(configJson)) {
-                this.launcher.getListener().getLogger().print("Using the existing docker config file.");
-
-                JSONObject json = JSONObject.fromObject(configJson);
-                for (String property : blacklistedProperties) {
-                    Object value = json.remove(property);
-                    if (value != null) {
-                        this.launcher.getListener().getLogger().print("Removing blacklisted property: " + property);
-                    }
+    private String removeBlacklistedProperties(@Nonnull String json, @Nonnull String[] blacklistedProperties) {
+        String jsonString = "";
+        if (StringUtils.isNotBlank(json)) {
+            JSONObject jsonObject = JSONObject.fromObject(json);
+            for (String property : blacklistedProperties) {
+                Object value = jsonObject.remove(property);
+                if (value != null) {
+                    this.launcher.getListener().getLogger().print("Removing blacklisted property: " + property + "\n");
                 }
-
-                dockerConfig.child(DOCKER_CONFIG_FILENAME).write(json.toString(), StandardCharsets.UTF_8.name());
             }
+            jsonString = jsonObject.toString();
         }
-        return dockerConfig;
+        return jsonString;
     }
 
     private static class RegistryKeyMaterial extends KeyMaterial {

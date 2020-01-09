@@ -27,6 +27,7 @@ package org.jenkinsci.plugins.docker.commons.impl;
 import static org.hamcrest.Matchers.arrayContaining;
 import static org.hamcrest.Matchers.emptyArray;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
@@ -41,6 +42,7 @@ import org.jenkinsci.plugins.docker.commons.credentials.KeyMaterial;
 import org.jenkinsci.plugins.docker.commons.credentials.KeyMaterialContext;
 import org.jenkinsci.plugins.docker.commons.credentials.KeyMaterialFactory;
 import org.jenkinsci.plugins.docker.commons.tools.DockerTool;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -48,6 +50,7 @@ import org.junit.rules.TemporaryFolder;
 import org.jvnet.hudson.test.FakeLauncher;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.PretendSlave;
+import net.sf.json.JSONObject;
 
 import hudson.EnvVars;
 import hudson.FilePath;
@@ -66,6 +69,7 @@ public class RegistryKeyMaterialFactoryTest {
     @Rule
     public TemporaryFolder tempFolder = new TemporaryFolder();
 
+    private EnvVars env = new EnvVars();
     private KeyMaterialFactory factory;
 
     @Before
@@ -98,12 +102,16 @@ public class RegistryKeyMaterialFactoryTest {
 	};
 
 	URL endpoint = new DockerRegistryEndpoint(null, null).getEffectiveUrl();
-	EnvVars env = new EnvVars();
 	String dockerExecutable = DockerTool.getExecutable(null, null, listener, env);
 
 	factory = new RegistryKeyMaterialFactory("username", "password", endpoint, launcher, env, listener,
 		dockerExecutable).contextualize(new KeyMaterialContext(new FilePath(tempFolder.newFolder())));
     }
+
+    @After
+	public void reset() {
+		env = new EnvVars();
+	}
 
     @Test
     public void materialize_userConfigFileNotPresent_notCreated() throws Exception {
@@ -232,4 +240,34 @@ public class RegistryKeyMaterialFactoryTest {
 	assertEquals("{\"HttpHeaders\":{\"User-Agent\":\"Docker-Client\"}}", FileUtils.readFileToString(jsonFile));
     }
 
+	@Test
+	public void materialize_existingConfigFile_updatedWithCredentials() throws Exception {
+
+		// arrange
+		File existingCfgFile = new File(new File(tempFolder.getRoot(), ".docker"), "config.json");
+		String existingCfgPath = new File(existingCfgFile.getAbsolutePath()).getParent();
+		String updatedConfigJson = "{" + "\"auths\":{\"localhost2:5001\":{\"auth\":\"whatever2\",\"email\":\"\"}}," +
+				"\"proxies\":{\"default\":{\"httpProxy\":\"proxy\",\"noProxy\":\"something\"}}" + "}";
+		FileUtils.write(existingCfgFile, updatedConfigJson);
+		assertNotNull(existingCfgPath);
+		env.put("DOCKER_CONFIG", existingCfgPath);
+		assertNotNull(env.get("DOCKER_CONFIG", null));
+
+		// act
+		KeyMaterial material = factory.materialize();
+
+		// assert
+		String cfgFolderPath = material.env().get("DOCKER_CONFIG", null);
+		assertNotNull(cfgFolderPath);
+		assertNotEquals(cfgFolderPath, existingCfgPath);
+
+		File dockerCfgFolder = new File(cfgFolderPath);
+		assertTrue(dockerCfgFolder.exists());
+
+		String[] existingFiles = dockerCfgFolder.list();
+		assertThat(existingFiles, arrayContaining("config.json"));
+
+		File jsonFile = new File(dockerCfgFolder, "config.json");
+		assertEquals(updatedConfigJson, FileUtils.readFileToString(jsonFile));
+	}
 }
