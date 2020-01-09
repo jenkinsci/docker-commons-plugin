@@ -233,6 +233,7 @@ public class DockerFingerprints {
      */
     public static void addRunFacet(@Nonnull ContainerRecord record, @Nonnull Run<?,?> run) throws IOException {
         if (DISABLE) {
+            LOGGER.info("Recording of fingerprints is disabled, no RUN fingerprint record will be made.");
             return;
         }
         String imageId = record.getImageId();
@@ -271,6 +272,7 @@ public class DockerFingerprints {
      */
     public static void addFromFacet(@CheckForNull String ancestorImageId, @Nonnull String descendantImageId, @Nonnull Run<?,?> run) throws IOException {
         if (DISABLE) {
+            LOGGER.info("Recording of fingerprints is disabled, no FROM fingerprint record will be made.");
             return;
         }
         long timestamp = System.currentTimeMillis();
