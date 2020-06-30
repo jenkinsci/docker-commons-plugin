@@ -28,6 +28,7 @@ import com.cloudbees.plugins.credentials.impl.BaseStandardCredentials;
 import hudson.Extension;
 import hudson.Util;
 import hudson.util.Secret;
+import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 import javax.annotation.CheckForNull;
@@ -111,7 +112,7 @@ public class DockerServerCredentials extends BaseStandardCredentials {
         return serverCaCertificate;
     }
 
-    @Extension
+    @Extension @Symbol({"x509ClientCert", "dockerServer"})
     public static class DescriptorImpl extends BaseStandardCredentialsDescriptor {
         @Override
         public String getDisplayName() {

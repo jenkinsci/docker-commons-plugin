@@ -43,6 +43,7 @@ import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import jenkins.model.Jenkins;
+import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 /**
@@ -114,7 +115,8 @@ public class DockerTool extends ToolInstallation implements EnvironmentSpecific<
         }
     }
 
-    @Extension public static class DescriptorImpl extends ToolDescriptor<DockerTool> {
+    @Extension @Symbol("dockerTool")
+    public static class DescriptorImpl extends ToolDescriptor<DockerTool> {
 
         @Override public String getDisplayName() {
             return "Docker";
