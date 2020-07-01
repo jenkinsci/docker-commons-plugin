@@ -44,6 +44,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import javax.annotation.Nonnull;
 import jenkins.security.MasterToSlaveCallable;
+import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 /**
@@ -165,7 +166,7 @@ public class DockerToolInstaller extends ToolInstaller {
         throw new IllegalArgumentException("Failed to parse version " + version);
     }
 
-    @Extension
+    @Extension @Symbol("fromDocker")
     public static class DescriptorImpl extends ToolInstallerDescriptor<DockerToolInstaller> {
 
         @Override
