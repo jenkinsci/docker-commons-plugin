@@ -147,7 +147,7 @@ public final class DockerRegistryToken implements Serializable {
                             auths = json = new JSONObject();
                         }
                     }
-                    auths.put(endpoint.toString(), new JSONObject()
+                    auths.put(endpoint.getHost(), new JSONObject()
                             .accumulate("auth", getToken())
                             .accumulate("email", getEmail()));
                     
