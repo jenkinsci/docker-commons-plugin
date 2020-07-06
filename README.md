@@ -26,6 +26,49 @@ thereby keeping configuration more [DRY](http://en.wikipedia.org/wiki/Don%27t_re
 
 See [Docker Pipeline Plugin](https://plugins.jenkins.io/docker-workflow) for the typical usage.
 
+### Multiple Private/Authenticated Registries
+
+In some scenarios you need to authenticate between multiple registries from within a single pipeline step/command. Below
+are some examples to allow this:
+
+*Scripted*
+```groovy
+node('docker') {
+  docker.withRegistry('private-repo1-url', 'id-for-a-docker-cred-repo1') {
+    docker.withRegistry('private-repo2-url', 'id-for-a-docker-cred-repo2') {
+      writeFile file: 'Dockerfile', text: '''
+          FROM private-repo1-url/image
+          COPY someFile /
+          ENTRYPOINT /someFile'''
+      sh 'docker build --tag private-repo2-url/myapp  .'
+    }
+  }
+}
+```
+
+*Declarative*
+```groovy
+pipeline {
+  agent docker
+  stages {
+    stage('foo') {
+      steps {
+        docker.withRegistry('private-repo1-url', 'id-for-a-docker-cred-repo1') {
+            docker.withRegistry('private-repo2-url', 'id-for-a-docker-cred-repo2') {
+              writeFile file: 'Dockerfile', text: '''
+                  FROM private-repo1-url/image
+                  COPY someFile /
+                  ENTRYPOINT /someFile'''
+              sh 'docker build --tag private-repo2-url/myapp .'
+            }
+          }
+      }
+    }
+  }
+}
+```
+
+
 ## Declarative pipeline example
 
 An example on how to bind Docker host/daemon credentials in a declarative pipeline: 

@@ -24,9 +24,11 @@
 
 package org.jenkinsci.plugins.docker.commons.impl;
 
+import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Paths;
 
 import javax.annotation.Nonnull;
 
@@ -51,7 +53,9 @@ import net.sf.json.JSONObject;
 public class RegistryKeyMaterialFactory extends KeyMaterialFactory {
 
     private static final String DOCKER_CONFIG_FILENAME = "config.json";
-    private static final String[] BLACKLISTED_PROPERTIES = { "auths", "credsStore" };
+    private static final String BLACKLISTED_PROPERTY_CREDS_STORE = "credsStore";
+    private static final String BLACKLISTED_PROPERTY_AUTHS = "auths";
+    private static final String[] BLACKLISTED_PROPERTIES = { BLACKLISTED_PROPERTY_AUTHS, BLACKLISTED_PROPERTY_CREDS_STORE };
 
     private final @Nonnull String username;
     private final @Nonnull String password;
@@ -75,23 +79,25 @@ public class RegistryKeyMaterialFactory extends KeyMaterialFactory {
     public KeyMaterial materialize() throws IOException, InterruptedException {
         FilePath dockerConfig = createSecretsDirectory();
 
-        // read the existing docker config file, which might hold some important settings (e.b. proxies)
+        // read the user's home dir docker config file, which might hold some important settings (e.b. proxies)
         FilePath configJsonPath = FilePath.getHomeDirectory(this.launcher.getChannel()).child(".docker").child(DOCKER_CONFIG_FILENAME);
-        if (configJsonPath.exists()) {
-            String configJson = configJsonPath.readToString();
-            if (StringUtils.isNotBlank(configJson)) {
-                launcher.getListener().getLogger().print("Using the existing docker config file.");
+        // read the current docker config which might hold some existing settings (e.b. credentials)
+        FilePath existingDockerConfigPath = new FilePath(this.launcher.getChannel(),
+                    Paths.get(this.env.get("DOCKER_CONFIG"), DOCKER_CONFIG_FILENAME).toString());
 
-                JSONObject json = JSONObject.fromObject(configJson);
-                for (String property : BLACKLISTED_PROPERTIES) {
-                    Object value = json.remove(property);
-                    if (value != null) {
-                        launcher.getListener().getLogger().print("Removing blacklisted property: " + property);
-                    }
-                }
+        String dockerConfigJson = "";
+        if (existingDockerConfigPath.exists()) {
+            this.launcher.getListener().getLogger().print("Reading the existing DOCKER_CONFIG '" +
+                    existingDockerConfigPath + "' docker config file.\n");
+            dockerConfigJson = existingDockerConfigPath.readToString();
+        } else if (configJsonPath.exists()) {
+            this.launcher.getListener().getLogger().print("Reading the existing user's home '" +
+                    configJsonPath + "' docker config file.\n");
+            dockerConfigJson = removeBlacklistedProperties(configJsonPath.readToString(), BLACKLISTED_PROPERTIES);
+        }
 
-                dockerConfig.child(DOCKER_CONFIG_FILENAME).write(json.toString(), StandardCharsets.UTF_8.name());
-            }
+        if (StringUtils.isNotBlank(dockerConfigJson)) {
+            dockerConfig.child(DOCKER_CONFIG_FILENAME).write(dockerConfigJson, StandardCharsets.UTF_8.name());
         }
 
         try {
@@ -110,6 +116,21 @@ public class RegistryKeyMaterialFactory extends KeyMaterialFactory {
             throw x;
         }
         return new RegistryKeyMaterial(dockerConfig, new EnvVars("DOCKER_CONFIG", dockerConfig.getRemote()));
+    }
+
+    private String removeBlacklistedProperties(@Nonnull String json, @Nonnull String[] blacklistedProperties) {
+        String jsonString = "";
+        if (StringUtils.isNotBlank(json)) {
+            JSONObject jsonObject = JSONObject.fromObject(json);
+            for (String property : blacklistedProperties) {
+                Object value = jsonObject.remove(property);
+                if (value != null) {
+                    this.launcher.getListener().getLogger().print("Removing blacklisted property: " + property + "\n");
+                }
+            }
+            jsonString = jsonObject.toString();
+        }
+        return jsonString;
     }
 
     private static class RegistryKeyMaterial extends KeyMaterial {
