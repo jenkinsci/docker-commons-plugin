@@ -24,6 +24,7 @@
 
 package org.jenkinsci.plugins.docker.commons.impl;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
@@ -95,10 +96,9 @@ public class RegistryKeyMaterialFactory extends KeyMaterialFactory {
         }
 
         try {
-            // TODO on Docker 17.07+ use --password-stdin
             EnvVars envWithConfig = new EnvVars(env);
             envWithConfig.put("DOCKER_CONFIG", dockerConfig.getRemote());
-            if (launcher.launch().cmds(new ArgumentListBuilder(dockerExecutable, "login", "-u", username, "-p").add(password, true).add(endpoint)).envs(envWithConfig).stdout(listener).join() != 0) {
+            if (launcher.launch().cmds(new ArgumentListBuilder(dockerExecutable, "login", "-u", username, "--password-stdin").add(endpoint)).envs(envWithConfig).stdin(new ByteArrayInputStream(password.getBytes("UTF-8"))).stdout(listener).join() != 0) {
                 throw new AbortException("docker login failed");
             }
         } catch (IOException | InterruptedException x) {
