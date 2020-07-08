@@ -1,0 +1,22 @@
+credentials:
+  system:
+    domainCredentials:
+      - credentials:
+          - x509ClientCert:
+              clientCertificate: "THE CLIENT"
+              clientKeySecret: "Be wewy wewy cuwiet"
+              description: "Docker X.509"
+              id: "dockerx509"
+              scope: GLOBAL
+              serverCaCertificate: "THE SERVER"
+tool:
+  dockerTool:
+    installations:
+      - name: "docker-latest"
+        properties:
+          - installSource:
+              installers:
+                - fromDocker:
+                    version: "latest"
+      - home: "/etc/docket/docker"
+        name: "docker-native"
