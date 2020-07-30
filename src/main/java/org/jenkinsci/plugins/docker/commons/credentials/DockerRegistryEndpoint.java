@@ -84,12 +84,13 @@ public class DockerRegistryEndpoint extends AbstractDescribableImpl<DockerRegist
      * Some regex magic to parse docker registry:port/namespace/name:tag into parts, using the same constraints as
      * docker push.
      * 
-     * registry must not contain / and must contain a .
+     * registry must not contain /, may contain dashes and must contain a .
      * 
      * everything but name is optional
      */
     private static final Pattern DOCKER_REGISTRY_PATTERN = Pattern
-            .compile("(([^/]+\\.[^/]+)/)?(([a-z0-9_]+)/)?([a-zA-Z0-9-_\\.]+)(:([a-z0-9-_\\.]+))?");
+        .compile("^(?:([a-zA-Z0-9]+(?:(?:[-.][a-zA-Z0-9]+)+)(?::([0-9]+))?)/)?([a-z0-9-_.]+)(?:/([a-z0-9-_.]+))*(:[a-zA-Z0-9-_.]+)?$");
+    
 
     private static final Logger LOGGER = Logger.getLogger(DockerRegistryEndpoint.class.getName());
 
@@ -119,13 +120,13 @@ public class DockerRegistryEndpoint extends AbstractDescribableImpl<DockerRegist
      */
     public static DockerRegistryEndpoint fromImageName(String s, @CheckForNull String credentialsId) {
         Matcher matcher = DOCKER_REGISTRY_PATTERN.matcher(s);
-        if (!matcher.matches() || matcher.groupCount() < 7) {
+        if (!matcher.matches() || matcher.groupCount() < 5) {
             throw new IllegalArgumentException(s + " does not match regex " + DOCKER_REGISTRY_PATTERN);
         }
         String url;
         try {
             // docker push always uses https
-            url = matcher.group(2) == null ? null : new URL("https://" + matcher.group(2)).toString();
+            url = matcher.group(1) == null ? null : new URL("https://" + matcher.group(1)).toString();
         } catch (MalformedURLException e) {
             throw new IllegalArgumentException(s + " can not be parsed as URL: " + e.getMessage());
         }

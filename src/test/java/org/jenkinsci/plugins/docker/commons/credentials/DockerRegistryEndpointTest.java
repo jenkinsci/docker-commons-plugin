@@ -71,6 +71,9 @@ public class DockerRegistryEndpointTest {
         assertRegistry("https://docker.acme.com:8080", "docker.acme.com:8080/acme/test");
         assertRegistry("https://docker.acme.com", "docker.acme.com/acme/test");
         assertRegistry("https://docker.acme.com", "docker.acme.com/busybox");
+        // Registry v2
+        assertRegistry("https://docker.acme.com", "docker.acme.com/path/to/busybox");
+        assertRegistry("https://docker.acme.com:8080", "docker.acme.com:8080/path/to/busybox");
     }
 
     @Test
@@ -81,6 +84,9 @@ public class DockerRegistryEndpointTest {
         assertRegistry("https://docker.acme.com:8080", "docker.acme.com:8080/acme/test:tag");
         assertRegistry("https://docker.acme.com", "docker.acme.com/acme/test:tag");
         assertRegistry("https://docker.acme.com", "docker.acme.com/busybox:tag");
+        // Registry v2
+        assertRegistry("https://docker.acme.com", "docker.acme.com/path/to/busybox:tag");
+        assertRegistry("https://docker.acme.com:8080", "docker.acme.com:8080/path/to/busybox:tag");
     }
 
     @Issue("JENKINS-39181")
