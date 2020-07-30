@@ -87,9 +87,19 @@ public class DockerRegistryEndpoint extends AbstractDescribableImpl<DockerRegist
      * registry must not contain /, may contain dashes and must contain a .
      * 
      * everything but name is optional
+     * 
+     * See also https://github.com/docker/distribution/blob/release/2.7/reference/regexp.go
      */
     private static final Pattern DOCKER_REGISTRY_PATTERN = Pattern
-        .compile("^(?:([a-zA-Z0-9]+(?:(?:[-.][a-zA-Z0-9]+)+)(?::([0-9]+))?)/)?([a-z0-9-_.]+)(?:/([a-z0-9-_.]+))*(:[a-zA-Z0-9-_.]+)?$");
+        .compile("^" +
+            // Domain
+            "(?:([a-zA-Z0-9]+(?:(?:[-.][a-zA-Z0-9]+)+)?(?::([0-9]+))?)/)?" +
+            // Repo
+            "([a-z0-9-_.]+)(?:/([a-z0-9-_.]+))*" +
+            // Tag
+            "(:[a-zA-Z0-9-_.]+)?" +
+            // Digest
+            "(@[A-Za-z][A-Za-z0-9]*(?:[-_+.][A-Za-z][A-Za-z0-9]*)*[:][A-Za-z0-9]*)?$");
     
 
     private static final Logger LOGGER = Logger.getLogger(DockerRegistryEndpoint.class.getName());
@@ -126,7 +136,10 @@ public class DockerRegistryEndpoint extends AbstractDescribableImpl<DockerRegist
         String url;
         try {
             // docker push always uses https
-            url = matcher.group(1) == null ? null : new URL("https://" + matcher.group(1)).toString();
+            String domain = matcher.group(1);
+            url = (domain == null || !(domain.contains(".") || domain.contains(":") || "localhost".equalsIgnoreCase(domain))) 
+                ? null
+                : new URL("https://" + matcher.group(1)).toString();
         } catch (MalformedURLException e) {
             throw new IllegalArgumentException(s + " can not be parsed as URL: " + e.getMessage());
         }
