@@ -89,6 +89,8 @@ public class DockerRegistryEndpointTest {
     public void testParseFullyQualifiedImageName() throws Exception {
         assertEquals("private-repo:5000/test-image", new DockerRegistryEndpoint("http://private-repo:5000/", null).imageName("private-repo:5000/test-image"));
         assertEquals("private-repo:5000/test-image", new DockerRegistryEndpoint("http://private-repo:5000/", null).imageName("test-image"));
+        assertEquals("private-repo:5000/test-image:dev", new DockerRegistryEndpoint("http://private-repo:5000/", null).imageName("private-repo:5000/test-image:dev"));
+        assertEquals("private-repo:5000/test-image:dev", new DockerRegistryEndpoint("http://private-repo:5000/", null).imageName("test-image:dev"));
     }
 
     @Issue("JENKINS-39181")
