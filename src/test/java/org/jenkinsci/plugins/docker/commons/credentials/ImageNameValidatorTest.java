@@ -22,6 +22,7 @@ public class ImageNameValidatorTest {
                 {"workflow-demo:latest",                                                                         FormValidation.Kind.OK},
                 {"workflow-demo",                                                                                FormValidation.Kind.OK},
                 {"workflow-demo:latest@sha256:56930391cf0e1be83108422bbef43001650cfb75f64b3429928f0c5986fdb750", FormValidation.Kind.OK},
+                {"workflow-demo@sha256:56930391cf0e1be83108422bbef43001650cfb75f64b3429928f0c5986fdb750",        FormValidation.Kind.OK},
                 {":tag",                                                                                         FormValidation.Kind.ERROR},
                 {"name:tag",                                                                                     FormValidation.Kind.OK},
                 {"name:.tag",                                                                                    FormValidation.Kind.ERROR},
