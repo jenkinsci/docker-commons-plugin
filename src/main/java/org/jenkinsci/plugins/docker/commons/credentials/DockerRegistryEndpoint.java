@@ -29,9 +29,11 @@ import com.cloudbees.plugins.credentials.common.StandardCredentials;
 import com.cloudbees.plugins.credentials.common.StandardListBoxModel;
 import com.cloudbees.plugins.credentials.domains.DomainRequirement;
 import com.cloudbees.plugins.credentials.domains.HostnameRequirement;
-
+import hudson.AbortException;
+import hudson.EnvVars;
 import hudson.Extension;
 import hudson.FilePath;
+import hudson.Launcher;
 import hudson.Util;
 import hudson.model.AbstractBuild;
 import hudson.model.AbstractDescribableImpl;
@@ -41,17 +43,18 @@ import hudson.model.Item;
 import hudson.model.Run;
 import hudson.model.TaskListener;
 import hudson.remoting.VirtualChannel;
+import hudson.slaves.WorkspaceList;
+import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
 import jenkins.authentication.tokens.api.AuthenticationTokens;
 import jenkins.model.Jenkins;
-
+import org.jenkinsci.plugins.docker.commons.tools.DockerTool;
 import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -62,12 +65,10 @@ import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import static com.cloudbees.plugins.credentials.CredentialsMatchers.*;
-import hudson.AbortException;
-import hudson.EnvVars;
-import hudson.Launcher;
-import hudson.slaves.WorkspaceList;
-import org.jenkinsci.plugins.docker.commons.tools.DockerTool;
+import static com.cloudbees.plugins.credentials.CredentialsMatchers.allOf;
+import static com.cloudbees.plugins.credentials.CredentialsMatchers.firstOrNull;
+import static com.cloudbees.plugins.credentials.CredentialsMatchers.withId;
+import static org.jenkinsci.plugins.docker.commons.credentials.ImageNameValidator.validateUserAndRepo;
 
 /**
  * Encapsulates the endpoint of DockerHub and how to interact with it.
@@ -312,6 +313,12 @@ public class DockerRegistryEndpoint extends AbstractDescribableImpl<DockerRegist
         if (userAndRepo == null) {
             throw new IllegalArgumentException("Image name cannot be null.");
         }
+
+        final FormValidation validation = validateUserAndRepo(userAndRepo);
+        if (validation.kind != FormValidation.Kind.OK) {
+            throw validation;
+        }
+
         if (url == null) {
             return userAndRepo;
         }
