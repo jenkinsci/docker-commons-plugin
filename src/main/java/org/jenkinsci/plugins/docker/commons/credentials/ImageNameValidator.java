@@ -50,21 +50,22 @@ public class ImageNameValidator {
     }
 
     /**
-     * Splits a repository id namespace/name into it's three components (repo/namespace[/*],name,tag)
+     * Splits a repository id namespace/name into it's four components (repo/namespace[/*],name,tag, digest)
      *
      * @param userAndRepo the repository ID namespace/name (ie. "jenkinsci/workflow-demo:latest").
      *                    The namespace can have more than one path element.
-     * @return an array where position 0 is the namespace, 1 is the name and 2 is the tag.
+     * @return an array where position 0 is the namespace, 1 is the name and 2 is the tag and 3 is the digest.
      *         Any position could be <code>null</code>
      */
     public static @NonNull String[] splitUserAndRepo(@NonNull String userAndRepo) {
-        String[] args = new String[3];
+        String[] args = new String[4];
         if (StringUtils.isEmpty(userAndRepo)) {
             return args;
         }
         int slashIdx = userAndRepo.lastIndexOf('/');
         int tagIdx = userAndRepo.lastIndexOf(':');
-        if (tagIdx == -1 && slashIdx == -1) {
+        int digestIdx = userAndRepo.lastIndexOf('@');
+        if (tagIdx == -1 && slashIdx == -1 && digestIdx == -1) {
             args[1] = userAndRepo;
         } else if (tagIdx < slashIdx) {
             //something:port/something or something/something
@@ -75,12 +76,20 @@ public class ImageNameValidator {
                 args[0] = userAndRepo.substring(0, slashIdx);
                 args[1] = userAndRepo.substring(slashIdx + 1);
             }
-            if (tagIdx > 0) {
+            if (digestIdx > 0) {
+                int start = slashIdx > 0 ? slashIdx + 1 : 0;
+                String name = userAndRepo.substring(start, digestIdx);
+                args[1] = name;
+                tagIdx = name.lastIndexOf(':');
+                if (tagIdx > 0) {
+                    args[1] = name.substring(0, tagIdx);
+                    args[2] = name.substring(tagIdx);
+                }
+                args[3] = userAndRepo.substring(digestIdx);
+            } else if (tagIdx > 0) {
                 int start = slashIdx > 0 ? slashIdx + 1 : 0;
                 args[1] = userAndRepo.substring(start, tagIdx);
-                if (tagIdx < userAndRepo.length() - 1) {
-                    args[2] = userAndRepo.substring(tagIdx + 1);
-                }
+                args[2] = userAndRepo.substring(tagIdx);
             }
         }
         return args;
@@ -99,21 +108,27 @@ public class ImageNameValidator {
             return FormValidation.ok();
         }
         final String[] args = splitUserAndRepo(userAndRepo);
-        if (StringUtils.isBlank(args[0]) && StringUtils.isBlank(args[1]) && StringUtils.isBlank(args[2])) {
+        if (StringUtils.isBlank(args[0]) && StringUtils.isBlank(args[1]) && StringUtils.isBlank(args[2])
+                && StringUtils.isBlank(args[3])) {
             return FormValidation.error("Bad imageName format: %s", userAndRepo);
         }
         final FormValidation name = validateName(args[1]);
         final FormValidation tag = validateTag(args[2]);
-        if (name.kind == FormValidation.Kind.OK && tag.kind == FormValidation.Kind.OK) {
+        final FormValidation digest = validateDigest(args[3]);
+        if (name.kind == FormValidation.Kind.OK && tag.kind == FormValidation.Kind.OK
+                && digest.kind == FormValidation.Kind.OK) {
             return FormValidation.ok();
         }
-        if (name.kind == FormValidation.Kind.OK) {
-            return tag;
-        }
-        if (tag.kind == FormValidation.Kind.OK) {
+        if (name.kind != FormValidation.Kind.OK ) {
             return name;
         }
-        return FormValidation.aggregate(Arrays.asList(name, tag));
+        if (tag.kind != FormValidation.Kind.OK) {
+            return tag;
+        }
+        if (digest.kind != FormValidation.Kind.OK) {
+            return digest;
+        }
+        return FormValidation.aggregate(Arrays.asList(name, tag, digest));
     }
 
     /**
@@ -130,13 +145,78 @@ public class ImageNameValidator {
     }
 
     /**
+     * A content digest specified by open container spec.
+     *
+     * @see <a href="https://docs.docker.com/registry/spec/api/#content-digests">Content Digests</a>
+     *      <a href="https://github.com/opencontainers/image-spec/blob/v1.0.1/descriptor.md#digests">OCI Digests</a>
+     */
+    public static final Pattern VALID_DIGEST = Pattern.compile("^@[a-z0-9]+([+._-][a-z0-9]+)*:[a-zA-Z0-9=_-]+$");
+
+    /**
+     * A SHA-256 content digest specified by open container spec.
+     *
+     * @see <a href="https://docs.docker.com/registry/spec/api/#content-digests">Content Digests</a>
+     *      <a href="https://github.com/opencontainers/image-spec/blob/v1.0.1/descriptor.md#digests">OCI Digests</a>
+     */
+    public static final Pattern VALID_DIGEST_SHA256 = Pattern.compile("^@sha256:[a-z0-9]{64}$");
+
+    /**
+     * A SHA-512 content digest specified by open container spec.
+     *
+     * @see <a href="https://docs.docker.com/registry/spec/api/#content-digests">Content Digests</a>
+     *      <a href="https://github.com/opencontainers/image-spec/blob/v1.0.1/descriptor.md#digests">OCI Digests</a>
+     */
+    public static final Pattern VALID_DIGEST_SHA512 = Pattern.compile("^@sha512:[a-z0-9]{128}$");
+
+    /**
+     * Validates a digest is following the rules.
+     *
+     * If the tag is null or the empty string it is considered valid.
+     *
+     * @param digest the digest to validate.
+     * @return the validation result
+     * @see #VALID_DIGEST
+     */
+    public static @NonNull FormValidation validateDigest(@CheckForNull String digest) {
+        if (SKIP) {
+            return FormValidation.ok();
+        }
+        if (StringUtils.isEmpty(digest)) {
+            return FormValidation.ok();
+        }
+        if (digest.startsWith("@sha256")) { 
+            if (digest.length() != 72) {
+                return FormValidation.error("Digest length != 72");
+            }
+            if (!VALID_DIGEST_SHA256.matcher(digest).matches()) {
+                return FormValidation.error("Digest must follow the pattern '%s' for sha-256 algorithm", VALID_DIGEST_SHA256.pattern());
+            }
+            return FormValidation.ok();
+        }
+        if (digest.startsWith("@sha512")) { 
+            if (digest.length() != 136) {
+                return FormValidation.error("Digest length != 136");
+            }
+            if (!VALID_DIGEST_SHA512.matcher(digest).matches()) {
+                return FormValidation.error("Digest must follow the pattern '%s' for sha-512 algorithm", VALID_DIGEST_SHA512.pattern());
+            }
+            return FormValidation.ok();
+        }
+        if (VALID_DIGEST.matcher(digest).matches()) {
+            return FormValidation.ok();
+        } else {
+            return FormValidation.error("Digest must follow the pattern '%s'", VALID_DIGEST.pattern());
+        }
+    }
+
+    /**
      * A tag name must be valid ASCII and may contain
      * lowercase and uppercase letters, digits, underscores, periods and dashes.
      * A tag name may not start with a period or a dash and may contain a maximum of 128 characters.
      *
      * @see <a href="https://docs.docker.com/engine/reference/commandline/tag/">docker tag</a>
      */
-    public static final Pattern VALID_TAG = Pattern.compile("^[a-zA-Z0-9_]([a-zA-Z0-9_.-]){0,127}");
+    public static final Pattern VALID_TAG = Pattern.compile("^:[a-zA-Z0-9_]([a-zA-Z0-9_.-]){0,127}");
 
 
     /**
