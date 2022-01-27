@@ -19,20 +19,23 @@ public class ImageNameValidatorTest {
                 {"docker:80/jenkinsci/workflow-demo",                                                                                FormValidation.Kind.OK},
                 {"jenkinsci/workflow-demo:latest",                                                                                   FormValidation.Kind.OK},
                 {"docker:80/jenkinsci/workflow-demo:latest",                                                                         FormValidation.Kind.OK},
+                {"jenkinsci/workflow-demo@",                                                                                         FormValidation.Kind.ERROR},
                 {"workflow-demo:latest",                                                                                             FormValidation.Kind.OK},
                 {"workflow-demo",                                                                                                    FormValidation.Kind.OK},
                 {"workflow-demo:latest@sha256:56930391cf0e1be83108422bbef43001650cfb75f64b3429928f0c5986fdb750",                     FormValidation.Kind.OK},
                 {"workflow-demo:latest@sha256:56930391cf0e1be83108422bbef43001650cfb75f64b",                                         FormValidation.Kind.ERROR},
                 {"workflow-demo@sha256:56930391cf0e1be83108422bbef43001650cfb75f64b3429928f0c5986fdb750",                            FormValidation.Kind.OK},
+                {"workflow-demo@sha256:56930391cf0e1be83108422bbef43001650cfb75f64b3429928f0c5986fdB750",                            FormValidation.Kind.ERROR},
+                {"workflow-demo:",                                                                                                   FormValidation.Kind.ERROR},
+                {"workflow-demo:latest@",                                                                                            FormValidation.Kind.ERROR},
+                {"workflow-demo@",                                                                                                   FormValidation.Kind.ERROR},
                 {"jenkinsci/workflow-demo@sha256:56930391cf0e1be83108422bbef43001650cfb75f64b3429928f0c5986fdb750",                  FormValidation.Kind.OK},
                 {"docker:80/jenkinsci/workflow-demo@sha256:56930391cf0e1be83108422bbef43001650cfb75f64b3429928f0c5986fdb750",        FormValidation.Kind.OK},
                 {"docker:80/jenkinsci/workflow-demo:latest@sha256:56930391cf0e1be83108422bbef43001650cfb75f64b3429928f0c5986fdb750", FormValidation.Kind.OK},
-                {"docker:80/jenkinsci/workflow-demo:latest@sha1:0123456789abcdef", FormValidation.Kind.ERROR},                                //?
-                {"workflow-demo:latest@",                                         FormValidation.Kind.ERROR},
-                {"workflow-demo@",                            FormValidation.Kind.ERROR},
-                {"jenkinsci/workflow-demo@",                  FormValidation.Kind.ERROR},
-                {"docker:80/jenkinsci/workflow-demo@",        FormValidation.Kind.ERROR},
-                {"docker:80/jenkinsci/workflow-demo:latest@", FormValidation.Kind.ERROR},
+                {"docker:80/jenkinsci/workflow-demo:latest@sha1:0123456789abcdef",                                                   FormValidation.Kind.OK},                                
+                {"docker:80/jenkinsci/workflow-demo:latest@sha1:",                                                                   FormValidation.Kind.ERROR}, 
+                {"docker:80/jenkinsci/workflow-demo@",                                                                               FormValidation.Kind.ERROR},
+                {"docker:80/jenkinsci/workflow-demo:latest@",                                                                        FormValidation.Kind.ERROR},
                 {":tag",                                                                                                             FormValidation.Kind.ERROR},
                 {"name:tag",                                                                                                         FormValidation.Kind.OK},
                 {"name:.tag",                                                                                                        FormValidation.Kind.ERROR},
@@ -52,6 +55,10 @@ public class ImageNameValidatorTest {
                 {":",                                                                                                                FormValidation.Kind.ERROR},
                 {"  ",                                                                                                               FormValidation.Kind.ERROR},
 
+                {"a@sha512:56930391cf0e1be83108422bbef43001650cfb75f64b",                                                                                     FormValidation.Kind.ERROR},
+                {"a@sha512:56930391cf0e1be83108422bbef43001650cfb75f64b3429928f0c5986fdb75056930391cf0e1be83108422bbef43001650cfb75f64b3429928f0c5986fdb750", FormValidation.Kind.OK},
+                {"a@sha512:B6930391cf0e1be83108422bbef43001650cfb75f64b3429928f0c5986fdb75056930391cf0e1be83108422bbef43001650cfb75f64b3429928f0c5986fdb750", FormValidation.Kind.ERROR}
+
         };
     }
 
@@ -65,6 +72,7 @@ public class ImageNameValidatorTest {
 
     @Test
     public void test() {
-        assertSame(expected, ImageNameValidator.validateUserAndRepo(userAndRepo).kind);
+        FormValidation res = ImageNameValidator.validateUserAndRepo(userAndRepo);
+        assertSame(userAndRepo + " : " + res.getMessage(), expected, res.kind);
     }
 }
