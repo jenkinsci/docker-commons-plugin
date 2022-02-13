@@ -52,6 +52,8 @@ public class RegistryKeyMaterialFactory extends KeyMaterialFactory {
 
     private static final String DOCKER_CONFIG_FILENAME = "config.json";
     private static final String[] BLACKLISTED_PROPERTIES = { "auths", "credsStore" };
+    
+    protected static final String DOCKER_REGISTRY_HOST_ONLY = "DOCKER_REGISTRY_HOST_ONLY";
 
     private final @Nonnull String username;
     private final @Nonnull String password;
@@ -98,7 +100,7 @@ public class RegistryKeyMaterialFactory extends KeyMaterialFactory {
             // TODO on Docker 17.07+ use --password-stdin
             EnvVars envWithConfig = new EnvVars(env);
             envWithConfig.put("DOCKER_CONFIG", dockerConfig.getRemote());
-            if (launcher.launch().cmds(new ArgumentListBuilder(dockerExecutable, "login", "-u", username, "-p").add(password, true).add(endpoint)).envs(envWithConfig).stdout(listener).join() != 0) {
+            if (launcher.launch().cmds(new ArgumentListBuilder(dockerExecutable, "login", "-u", username, "-p").add(password, true).add(registry())).envs(envWithConfig).stdout(listener).join() != 0) {
                 throw new AbortException("docker login failed");
             }
         } catch (IOException | InterruptedException x) {
@@ -110,6 +112,14 @@ public class RegistryKeyMaterialFactory extends KeyMaterialFactory {
             throw x;
         }
         return new RegistryKeyMaterial(dockerConfig, new EnvVars("DOCKER_CONFIG", dockerConfig.getRemote()));
+    }
+    
+    protected String registry() {
+    	if (dockerExecutable.endsWith("podman") || Boolean.parseBoolean(env.get(DOCKER_REGISTRY_HOST_ONLY, "false"))) {
+    		return endpoint.getAuthority();
+    	}
+    	
+    	return endpoint.toString();
     }
 
     private static class RegistryKeyMaterial extends KeyMaterial {
