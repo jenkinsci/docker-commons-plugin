@@ -80,7 +80,7 @@ public class DockerFingerprints {
      * @throws IOException Fingerprint loading error
      */
     public static @CheckForNull Fingerprint of(@Nonnull String id) throws IOException {
-        return Jenkins.getInstance().getFingerprintMap().get(getFingerprintHash(id));
+        return Jenkins.get().getFingerprintMap().get(getFingerprintHash(id));
     }
     
     private static @CheckForNull Fingerprint ofNoException(@Nonnull String id) {
@@ -139,12 +139,8 @@ public class DockerFingerprints {
     
     private static @Nonnull Fingerprint forDockerInstance(@CheckForNull Run<?,?> run, 
             @Nonnull String id, @CheckForNull String name, @Nonnull String prefix) throws IOException {
-        final Jenkins j = Jenkins.getInstance();
-        if (j == null) {
-            throw new IOException("Jenkins instance is not ready");
-        }
         final String imageName = prefix + (StringUtils.isNotBlank(name) ? name : id);
-        return j.getFingerprintMap().getOrCreate(run, imageName, getFingerprintHash(id));
+        return Jenkins.get().getFingerprintMap().getOrCreate(run, imageName, getFingerprintHash(id));
     }
 
     /**

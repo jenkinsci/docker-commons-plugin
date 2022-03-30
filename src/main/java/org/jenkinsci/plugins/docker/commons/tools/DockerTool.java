@@ -73,26 +73,23 @@ public class DockerTool extends ToolInstallation implements EnvironmentSpecific<
      */
     public static @Nonnull String getExecutable(@CheckForNull String name, @CheckForNull Node node, @Nullable TaskListener listener, @CheckForNull EnvVars env) throws IOException, InterruptedException {
         if (name != null) {
-            Jenkins j = Jenkins.getInstance();
-            if (j != null) {
-                for (DockerTool tool : j.getDescriptorByType(DescriptorImpl.class).getInstallations()) {
-                    if (tool.getName().equals(name)) {
+            for (DockerTool tool : Jenkins.get().getDescriptorByType(DescriptorImpl.class).getInstallations()) {
+                if (tool.getName().equals(name)) {
+                    if (node != null) {
+                        tool = tool.forNode(node, listener);
+                    }
+                    if (env != null) {
+                        tool = tool.forEnvironment(env);
+                    }
+                    String home = Util.fixEmpty(tool.getHome());
+                    if (home != null) {
                         if (node != null) {
-                            tool = tool.forNode(node, listener);
-                        }
-                        if (env != null) {
-                            tool = tool.forEnvironment(env);
-                        }
-                        String home = Util.fixEmpty(tool.getHome());
-                        if (home != null) {
-                            if (node != null) {
-                                FilePath homeFP = node.createPath(home);
-                                if (homeFP != null) {
-                                    return homeFP.child("bin/docker").getRemote();
-                                }
+                            FilePath homeFP = node.createPath(home);
+                            if (homeFP != null) {
+                                return homeFP.child("bin/docker").getRemote();
                             }
-                            return home + "/bin/docker";
                         }
+                        return home + "/bin/docker";
                     }
                 }
             }

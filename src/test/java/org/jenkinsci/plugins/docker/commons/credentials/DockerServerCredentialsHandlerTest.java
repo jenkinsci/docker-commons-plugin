@@ -48,6 +48,7 @@ import org.jvnet.hudson.test.RestartableJenkinsRule;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 
 import static org.hamcrest.Matchers.instanceOf;
@@ -70,7 +71,7 @@ public class DockerServerCredentialsHandlerTest {
                         "docker-client-cert", "desc", "clientKey", "clientCertificate", "serverCaCertificate");
                 CredentialsProvider.lookupStores(story.j.jenkins).iterator().next().addCredentials(Domain.global(), c);
                 WorkflowJob p = story.j.jenkins.createProject(WorkflowJob.class, "p");
-                String pipelineScript = IOUtils.toString(getTestResourceInputStream("basics-Jenkinsfile"));
+                String pipelineScript = IOUtils.toString(getTestResourceInputStream("basics-Jenkinsfile"), StandardCharsets.UTF_8);
                 p.setDefinition(new CpsFlowDefinition(pipelineScript, true));
                 WorkflowRun b = p.scheduleBuild2(0).waitForStart();
                 SemaphoreStep.waitForStart("basics/1", b);
