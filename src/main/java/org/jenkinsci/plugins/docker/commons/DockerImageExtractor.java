@@ -59,8 +59,7 @@ public abstract class DockerImageExtractor implements ExtensionPoint {
     @Nonnull
     public static Set<String> getDockerImagesUsedByJobFromAll(@Nonnull Job<?,?> job) {
         Set<String> names = new TreeSet<String>();
-        //TODO use ExtensionList.lookup(DockerImageExtractor.class); when core req is past 1.572 to not have to check for Jenkins instance
-        for (DockerImageExtractor extractor : Jenkins.get().getExtensionList(DockerImageExtractor.class)) {
+        for (DockerImageExtractor extractor : ExtensionList.lookup(DockerImageExtractor.class)) {
             names.addAll(extractor.getDockerImagesUsedByJob(job));
         }
         return names;
