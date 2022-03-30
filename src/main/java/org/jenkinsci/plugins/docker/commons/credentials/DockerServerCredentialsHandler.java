@@ -24,11 +24,11 @@
 package org.jenkinsci.plugins.docker.commons.credentials;
 
 import com.cloudbees.plugins.credentials.common.StandardCredentials;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import org.jenkinsci.plugins.credentialsbinding.MultiBinding;
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.CredentialsBindingHandler;
 
-import javax.annotation.Nonnull;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -37,19 +37,19 @@ import java.util.Map;
 @Extension(optional = true)
 public class DockerServerCredentialsHandler extends CredentialsBindingHandler<DockerServerCredentials> {
 
-    @Nonnull
+    @NonNull
     @Override
     public List<MultiBinding<DockerServerCredentials>> toBindings(String varName, String credentialsId) {
         return Collections.singletonList(new DockerServerCredentialsBinding(varName, credentialsId));
     }
 
-    @Nonnull
+    @NonNull
     @Override
     public Class<? extends StandardCredentials> type() {
         return DockerServerCredentials.class;
     }
 
-    @Nonnull
+    @NonNull
     @Override
     public List<Map<String, Object>> getWithCredentialsParameters(String credentialsId) {
         Map<String, Object> map = new HashMap<>();

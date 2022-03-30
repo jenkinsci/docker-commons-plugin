@@ -28,8 +28,7 @@ import java.io.IOException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 
-import javax.annotation.Nonnull;
-
+import edu.umd.cs.findbugs.annotations.NonNull;
 import org.apache.commons.lang.StringUtils;
 import org.jenkinsci.plugins.docker.commons.credentials.KeyMaterial;
 import org.jenkinsci.plugins.docker.commons.credentials.KeyMaterialFactory;
@@ -53,15 +52,15 @@ public class RegistryKeyMaterialFactory extends KeyMaterialFactory {
     private static final String DOCKER_CONFIG_FILENAME = "config.json";
     private static final String[] BLACKLISTED_PROPERTIES = { "auths", "credsStore" };
 
-    private final @Nonnull String username;
-    private final @Nonnull String password;
-    private final @Nonnull URL endpoint;
-    private final @Nonnull Launcher launcher;
-    private final @Nonnull EnvVars env;
-    private final @Nonnull TaskListener listener;
-    private final @Nonnull String dockerExecutable;
+    private final @NonNull String username;
+    private final @NonNull String password;
+    private final @NonNull URL endpoint;
+    private final @NonNull Launcher launcher;
+    private final @NonNull EnvVars env;
+    private final @NonNull TaskListener listener;
+    private final @NonNull String dockerExecutable;
 
-    public RegistryKeyMaterialFactory(@Nonnull String username, @Nonnull String password, @Nonnull URL endpoint, @Nonnull Launcher launcher, @Nonnull EnvVars env, @Nonnull TaskListener listener, @Nonnull String dockerExecutable) {
+    public RegistryKeyMaterialFactory(@NonNull String username, @NonNull String password, @NonNull URL endpoint, @NonNull Launcher launcher, @NonNull EnvVars env, @NonNull TaskListener listener, @NonNull String dockerExecutable) {
         this.username = username;
         this.password = password;
         this.endpoint = endpoint;

@@ -23,6 +23,7 @@
  */
 package org.jenkinsci.plugins.docker.commons.impl;
 
+import edu.umd.cs.findbugs.annotations.CheckForNull;
 import hudson.EnvVars;
 import hudson.FilePath;
 import hudson.util.Secret;
@@ -32,7 +33,6 @@ import org.jenkinsci.plugins.docker.commons.credentials.KeyMaterialFactory;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
 
-import javax.annotation.CheckForNull;
 import java.io.IOException;
 
 /**
@@ -47,7 +47,7 @@ import java.io.IOException;
 @Restricted(NoExternalUse.class)
 public class ServerKeyMaterialFactory extends KeyMaterialFactory {
     
-    @CheckForNull 
+    @CheckForNull
     private final String key;
     @CheckForNull 
     private final String cert;

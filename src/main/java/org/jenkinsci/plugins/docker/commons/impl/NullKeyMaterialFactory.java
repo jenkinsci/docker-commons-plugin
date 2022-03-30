@@ -23,6 +23,7 @@
  */
 package org.jenkinsci.plugins.docker.commons.impl;
 
+import edu.umd.cs.findbugs.annotations.NonNull;
 import org.jenkinsci.plugins.docker.commons.credentials.KeyMaterial;
 import org.jenkinsci.plugins.docker.commons.credentials.KeyMaterialContext;
 import org.jenkinsci.plugins.docker.commons.credentials.KeyMaterialFactory;
@@ -46,7 +47,7 @@ public final class NullKeyMaterialFactory extends KeyMaterialFactory {
     }
 
     @Override
-    public synchronized KeyMaterialFactory contextualize(KeyMaterialContext context) {
+    public synchronized KeyMaterialFactory contextualize(@NonNull KeyMaterialContext context) {
         return this;
     }
 }

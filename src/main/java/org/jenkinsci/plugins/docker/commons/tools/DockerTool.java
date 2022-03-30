@@ -24,6 +24,7 @@
 
 package org.jenkinsci.plugins.docker.commons.tools;
 
+import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.EnvVars;
 import hudson.Extension;
 import hudson.FilePath;
@@ -104,7 +105,7 @@ public class DockerTool extends ToolInstallation implements EnvironmentSpecific<
         return new DockerTool(getName(), environment.expand(getHome()), getProperties());
     }
 
-    public DockerTool forNode(Node node, TaskListener log) throws IOException, InterruptedException {
+    public DockerTool forNode(@NonNull Node node, TaskListener log) throws IOException, InterruptedException {
             return new DockerTool(getName(), translateFor(node, log), getProperties().toList());
     }
 
@@ -118,6 +119,7 @@ public class DockerTool extends ToolInstallation implements EnvironmentSpecific<
     @Extension @Symbol("dockerTool")
     public static class DescriptorImpl extends ToolDescriptor<DockerTool> {
 
+        @NonNull
         @Override public String getDisplayName() {
             return "Docker";
         }

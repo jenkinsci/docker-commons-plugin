@@ -24,6 +24,7 @@
 
 package org.jenkinsci.plugins.docker.commons.tools;
 
+import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.AbortException;
 import hudson.Extension;
 import hudson.FilePath;
@@ -169,6 +170,7 @@ public class DockerToolInstaller extends ToolInstaller {
     @Extension @Symbol("fromDocker")
     public static class DescriptorImpl extends ToolInstallerDescriptor<DockerToolInstaller> {
 
+        @NonNull
         @Override
         public String getDisplayName() {
             return "Download from docker.com";
