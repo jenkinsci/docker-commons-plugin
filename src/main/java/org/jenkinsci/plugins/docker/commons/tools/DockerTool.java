@@ -66,7 +66,7 @@ public class DockerTool extends ToolInstallation implements EnvironmentSpecific<
      * Gets the executable name to use for a given launcher.
      * Suitable for the first item in {@link ArgumentListBuilder}.
      * @param name the name of the selected tool, or null for the default
-     * @param node optionally, a node (such as a slave) on which we are running Docker
+     * @param node optionally, a node (such as an agent) on which we are running Docker
      * @param listener a listener, required in case {@code node} is not null
      * @param env optionally, environment variables to use when expanding the home directory
      * @return {@code docker} or an absolute path
