@@ -80,7 +80,7 @@ public class DockerToolInstallerTest {
         } catch (IOException x) {
             Assume.assumeNoException("Cannot contact download sites, perhaps test machine is not online", x);
         }
-        String[] testedVersions = {"17.09.1-ce", "1.12.6", "1.10.0", "latest"};
+        String[] testedVersions = {"19.03.9"};
         DockerTool[] installations = new DockerTool[testedVersions.length];
         for (int i = 0; i < testedVersions.length; i++) {
             String v = testedVersions[i];
