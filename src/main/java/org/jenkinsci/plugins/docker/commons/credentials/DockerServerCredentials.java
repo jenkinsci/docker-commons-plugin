@@ -25,13 +25,13 @@ package org.jenkinsci.plugins.docker.commons.credentials;
 
 import com.cloudbees.plugins.credentials.CredentialsScope;
 import com.cloudbees.plugins.credentials.impl.BaseStandardCredentials;
+import edu.umd.cs.findbugs.annotations.CheckForNull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.Util;
 import hudson.util.Secret;
 import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.DataBoundConstructor;
-
-import javax.annotation.CheckForNull;
 
 /**
  * Represents the connection details to talk to a TLS server, which involves
@@ -43,7 +43,7 @@ import javax.annotation.CheckForNull;
  */
 public class DockerServerCredentials extends BaseStandardCredentials {
 
-    @CheckForNull 
+    @CheckForNull
     private final Secret clientKey;
     @CheckForNull 
     private final String clientCertificate;
@@ -114,6 +114,7 @@ public class DockerServerCredentials extends BaseStandardCredentials {
 
     @Extension @Symbol({"x509ClientCert", "dockerServer"})
     public static class DescriptorImpl extends BaseStandardCredentialsDescriptor {
+        @NonNull
         @Override
         public String getDisplayName() {
             return "X.509 Client Certificate";

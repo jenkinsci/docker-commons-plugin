@@ -23,11 +23,11 @@
  */
 package org.jenkinsci.plugins.docker.commons.credentials;
 
+import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.util.FormValidation;
 import org.apache.commons.lang.StringUtils;
 
-import javax.annotation.CheckForNull;
 import java.util.Arrays;
 import java.util.regex.Pattern;
 

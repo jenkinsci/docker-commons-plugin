@@ -24,6 +24,8 @@
 package org.jenkinsci.plugins.docker.commons.credentials;
 
 import com.cloudbees.plugins.credentials.Credentials;
+import edu.umd.cs.findbugs.annotations.CheckForNull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.EnvVars;
 import hudson.FilePath;
 import hudson.Launcher;
@@ -35,10 +37,7 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
 import java.util.Base64;
-import javax.annotation.CheckForNull;
-import javax.annotation.Nonnull;
 import jenkins.authentication.tokens.api.AuthenticationTokens;
 import jenkins.security.MasterToSlaveCallable;
 import net.sf.json.JSONObject;
@@ -75,7 +74,7 @@ public final class DockerRegistryToken implements Serializable {
      * @deprecated use {@link #newKeyMaterialFactory(URL, FilePath, Launcher, EnvVars, TaskListener, String)}
      */
     @Deprecated
-    public KeyMaterialFactory newKeyMaterialFactory(final URL endpoint, @Nonnull VirtualChannel target) throws InterruptedException, IOException {
+    public KeyMaterialFactory newKeyMaterialFactory(final URL endpoint, @NonNull VirtualChannel target) throws InterruptedException, IOException {
         return newKeyMaterialFactory(endpoint, target, null, TaskListener.NULL);
     }
 
@@ -83,7 +82,7 @@ public final class DockerRegistryToken implements Serializable {
      * @deprecated use {@link #newKeyMaterialFactory(URL, FilePath, Launcher, EnvVars, TaskListener, String)}
      */
     @Deprecated
-    public KeyMaterialFactory newKeyMaterialFactory(@Nonnull URL endpoint, @Nonnull FilePath workspace, @Nonnull Launcher launcher, @Nonnull TaskListener listener, @Nonnull String dockerExecutable) throws InterruptedException, IOException {
+    public KeyMaterialFactory newKeyMaterialFactory(@NonNull URL endpoint, @NonNull FilePath workspace, @NonNull Launcher launcher, @NonNull TaskListener listener, @NonNull String dockerExecutable) throws InterruptedException, IOException {
         return newKeyMaterialFactory(endpoint, workspace, launcher, new EnvVars(), listener, dockerExecutable);
     }
 
@@ -95,7 +94,7 @@ public final class DockerRegistryToken implements Serializable {
      * Sets up an environment logged in to the specified Docker registry.
      * @param dockerExecutable as in {@link DockerTool#getExecutable}, with a 1.8+ client
      */
-    public KeyMaterialFactory newKeyMaterialFactory(@Nonnull URL endpoint, @Nonnull FilePath workspace, @Nonnull Launcher launcher, @Nonnull EnvVars env, @Nonnull TaskListener listener, @Nonnull String dockerExecutable) throws InterruptedException, IOException {
+    public KeyMaterialFactory newKeyMaterialFactory(@NonNull URL endpoint, @NonNull FilePath workspace, @NonNull Launcher launcher, @NonNull EnvVars env, @NonNull TaskListener listener, @NonNull String dockerExecutable) throws InterruptedException, IOException {
         if (!USE_CUSTOM_LOGIN) {
             try {
                 // see UsernamePasswordDockerRegistryTokenSource for example
@@ -121,7 +120,7 @@ public final class DockerRegistryToken implements Serializable {
      * @deprecated use {@link #newKeyMaterialFactory(URL, FilePath, Launcher, EnvVars, TaskListener, String)}
      */
     @Deprecated
-    public KeyMaterialFactory newKeyMaterialFactory(final @Nonnull URL endpoint, @Nonnull VirtualChannel target, @CheckForNull Launcher launcher, final @Nonnull TaskListener listener) throws InterruptedException, IOException {
+    public KeyMaterialFactory newKeyMaterialFactory(final @NonNull URL endpoint, @NonNull VirtualChannel target, @CheckForNull Launcher launcher, final @NonNull TaskListener listener) throws InterruptedException, IOException {
         target.call(new MasterToSlaveCallable<Void, IOException>() {
             /**
              * Insert the token into {@code ~/.dockercfg}

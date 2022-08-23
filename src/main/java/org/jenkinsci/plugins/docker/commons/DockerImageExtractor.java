@@ -26,7 +26,6 @@ package org.jenkinsci.plugins.docker.commons;
 import hudson.ExtensionList;
 import hudson.ExtensionPoint;
 import hudson.model.Job;
-import jenkins.model.Jenkins;
 
 import javax.annotation.Nonnull;
 import java.util.Collection;

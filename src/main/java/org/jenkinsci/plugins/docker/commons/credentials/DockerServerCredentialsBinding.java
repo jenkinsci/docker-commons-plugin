@@ -2,6 +2,7 @@ package org.jenkinsci.plugins.docker.commons.credentials;
 
 import java.io.IOException;
 
+import edu.umd.cs.findbugs.annotations.NonNull;
 import org.jenkinsci.Symbol;
 import org.jenkinsci.plugins.credentialsbinding.BindingDescriptor;
 import org.jenkinsci.plugins.credentialsbinding.impl.AbstractOnDiskBinding;
@@ -50,6 +51,7 @@ public class DockerServerCredentialsBinding extends AbstractOnDiskBinding<Docker
             return DockerServerCredentials.class;
         }
 
+        @NonNull
         @Override
         public String getDisplayName() {
             return Messages.DockerServerCredentialsBinding_DisplayName();
