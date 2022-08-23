@@ -151,7 +151,7 @@ public class DockerToolInstaller extends ToolInstaller {
     static URL getDockerImageUrl(String os, String version) throws MalformedURLException {
         final int i = os.indexOf("/");
         if (parseVersion(version).isNewerThan(parseVersion("17.05.0-ce"))) {
-            return new URL("https://download.docker.com/" + os.substring(0, i) + "/static/edge/"+ os.substring(i + 1) + "/docker-" + version);
+            return new URL("https://download.docker.com/" + os.substring(0, i) + "/static/stable/"+ os.substring(i + 1) + "/docker-" + version);
         }
 
         return new URL("https://get.docker.com/builds/" + FindArch.asGetDockerArchName(os) + os.substring(i +1) + "/docker-" + version);

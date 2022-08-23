@@ -69,9 +69,12 @@ public class DockerToolInstallerTest {
         assertEquals(new URL("https://get.docker.com/builds/Linux/x86_64/docker-latest"), DockerToolInstaller.getDockerImageUrl("linux/x86_64", "latest"));
         assertEquals(new URL("https://get.docker.com/builds/Windows/x86_64/docker-latest"), DockerToolInstaller.getDockerImageUrl("win/x86_64","latest"));
         assertEquals(new URL("https://get.docker.com/builds/Darwin/x86_64/docker-latest"), DockerToolInstaller.getDockerImageUrl("mac/x86_64","latest"));
-        assertEquals(new URL("https://download.docker.com/linux/static/edge/x86_64/docker-17.09.0-ce"), DockerToolInstaller.getDockerImageUrl("linux/x86_64", "17.09.0-ce"));
-        assertEquals(new URL("https://download.docker.com/win/static/edge/x86_64/docker-17.09.0-ce"), DockerToolInstaller.getDockerImageUrl("win/x86_64","17.09.0-ce"));
-        assertEquals(new URL("https://download.docker.com/mac/static/edge/x86_64/docker-17.09.0-ce"), DockerToolInstaller.getDockerImageUrl("mac/x86_64","17.09.0-ce"));
+        assertEquals(new URL("https://download.docker.com/linux/static/stable/x86_64/docker-17.09.0-ce"), DockerToolInstaller.getDockerImageUrl("linux/x86_64", "17.09.0-ce"));
+        assertEquals(new URL("https://download.docker.com/win/static/stable/x86_64/docker-17.09.0-ce"), DockerToolInstaller.getDockerImageUrl("win/x86_64","17.09.0-ce"));
+        assertEquals(new URL("https://download.docker.com/mac/static/stable/x86_64/docker-17.09.0-ce"), DockerToolInstaller.getDockerImageUrl("mac/x86_64","17.09.0-ce"));
+        assertEquals(new URL("https://download.docker.com/linux/static/stable/x86_64/docker-20.10.6"), DockerToolInstaller.getDockerImageUrl("linux/x86_64", "20.10.6"));
+        assertEquals(new URL("https://download.docker.com/win/static/stable/x86_64/docker-20.10.6"), DockerToolInstaller.getDockerImageUrl("win/x86_64","20.10.6"));
+        assertEquals(new URL("https://download.docker.com/mac/static/stable/x86_64/docker-20.10.6"), DockerToolInstaller.getDockerImageUrl("mac/x86_64","20.10.6"));
     }
 
     @Issue({"JENKINS-36082", "JENKINS-32790", "JENKINS-48674"})
@@ -84,7 +87,8 @@ public class DockerToolInstallerTest {
         } catch (IOException x) {
             Assume.assumeNoException("Cannot contact download sites, perhaps test machine is not online", x);
         }
-        String[] testedVersions = {"19.03.9"};
+
+        String[] testedVersions = {"20.10.6", "19.03.9"};
         DockerTool[] installations = new DockerTool[testedVersions.length];
         for (int i = 0; i < testedVersions.length; i++) {
             String v = testedVersions[i];
