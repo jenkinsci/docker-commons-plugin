@@ -101,8 +101,13 @@ public final class DockerRegistryToken implements Serializable {
                 String usernameColonPassword = new String(Base64.getDecoder().decode(token), StandardCharsets.UTF_8);
                 int colon = usernameColonPassword.indexOf(':');
                 if (colon > 0) {
-                    return new RegistryKeyMaterialFactory(usernameColonPassword.substring(0, colon), usernameColonPassword.substring(colon + 1), endpoint, launcher, env, listener, dockerExecutable).
-                        contextualize(new KeyMaterialContext(WorkspaceList.tempDir(workspace)));
+                    FilePath tempDir = WorkspaceList.tempDir(workspace);
+                    if (tempDir != null) {
+                        return new RegistryKeyMaterialFactory(usernameColonPassword.substring(0, colon), usernameColonPassword.substring(colon + 1), endpoint, launcher, env, listener, dockerExecutable).
+                                contextualize(new KeyMaterialContext(tempDir));
+                    } else {
+                        listener.getLogger().println("Failed to create temporary directory for docker login");
+                    }
                 }
             } catch (IllegalArgumentException x) {
                 // not Base64-encoded
