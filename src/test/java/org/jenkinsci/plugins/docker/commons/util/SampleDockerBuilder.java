@@ -23,6 +23,7 @@
  */
 package org.jenkinsci.plugins.docker.commons.util;
 
+import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.EnvVars;
 import org.jenkinsci.plugins.docker.commons.tools.DockerTool;
 import org.jenkinsci.plugins.docker.commons.credentials.KeyMaterialFactory;
@@ -87,6 +88,7 @@ public class SampleDockerBuilder extends Builder {
 
     @Extension public static class DescriptorImpl extends BuildStepDescriptor<Builder> {
 
+        @NonNull
         @Override public String getDisplayName() {
             return "Get Docker Info";
         }

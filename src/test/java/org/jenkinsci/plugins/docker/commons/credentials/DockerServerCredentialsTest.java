@@ -42,10 +42,9 @@ import org.xml.sax.SAXException;
 
 import java.io.IOException;
 import java.util.Collections;
-import java.util.List;
 
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.instanceOf;
-import static org.junit.Assert.assertThat;
 
 /**
  * @author Stephen Connolly

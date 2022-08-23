@@ -51,7 +51,7 @@ public class DockerServerDomainSpecification extends DomainSpecification {
     /** {@inheritDoc} */
     @NonNull
     @Override
-    public Result test(DomainRequirement scope) {
+    public Result test(@NonNull DomainRequirement scope) {
         if (scope instanceof DockerServerDomainRequirement) {
             // we are a very simple specification
             return Result.POSITIVE;
@@ -63,6 +63,7 @@ public class DockerServerDomainSpecification extends DomainSpecification {
     @Extension
     public static class DescriptorImpl extends DomainSpecificationDescriptor {
 
+        @NonNull
         @Override
         public String getDisplayName() {
             return Messages.DockerServerDomainSpecification_DisplayName();

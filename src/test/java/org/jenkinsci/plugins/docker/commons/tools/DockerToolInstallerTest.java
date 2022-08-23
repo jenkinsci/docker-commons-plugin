@@ -38,9 +38,13 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import org.apache.commons.io.output.TeeOutputStream;
+
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
 import org.junit.Test;
-import static org.junit.Assert.*;
 import org.junit.Assume;
 import org.junit.Rule;
 import org.jvnet.hudson.test.Issue;
@@ -83,7 +87,8 @@ public class DockerToolInstallerTest {
         } catch (IOException x) {
             Assume.assumeNoException("Cannot contact download sites, perhaps test machine is not online", x);
         }
-        String[] testedVersions = {"20.10.6", "17.09.1-ce", "1.12.6", "1.10.0", "latest"};
+
+        String[] testedVersions = {"20.10.6", "19.03.9"};
         DockerTool[] installations = new DockerTool[testedVersions.length];
         for (int i = 0; i < testedVersions.length; i++) {
             String v = testedVersions[i];

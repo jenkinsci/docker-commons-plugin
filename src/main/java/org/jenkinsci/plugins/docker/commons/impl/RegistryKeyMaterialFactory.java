@@ -24,12 +24,12 @@
 
 package org.jenkinsci.plugins.docker.commons.impl;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 
-import javax.annotation.Nonnull;
-
+import edu.umd.cs.findbugs.annotations.NonNull;
 import org.apache.commons.lang.StringUtils;
 import org.jenkinsci.plugins.docker.commons.credentials.KeyMaterial;
 import org.jenkinsci.plugins.docker.commons.credentials.KeyMaterialFactory;
@@ -52,16 +52,18 @@ public class RegistryKeyMaterialFactory extends KeyMaterialFactory {
 
     private static final String DOCKER_CONFIG_FILENAME = "config.json";
     private static final String[] BLACKLISTED_PROPERTIES = { "auths", "credsStore" };
+    
+    protected static final String DOCKER_REGISTRY_HOST_ONLY = "DOCKER_REGISTRY_HOST_ONLY";
 
-    private final @Nonnull String username;
-    private final @Nonnull String password;
-    private final @Nonnull URL endpoint;
-    private final @Nonnull Launcher launcher;
-    private final @Nonnull EnvVars env;
-    private final @Nonnull TaskListener listener;
-    private final @Nonnull String dockerExecutable;
+    private final @NonNull String username;
+    private final @NonNull String password;
+    private final @NonNull URL endpoint;
+    private final @NonNull Launcher launcher;
+    private final @NonNull EnvVars env;
+    private final @NonNull TaskListener listener;
+    private final @NonNull String dockerExecutable;
 
-    public RegistryKeyMaterialFactory(@Nonnull String username, @Nonnull String password, @Nonnull URL endpoint, @Nonnull Launcher launcher, @Nonnull EnvVars env, @Nonnull TaskListener listener, @Nonnull String dockerExecutable) {
+    public RegistryKeyMaterialFactory(@NonNull String username, @NonNull String password, @NonNull URL endpoint, @NonNull Launcher launcher, @NonNull EnvVars env, @NonNull TaskListener listener, @NonNull String dockerExecutable) {
         this.username = username;
         this.password = password;
         this.endpoint = endpoint;
@@ -95,10 +97,9 @@ public class RegistryKeyMaterialFactory extends KeyMaterialFactory {
         }
 
         try {
-            // TODO on Docker 17.07+ use --password-stdin
             EnvVars envWithConfig = new EnvVars(env);
             envWithConfig.put("DOCKER_CONFIG", dockerConfig.getRemote());
-            if (launcher.launch().cmds(new ArgumentListBuilder(dockerExecutable, "login", "-u", username, "-p").add(password, true).add(endpoint)).envs(envWithConfig).stdout(listener).join() != 0) {
+            if (launcher.launch().cmds(new ArgumentListBuilder(dockerExecutable, "login", "-u", username, "--password-stdin").add(registry())).envs(envWithConfig).stdin(new ByteArrayInputStream(password.getBytes("UTF-8"))).stdout(listener).join() != 0) {
                 throw new AbortException("docker login failed");
             }
         } catch (IOException | InterruptedException x) {
@@ -110,6 +111,14 @@ public class RegistryKeyMaterialFactory extends KeyMaterialFactory {
             throw x;
         }
         return new RegistryKeyMaterial(dockerConfig, new EnvVars("DOCKER_CONFIG", dockerConfig.getRemote()));
+    }
+    
+    protected String registry() {
+    	if (dockerExecutable.endsWith("podman") || Boolean.parseBoolean(env.get(DOCKER_REGISTRY_HOST_ONLY, "false"))) {
+    		return endpoint.getAuthority();
+    	}
+    	
+    	return endpoint.toString();
     }
 
     private static class RegistryKeyMaterial extends KeyMaterial {

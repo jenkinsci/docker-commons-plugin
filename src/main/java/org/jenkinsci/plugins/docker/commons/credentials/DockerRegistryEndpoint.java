@@ -29,9 +29,14 @@ import com.cloudbees.plugins.credentials.common.StandardCredentials;
 import com.cloudbees.plugins.credentials.common.StandardListBoxModel;
 import com.cloudbees.plugins.credentials.domains.DomainRequirement;
 import com.cloudbees.plugins.credentials.domains.HostnameRequirement;
-
+import edu.umd.cs.findbugs.annotations.CheckForNull;
+import edu.umd.cs.findbugs.annotations.NonNull;
+import edu.umd.cs.findbugs.annotations.Nullable;
+import hudson.AbortException;
+import hudson.EnvVars;
 import hudson.Extension;
 import hudson.FilePath;
+import hudson.Launcher;
 import hudson.Util;
 import hudson.model.AbstractBuild;
 import hudson.model.AbstractDescribableImpl;
@@ -41,16 +46,14 @@ import hudson.model.Item;
 import hudson.model.Run;
 import hudson.model.TaskListener;
 import hudson.remoting.VirtualChannel;
+import hudson.slaves.WorkspaceList;
+import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
 import jenkins.authentication.tokens.api.AuthenticationTokens;
 import jenkins.model.Jenkins;
-
+import org.jenkinsci.plugins.docker.commons.tools.DockerTool;
 import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
-
-import javax.annotation.CheckForNull;
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
@@ -62,12 +65,10 @@ import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import static com.cloudbees.plugins.credentials.CredentialsMatchers.*;
-import hudson.AbortException;
-import hudson.EnvVars;
-import hudson.Launcher;
-import hudson.slaves.WorkspaceList;
-import org.jenkinsci.plugins.docker.commons.tools.DockerTool;
+import static com.cloudbees.plugins.credentials.CredentialsMatchers.allOf;
+import static com.cloudbees.plugins.credentials.CredentialsMatchers.firstOrNull;
+import static com.cloudbees.plugins.credentials.CredentialsMatchers.withId;
+import static org.jenkinsci.plugins.docker.commons.credentials.ImageNameValidator.validateUserAndRepo;
 
 /**
  * Encapsulates the endpoint of DockerHub and how to interact with it.
@@ -139,7 +140,7 @@ public class DockerRegistryEndpoint extends AbstractDescribableImpl<DockerRegist
     /**
      * Gets the endpoint URL, such as "https://index.docker.io/v1/"
      */
-    public @Nonnull URL getEffectiveUrl() throws IOException {
+    public @NonNull URL getEffectiveUrl() throws IOException {
         if (url != null) {
             return new URL(url);
         } else {
@@ -227,7 +228,7 @@ public class DockerRegistryEndpoint extends AbstractDescribableImpl<DockerRegist
      * @deprecated Call {@link #newKeyMaterialFactory(Run, FilePath, Launcher, EnvVars, TaskListener, String)}
      */
     @Deprecated
-    public KeyMaterialFactory newKeyMaterialFactory(@Nonnull AbstractBuild build) throws IOException, InterruptedException {
+    public KeyMaterialFactory newKeyMaterialFactory(@NonNull AbstractBuild build) throws IOException, InterruptedException {
         final FilePath workspace = build.getWorkspace();
         if (workspace == null) {
             throw new IllegalStateException("Requires workspace.");
@@ -239,7 +240,7 @@ public class DockerRegistryEndpoint extends AbstractDescribableImpl<DockerRegist
      * @deprecated Call {@link #newKeyMaterialFactory(Run, FilePath, Launcher, EnvVars, TaskListener, String)}
      */
     @Deprecated
-    public KeyMaterialFactory newKeyMaterialFactory(Item context, @Nonnull VirtualChannel target) throws IOException, InterruptedException {
+    public KeyMaterialFactory newKeyMaterialFactory(Item context, @NonNull VirtualChannel target) throws IOException, InterruptedException {
         return newKeyMaterialFactory(context, target, null, TaskListener.NULL);
     }
 
@@ -247,7 +248,7 @@ public class DockerRegistryEndpoint extends AbstractDescribableImpl<DockerRegist
      * @deprecated Call {@link #newKeyMaterialFactory(Run, FilePath, Launcher, EnvVars, TaskListener, String)}
      */
     @Deprecated
-    public KeyMaterialFactory newKeyMaterialFactory(@CheckForNull Item context, @Nonnull VirtualChannel target, @CheckForNull Launcher launcher, @Nonnull TaskListener listener) throws IOException, InterruptedException {
+    public KeyMaterialFactory newKeyMaterialFactory(@CheckForNull Item context, @NonNull VirtualChannel target, @CheckForNull Launcher launcher, @NonNull TaskListener listener) throws IOException, InterruptedException {
         if (credentialsId == null) {
             return KeyMaterialFactory.NULL; // nothing needed to be done
         }
@@ -262,7 +263,7 @@ public class DockerRegistryEndpoint extends AbstractDescribableImpl<DockerRegist
      * @deprecated Call {@link #newKeyMaterialFactory(Run, FilePath, Launcher, EnvVars, TaskListener, String)}
      */
     @Deprecated
-    public KeyMaterialFactory newKeyMaterialFactory(@CheckForNull Item context, @Nonnull FilePath workspace, @Nonnull Launcher launcher, @Nonnull TaskListener listener, @Nonnull String dockerExecutable) throws IOException, InterruptedException {
+    public KeyMaterialFactory newKeyMaterialFactory(@CheckForNull Item context, @NonNull FilePath workspace, @NonNull Launcher launcher, @NonNull TaskListener listener, @NonNull String dockerExecutable) throws IOException, InterruptedException {
         return newKeyMaterialFactory(context, workspace, launcher, new EnvVars(), listener, dockerExecutable);
     }
 
@@ -270,7 +271,7 @@ public class DockerRegistryEndpoint extends AbstractDescribableImpl<DockerRegist
      * @deprecated Call {@link #newKeyMaterialFactory(Run, FilePath, Launcher, EnvVars, TaskListener, String)}
      */
     @Deprecated
-    public KeyMaterialFactory newKeyMaterialFactory(@CheckForNull Item context, @Nonnull FilePath workspace, @Nonnull Launcher launcher, @Nonnull EnvVars env, @Nonnull TaskListener listener, @Nonnull String dockerExecutable) throws IOException, InterruptedException {
+    public KeyMaterialFactory newKeyMaterialFactory(@CheckForNull Item context, @NonNull FilePath workspace, @NonNull Launcher launcher, @NonNull EnvVars env, @NonNull TaskListener listener, @NonNull String dockerExecutable) throws IOException, InterruptedException {
         if (credentialsId == null) {
             return KeyMaterialFactory.NULL; // nothing needed to be done
         }
@@ -288,7 +289,7 @@ public class DockerRegistryEndpoint extends AbstractDescribableImpl<DockerRegist
      * @param workspace a workspace being used for operations ({@link WorkspaceList#tempDir} will be applied)
      * @param dockerExecutable as in {@link DockerTool#getExecutable}, with a 1.8+ client
      */
-    public KeyMaterialFactory newKeyMaterialFactory(@CheckForNull Run context, @Nonnull FilePath workspace, @Nonnull Launcher launcher, @Nonnull EnvVars env, @Nonnull TaskListener listener, @Nonnull String dockerExecutable) throws IOException, InterruptedException {
+    public KeyMaterialFactory newKeyMaterialFactory(@CheckForNull Run context, @NonNull FilePath workspace, @NonNull Launcher launcher, @NonNull EnvVars env, @NonNull TaskListener listener, @NonNull String dockerExecutable) throws IOException, InterruptedException {
         if (credentialsId == null) {
             return KeyMaterialFactory.NULL; // nothing needed to be done
         }
@@ -308,10 +309,16 @@ public class DockerRegistryEndpoint extends AbstractDescribableImpl<DockerRegist
      * @return the full registry:port/namespace/name string
      * @throws IOException
      */
-    public String imageName(@Nonnull String userAndRepo) throws IOException {
+    public String imageName(@NonNull String userAndRepo) throws IOException {
         if (userAndRepo == null) {
             throw new IllegalArgumentException("Image name cannot be null.");
         }
+
+        final FormValidation validation = validateUserAndRepo(userAndRepo);
+        if (validation.kind != FormValidation.Kind.OK) {
+            throw validation;
+        }
+
         if (url == null) {
             return userAndRepo;
         }
@@ -359,13 +366,14 @@ public class DockerRegistryEndpoint extends AbstractDescribableImpl<DockerRegist
     
     @Extension
     public static class DescriptorImpl extends Descriptor<DockerRegistryEndpoint> {
+        @NonNull
         @Override
         public String getDisplayName() {
             return "Docker Hub";
         }
 
         public ListBoxModel doFillCredentialsIdItems(@AncestorInPath Item item) {
-            if (item == null && !Jenkins.getActiveInstance().hasPermission(Jenkins.ADMINISTER) ||
+            if (item == null && !Jenkins.get().hasPermission(Jenkins.ADMINISTER) ||
                 item != null && !item.hasPermission(Item.EXTENDED_READ)) {
                 return new StandardListBoxModel();
             }

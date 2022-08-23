@@ -29,6 +29,9 @@ import com.cloudbees.plugins.credentials.common.IdCredentials;
 import com.cloudbees.plugins.credentials.common.StandardListBoxModel;
 import com.cloudbees.plugins.credentials.domains.DomainRequirement;
 import com.cloudbees.plugins.credentials.domains.URIRequirementBuilder;
+import edu.umd.cs.findbugs.annotations.CheckForNull;
+import edu.umd.cs.findbugs.annotations.NonNull;
+import edu.umd.cs.findbugs.annotations.Nullable;
 import hudson.Extension;
 import hudson.FilePath;
 import hudson.model.AbstractBuild;
@@ -46,9 +49,6 @@ import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 
-import javax.annotation.CheckForNull;
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 import java.io.IOException;
 import java.util.List;
 
@@ -99,7 +99,7 @@ public class DockerServerEndpoint extends AbstractDescribableImpl<DockerServerEn
      * @deprecated Call {@link #newKeyMaterialFactory(Run, VirtualChannel)}
      */
     @Deprecated
-    public KeyMaterialFactory newKeyMaterialFactory(@Nonnull AbstractBuild build) throws IOException, InterruptedException {
+    public KeyMaterialFactory newKeyMaterialFactory(@NonNull AbstractBuild build) throws IOException, InterruptedException {
         final FilePath workspace = build.getWorkspace();
         if (workspace == null) {
             throw new IllegalStateException("Build has no workspace");
@@ -114,7 +114,7 @@ public class DockerServerEndpoint extends AbstractDescribableImpl<DockerServerEn
      * @deprecated Call {@link #newKeyMaterialFactory(Run, VirtualChannel)}
      */
     @Deprecated
-    public KeyMaterialFactory newKeyMaterialFactory(@Nonnull Item context, @Nonnull VirtualChannel target) throws IOException, InterruptedException {
+    public KeyMaterialFactory newKeyMaterialFactory(@NonNull Item context, @NonNull VirtualChannel target) throws IOException, InterruptedException {
         // as a build step, your access to credentials are constrained by what the build
         // can access, hence Jenkins.getAuthentication()
         DockerServerCredentials creds=null;
@@ -140,7 +140,7 @@ public class DockerServerEndpoint extends AbstractDescribableImpl<DockerServerEn
      * Makes the key materials available locally and returns {@link KeyMaterialFactory} that gives you the parameters
      * needed to access it.
      */
-    public KeyMaterialFactory newKeyMaterialFactory(@Nonnull Run context, @Nonnull VirtualChannel target) throws IOException, InterruptedException {
+    public KeyMaterialFactory newKeyMaterialFactory(@NonNull Run context, @NonNull VirtualChannel target) throws IOException, InterruptedException {
         DockerServerCredentials creds=null;
         if (credentialsId!=null) {
             List<DomainRequirement> domainRequirements = URIRequirementBuilder.fromUri(getUri()).build();
@@ -156,7 +156,7 @@ public class DockerServerEndpoint extends AbstractDescribableImpl<DockerServerEn
         return newKeyMaterialFactory(dotDocker, creds);
     }
 
-    static FilePath dotDocker(@Nonnull VirtualChannel target) throws IOException, InterruptedException {
+    static FilePath dotDocker(@NonNull VirtualChannel target) throws IOException, InterruptedException {
         // TODO this is wrong, should be using WorkspaceList.tempDir
         return FilePath.getHomeDirectory(target).child(".docker");
     }
@@ -202,13 +202,14 @@ public class DockerServerEndpoint extends AbstractDescribableImpl<DockerServerEn
     
     @Extension
     public static class DescriptorImpl extends Descriptor<DockerServerEndpoint> {
+        @NonNull
         @Override
         public String getDisplayName() {
             return "Docker Daemon";
         }
 
         public ListBoxModel doFillCredentialsIdItems(@AncestorInPath Item item, @QueryParameter String uri) {
-            if (item == null && !Jenkins.getActiveInstance().hasPermission(Jenkins.ADMINISTER) ||
+            if (item == null && !Jenkins.get().hasPermission(Jenkins.ADMINISTER) ||
                 item != null && !item.hasPermission(Item.EXTENDED_READ)) {
                 return new StandardListBoxModel();
             }

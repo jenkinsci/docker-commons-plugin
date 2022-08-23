@@ -26,6 +26,7 @@ package org.jenkinsci.plugins.docker.commons.credentials;
 import static org.junit.Assert.*;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 
 import com.cloudbees.plugins.credentials.CredentialsProvider;
@@ -45,7 +46,6 @@ import java.util.Map;
 import jenkins.model.Jenkins;
 import jenkins.security.QueueItemAuthenticatorConfiguration;
 import org.acegisecurity.Authentication;
-import org.apache.commons.io.Charsets;
 import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;
@@ -89,6 +89,8 @@ public class DockerRegistryEndpointTest {
     public void testParseFullyQualifiedImageName() throws Exception {
         assertEquals("private-repo:5000/test-image", new DockerRegistryEndpoint("http://private-repo:5000/", null).imageName("private-repo:5000/test-image"));
         assertEquals("private-repo:5000/test-image", new DockerRegistryEndpoint("http://private-repo:5000/", null).imageName("test-image"));
+        assertEquals("private-repo:5000/test-image:dev", new DockerRegistryEndpoint("http://private-repo:5000/", null).imageName("private-repo:5000/test-image:dev"));
+        assertEquals("private-repo:5000/test-image:dev", new DockerRegistryEndpoint("http://private-repo:5000/", null).imageName("test-image:dev"));
     }
 
     @Issue("JENKINS-39181")
@@ -135,7 +137,7 @@ public class DockerRegistryEndpointTest {
             DockerRegistryToken token = new DockerRegistryEndpoint("https://index.docker.io/v1/", globalCredentialsId).getToken(r1);
             Assert.assertNotNull("Alice has Credentials.USE_ITEM and should be able to use the credential", token);
             Assert.assertEquals("user", token.getEmail());
-            Assert.assertEquals(Base64.getEncoder().encodeToString("user:password".getBytes(Charsets.UTF_8)), token.getToken());
+            Assert.assertEquals(Base64.getEncoder().encodeToString("user:password".getBytes(StandardCharsets.UTF_8)), token.getToken());
         }
 
         FreeStyleBuild r2 = j.buildAndAssertSuccess(p2);

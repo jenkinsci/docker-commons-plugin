@@ -23,9 +23,9 @@
  */
 package org.jenkinsci.plugins.docker.commons.credentials;
 
+import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.FilePath;
 
-import javax.annotation.Nonnull;
 import java.io.Serializable;
 
 /**
@@ -37,10 +37,10 @@ import java.io.Serializable;
 public class KeyMaterialContext implements Serializable {
     private static final long serialVersionUID = 1L;
 
-    @Nonnull
+    @NonNull
     private final FilePath baseDir;
 
-    public KeyMaterialContext(@Nonnull FilePath baseDir) {
+    public KeyMaterialContext(@NonNull FilePath baseDir) {
         this.baseDir = baseDir;
     }
 
@@ -50,7 +50,7 @@ public class KeyMaterialContext implements Serializable {
      *
      * @return the base directory.
      */
-    @Nonnull
+    @NonNull
     public FilePath getBaseDir() {
         return baseDir;
     }

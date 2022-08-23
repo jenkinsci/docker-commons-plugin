@@ -23,13 +23,13 @@
  */
 package org.jenkinsci.plugins.docker.commons.impl;
 
+import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.EnvVars;
 import org.jenkinsci.plugins.docker.commons.credentials.KeyMaterial;
 import org.jenkinsci.plugins.docker.commons.credentials.KeyMaterialFactory;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
 
-import javax.annotation.Nonnull;
 import java.io.IOException;
 
 /**
@@ -43,10 +43,10 @@ public class ServerHostKeyMaterialFactory extends KeyMaterialFactory{
     /**
      * The host.
      */
-    @Nonnull
+    @NonNull
     private final String host;
 
-    public ServerHostKeyMaterialFactory(@Nonnull String host) {
+    public ServerHostKeyMaterialFactory(@NonNull String host) {
         this.host = host;
     }
 

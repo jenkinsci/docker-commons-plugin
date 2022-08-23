@@ -23,13 +23,13 @@
  */
 package org.jenkinsci.plugins.docker.commons.credentials;
 
+import edu.umd.cs.findbugs.annotations.NonNull;
+import edu.umd.cs.findbugs.annotations.Nullable;
 import hudson.FilePath;
 import hudson.model.AbstractBuild;
 import org.jenkinsci.plugins.docker.commons.impl.CompositeKeyMaterialFactory;
 import org.jenkinsci.plugins.docker.commons.impl.NullKeyMaterialFactory;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -64,7 +64,7 @@ public abstract class KeyMaterialFactory {
      * @param context the {@link KeyMaterialContext}.
      * @return must return {@code this} (which is only returned to simplify use via method chaining)
      */
-    public synchronized KeyMaterialFactory contextualize(@Nonnull KeyMaterialContext context) {
+    public synchronized KeyMaterialFactory contextualize(@NonNull KeyMaterialContext context) {
         if (this.context != null) {
             throw new IllegalStateException("KeyMaterialFactories cannot be re-contextualized");
         }
@@ -72,7 +72,7 @@ public abstract class KeyMaterialFactory {
         return this;
     }
 
-    @Nonnull
+    @NonNull
     protected synchronized KeyMaterialContext getContext() {
         checkContextualized();
         return context;

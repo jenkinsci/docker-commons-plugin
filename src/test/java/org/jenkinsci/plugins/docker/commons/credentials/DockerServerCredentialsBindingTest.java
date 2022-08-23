@@ -26,6 +26,7 @@ package org.jenkinsci.plugins.docker.commons.credentials;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 
 import hudson.util.Secret;
@@ -53,8 +54,9 @@ import com.cloudbees.plugins.credentials.domains.DomainSpecification;
 
 import hudson.FilePath;
 
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.instanceOf;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertNotNull;
 
 public class DockerServerCredentialsBindingTest {
 
@@ -94,7 +96,7 @@ public class DockerServerCredentialsBindingTest {
                         "docker-client-cert", "desc", Secret.fromString("clientKey"), "clientCertificate", "serverCaCertificate");
                 CredentialsProvider.lookupStores(story.j.jenkins).iterator().next().addCredentials(Domain.global(), c);
                 WorkflowJob p = story.j.jenkins.createProject(WorkflowJob.class, "p");
-                String pipelineScript = IOUtils.toString(getTestResourceInputStream("basics-Jenkinsfile"));
+                String pipelineScript = IOUtils.toString(getTestResourceInputStream("basics-Jenkinsfile"), StandardCharsets.UTF_8);
                 p.setDefinition(new CpsFlowDefinition(pipelineScript, true));
                 WorkflowRun b = p.scheduleBuild2(0).waitForStart();
                 SemaphoreStep.waitForStart("basics/1", b);
