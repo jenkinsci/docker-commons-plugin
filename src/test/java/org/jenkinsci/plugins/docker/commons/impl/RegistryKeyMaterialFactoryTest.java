@@ -24,16 +24,17 @@
 
 package org.jenkinsci.plugins.docker.commons.impl;
 
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.arrayContaining;
 import static org.hamcrest.Matchers.emptyArray;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
+import java.nio.charset.Charset;
 
 import org.apache.commons.io.FileUtils;
 import org.jenkinsci.plugins.docker.commons.credentials.DockerRegistryEndpoint;
@@ -123,7 +124,7 @@ public class RegistryKeyMaterialFactoryTest {
     public void materialize_userConfigFileBlank_notCreated() throws Exception {
 	// arrange
 	File cfgFile = new File(new File(tempFolder.getRoot(), ".docker"), "config.json");
-	FileUtils.write(cfgFile, "    ");
+	FileUtils.write(cfgFile, "    ", Charset.defaultCharset());
 
 	// act
 	KeyMaterial material = factory.materialize();
@@ -141,7 +142,7 @@ public class RegistryKeyMaterialFactoryTest {
     public void materialize_userConfigFileWithBrackets_createdEmpty() throws Exception {
 	// arrange
 	File cfgFile = new File(new File(tempFolder.getRoot(), ".docker"), "config.json");
-	FileUtils.write(cfgFile, "{}");
+	FileUtils.write(cfgFile, "{}", Charset.defaultCharset());
 
 	// act
 	KeyMaterial material = factory.materialize();
@@ -157,14 +158,14 @@ public class RegistryKeyMaterialFactoryTest {
 	assertThat(files, arrayContaining("config.json"));
 
 	File jsonFile = new File(dockerCfgFolder, "config.json");
-	assertEquals("{}", FileUtils.readFileToString(jsonFile));
+	assertEquals("{}", FileUtils.readFileToString(jsonFile, Charset.defaultCharset()));
     }
 
     @Test
     public void materialize_userConfigFileWithAuths_createdEmpty() throws Exception {
 	// arrange
 	File cfgFile = new File(new File(tempFolder.getRoot(), ".docker"), "config.json");
-	FileUtils.write(cfgFile, "{\"auths\": { \"localhost:5001\": { \"auth\": \"whatever\", \"email\": \"\"} }}");
+	FileUtils.write(cfgFile, "{\"auths\": { \"localhost:5001\": { \"auth\": \"whatever\", \"email\": \"\"} }}", Charset.defaultCharset());
 
 	// act
 	KeyMaterial material = factory.materialize();
@@ -180,7 +181,7 @@ public class RegistryKeyMaterialFactoryTest {
 	assertThat(files, arrayContaining("config.json"));
 
 	File jsonFile = new File(dockerCfgFolder, "config.json");
-	assertEquals("{}", FileUtils.readFileToString(jsonFile));
+	assertEquals("{}", FileUtils.readFileToString(jsonFile, Charset.defaultCharset()));
     }
 
     @Test
@@ -188,7 +189,7 @@ public class RegistryKeyMaterialFactoryTest {
 	// arrange
 	File cfgFile = new File(new File(tempFolder.getRoot(), ".docker"), "config.json");
 	FileUtils.write(cfgFile, "{" + "\"auths\": { \"localhost:5001\": { \"auth\": \"whatever\", \"email\": \"\"} },"
-		+ "\"proxies\": { \"default\": { \"httpProxy\": \"proxy\", \"noProxy\": \"something\" } }" + "}");
+		+ "\"proxies\": { \"default\": { \"httpProxy\": \"proxy\", \"noProxy\": \"something\" } }" + "}", Charset.defaultCharset());
 
 	// act
 	KeyMaterial material = factory.materialize();
@@ -205,7 +206,7 @@ public class RegistryKeyMaterialFactoryTest {
 
 	File jsonFile = new File(dockerCfgFolder, "config.json");
 	assertEquals("{\"proxies\":{\"default\":{\"httpProxy\":\"proxy\",\"noProxy\":\"something\"}}}",
-		FileUtils.readFileToString(jsonFile));
+		FileUtils.readFileToString(jsonFile, Charset.defaultCharset()));
     }
 
     @Test
@@ -213,7 +214,7 @@ public class RegistryKeyMaterialFactoryTest {
 	// arrange
 	File cfgFile = new File(new File(tempFolder.getRoot(), ".docker"), "config.json");
 	FileUtils.write(cfgFile, "{" + "\"credsStore\" : \"osxkeychain\", "
-		+ "\"HttpHeaders\" : {\"User-Agent\" : \"Docker-Client\"}" + "}");
+		+ "\"HttpHeaders\" : {\"User-Agent\" : \"Docker-Client\"}" + "}", Charset.defaultCharset());
 
 	// act
 	KeyMaterial material = factory.materialize();
@@ -229,7 +230,7 @@ public class RegistryKeyMaterialFactoryTest {
 	assertThat(files, arrayContaining("config.json"));
 
 	File jsonFile = new File(dockerCfgFolder, "config.json");
-	assertEquals("{\"HttpHeaders\":{\"User-Agent\":\"Docker-Client\"}}", FileUtils.readFileToString(jsonFile));
+	assertEquals("{\"HttpHeaders\":{\"User-Agent\":\"Docker-Client\"}}", FileUtils.readFileToString(jsonFile, Charset.defaultCharset()));
     }
 
 }

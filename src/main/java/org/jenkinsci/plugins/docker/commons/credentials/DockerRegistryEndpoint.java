@@ -373,7 +373,7 @@ public class DockerRegistryEndpoint extends AbstractDescribableImpl<DockerRegist
         }
 
         public ListBoxModel doFillCredentialsIdItems(@AncestorInPath Item item) {
-            if (item == null && !Jenkins.getActiveInstance().hasPermission(Jenkins.ADMINISTER) ||
+            if (item == null && !Jenkins.get().hasPermission(Jenkins.ADMINISTER) ||
                 item != null && !item.hasPermission(Item.EXTENDED_READ)) {
                 return new StandardListBoxModel();
             }
