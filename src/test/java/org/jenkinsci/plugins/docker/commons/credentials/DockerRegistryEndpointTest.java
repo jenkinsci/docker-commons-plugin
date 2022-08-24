@@ -71,6 +71,11 @@ public class DockerRegistryEndpointTest {
         assertRegistry("https://docker.acme.com:8080", "docker.acme.com:8080/acme/test");
         assertRegistry("https://docker.acme.com", "docker.acme.com/acme/test");
         assertRegistry("https://docker.acme.com", "docker.acme.com/busybox");
+        // Registry v2
+        assertRegistry("https://docker.acme.com", "docker.acme.com/path/to/busybox");
+        assertRegistry("https://localhost:8080", "localhost:8080/path/to/busybox");
+        assertRegistry("https://docker.acme.com:8080", "docker.acme.com:8080/path/to/busybox");
+        assertRegistry("https://docker.acme.com:8080", "docker.acme.com:8080/path/to/busybox");
     }
 
     @Test
@@ -81,6 +86,12 @@ public class DockerRegistryEndpointTest {
         assertRegistry("https://docker.acme.com:8080", "docker.acme.com:8080/acme/test:tag");
         assertRegistry("https://docker.acme.com", "docker.acme.com/acme/test:tag");
         assertRegistry("https://docker.acme.com", "docker.acme.com/busybox:tag");
+        assertRegistry("https://docker.acme.com", "docker.acme.com/busybox@sha256:sha256");
+        // Registry v2
+        assertRegistry("https://docker.acme.com", "docker.acme.com/path/to/busybox:tag");
+        assertRegistry("https://localhost:8080", "localhost:8080/path/to/busybox:tag");
+        assertRegistry("https://docker.acme.com:8080", "docker.acme.com:8080/path/to/busybox:tag");
+        assertRegistry("https://docker.acme.com:8080", "docker.acme.com:8080/path/to/busybox@sha256:sha256");
     }
 
     @Issue("JENKINS-39181")
