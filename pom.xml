@@ -37,7 +37,7 @@
     <bom>2.263</bom>
     <jenkins.version>2.263.1</jenkins.version>
     <pipeline-model-definition.version>1.9.3</pipeline-model-definition.version>
-    <jcasc.version>1.51</jcasc.version>
+    <jcasc.version>1559.v38a_b_2e3b_6b_b_7</jcasc.version>
   </properties>
 
   <repositories>
