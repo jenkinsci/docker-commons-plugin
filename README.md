@@ -1,9 +1,6 @@
 # Docker Commons API Plugin for Jenkins
 
 [![Join the chat at https://gitter.im/jenkinsci/docker](https://badges.gitter.im/jenkinsci/docker.svg)](https://gitter.im/jenkinsci/docker?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
-[![Jenkins Plugin](https://img.shields.io/jenkins/plugin/v/docker-commons.svg)](https://plugins.jenkins.io/docker-commons)
-[![GitHub release](https://img.shields.io/github/release/jenkinsci/docker-commons-plugin.svg?label=changelog)](https://github.com/jenkinsci/docker-commons-plugin/releases/latest)
-[![Jenkins Plugin Installs](https://img.shields.io/jenkins/plugin/i/role-strategy.svg?color=blue)](https://plugins.jenkins.io/docker-commons)
 
 API plugin, which provides the common shared functionality for various Docker-related plugins.
 
@@ -60,4 +57,4 @@ pipeline {
 ## Changelog
 
 * See [GitHub Releases](https://github.com/jenkinsci/docker-commons-plugin/releases/latest) for the recent versions
-* See [the release notes archive](./CHANGELOG.md) for version `1.15` and older
+* See [the release notes archive](https://github.com/jenkinsci/docker-commons-plugin/blob/2e09f1fe61389ef9a967a2bd362bc9d141807c86/CHANGELOG.md) for version `1.15` and older
