@@ -27,7 +27,7 @@ import hudson.ExtensionList;
 import hudson.ExtensionPoint;
 import hudson.model.Job;
 
-import javax.annotation.Nonnull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import java.util.Collection;
 import java.util.Set;
 import java.util.TreeSet;
@@ -45,8 +45,8 @@ public abstract class DockerImageExtractor implements ExtensionPoint {
      * @param job the job being queried.
      * @return a collection of names, or an empty collection.
      */
-    @Nonnull
-    public abstract Collection<String> getDockerImagesUsedByJob(@Nonnull Job<?,?> job);
+    @NonNull
+    public abstract Collection<String> getDockerImagesUsedByJob(@NonNull Job<?,?> job);
 
     /**
      * Provides a set of repository names {@code namespace/name} that the job uses as seen by all the declared {@link DockerImageExtractor}s.
@@ -55,8 +55,8 @@ public abstract class DockerImageExtractor implements ExtensionPoint {
      * @param job the job being queried.
      * @return a set of names, or an empty set.
      */
-    @Nonnull
-    public static Set<String> getDockerImagesUsedByJobFromAll(@Nonnull Job<?,?> job) {
+    @NonNull
+    public static Set<String> getDockerImagesUsedByJobFromAll(@NonNull Job<?,?> job) {
         Set<String> names = new TreeSet<String>();
         for (DockerImageExtractor extractor : ExtensionList.lookup(DockerImageExtractor.class)) {
             names.addAll(extractor.getDockerImagesUsedByJob(job));

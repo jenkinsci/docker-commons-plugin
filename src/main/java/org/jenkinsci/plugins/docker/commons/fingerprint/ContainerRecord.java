@@ -25,7 +25,7 @@ package org.jenkinsci.plugins.docker.commons.fingerprint;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
-import javax.annotation.Nonnull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import java.io.Serializable;
 import java.util.Collections;
 import java.util.HashMap;
@@ -53,7 +53,7 @@ public class ContainerRecord implements Serializable {
     private final long created;
     private final Map<String,String> tags;
 
-    public ContainerRecord(@Nonnull String host, @Nonnull String containerId, @Nonnull String imageId, @Nonnull String containerName, long created, @Nonnull Map<String,String> tags) {
+    public ContainerRecord(@NonNull String host, @NonNull String containerId, @NonNull String imageId, @NonNull String containerName, long created, @NonNull Map<String,String> tags) {
         this.host = host;
         this.containerId = containerId;
         this.imageId = imageId;
@@ -88,7 +88,7 @@ public class ContainerRecord implements Serializable {
      * Set the image ID of the image from which this container was started.
      * @param imageId The image ID of the image from which this container was started.
      */
-    public void setImageId(@Nonnull String imageId) {
+    public void setImageId(@NonNull String imageId) {
         this.imageId = imageId;
     }
 
