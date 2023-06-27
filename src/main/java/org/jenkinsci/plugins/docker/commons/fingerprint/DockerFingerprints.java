@@ -23,6 +23,7 @@
  */
 package org.jenkinsci.plugins.docker.commons.fingerprint;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.BulkChange;
 import hudson.model.Fingerprint;
 import hudson.model.Run;
@@ -39,6 +40,8 @@ import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
 import jenkins.model.FingerprintFacet;
 import org.apache.commons.lang.StringUtils;
+import org.kohsuke.accmod.Restricted;
+import org.kohsuke.accmod.restrictions.NoExternalUse;
 
 /**
  * Entry point into fingerprint related functionalities in Docker.
@@ -47,7 +50,15 @@ import org.apache.commons.lang.StringUtils;
 public class DockerFingerprints {
     
     private static final Logger LOGGER = Logger.getLogger(DockerFingerprints.class.getName());
-    
+
+    /**
+     * System property, which, when set to true (default false), disables
+     * recording of new fingerprints.
+     */
+    @SuppressFBWarnings(value="MS_SHOULD_BE_FINAL", justification="mutable for scripts")
+    @Restricted(NoExternalUse.class)
+    public static boolean DISABLE = Boolean.getBoolean(DockerFingerprints.class.getName() + ".DISABLE");
+
     private DockerFingerprints() {} // no instantiation
  
     /**
@@ -217,6 +228,10 @@ public class DockerFingerprints {
      * Adds a new {@link ContainerRecord} for the specified image, creating necessary intermediate objects as it goes.
      */
     public static void addRunFacet(@Nonnull ContainerRecord record, @Nonnull Run<?,?> run) throws IOException {
+        if (DISABLE) {
+            LOGGER.info("Recording of fingerprints is disabled, no RUN fingerprint record will be made.");
+            return;
+        }
         String imageId = record.getImageId();
         Fingerprint f = forImage(run, imageId);
         synchronized (f) {
@@ -252,6 +267,10 @@ public class DockerFingerprints {
      * @param run the build in which the image building occurred
      */
     public static void addFromFacet(@CheckForNull String ancestorImageId, @Nonnull String descendantImageId, @Nonnull Run<?,?> run) throws IOException {
+        if (DISABLE) {
+            LOGGER.info("Recording of fingerprints is disabled, no FROM fingerprint record will be made.");
+            return;
+        }
         long timestamp = System.currentTimeMillis();
         if (ancestorImageId != null) {
             Fingerprint f = forImage(run, ancestorImageId);
@@ -305,6 +324,15 @@ public class DockerFingerprints {
             bc.abort();
         }
         }
+    }
+
+    /**
+     * Indicates whether recording of new fingerprints are disabled.
+     *
+     * @return true if fingerprint recording is disabled, otherwise false.
+     */
+    public static boolean isFingerprintsDisabled() {
+        return DISABLE;
     }
 
 }

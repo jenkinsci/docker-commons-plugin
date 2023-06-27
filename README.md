@@ -50,6 +50,13 @@ pipeline {
 }
 ```
 
+## Disable fingerprinting
+
+Recording fingerprints are great, but for large Jenkins instances it can become a scalability and performance issue.
+It is possible to disable recording of fingerprints by setting the system property
+<code>org.jenkinsci.plugins.docker.commons.fingerprint.DockerFingerprints.DISABLE</code> equal to true. This will
+not remove old fingerprints but will prevent new fingerprints from being recorded.
+
 ## License
 
 [MIT License](http://opensource.org/licenses/MIT)
