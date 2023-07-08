@@ -43,7 +43,7 @@ import java.net.URL;
 import java.net.URLConnection;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import javax.annotation.Nonnull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import jenkins.security.MasterToSlaveCallable;
 import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.DataBoundConstructor;
@@ -66,7 +66,7 @@ public class DockerToolInstaller extends ToolInstaller {
     }
 
     @Override
-    public FilePath performInstallation(ToolInstallation toolInstallation, @Nonnull Node node, TaskListener listener) throws IOException, InterruptedException {
+    public FilePath performInstallation(ToolInstallation toolInstallation, @NonNull Node node, TaskListener listener) throws IOException, InterruptedException {
 
         VirtualChannel nodeChannel = node.getChannel();
         if (nodeChannel == null) {

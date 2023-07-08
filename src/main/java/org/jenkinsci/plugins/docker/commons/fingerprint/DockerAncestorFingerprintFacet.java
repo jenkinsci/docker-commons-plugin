@@ -26,7 +26,7 @@ package org.jenkinsci.plugins.docker.commons.fingerprint;
 import hudson.model.Fingerprint;
 import java.util.Set;
 import java.util.TreeSet;
-import javax.annotation.Nonnull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 
 /**
  * Facet representing the fact that this Docker image was derived from another.
@@ -43,7 +43,7 @@ public class DockerAncestorFingerprintFacet extends DockerRunPtrFingerprintFacet
         super(fingerprint, timestamp, imageId);
     }
 
-    synchronized void addAncestorImageId(@Nonnull String id) {
+    synchronized void addAncestorImageId(@NonNull String id) {
         ancestorImageIds.add(id);
     }
 
@@ -55,7 +55,7 @@ public class DockerAncestorFingerprintFacet extends DockerRunPtrFingerprintFacet
      * The set may be empty in case you built a base image ({@code FROM scratch}), in which case there is no ID for the ancestor.
      * @return a set of 64-digit IDs, typically a singleton
      */
-    public synchronized @Nonnull Set<String> getAncestorImageIds() {
+    public synchronized @NonNull Set<String> getAncestorImageIds() {
         return new TreeSet<String>(ancestorImageIds);
     }
 

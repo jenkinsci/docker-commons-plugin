@@ -40,9 +40,9 @@ import hudson.tools.ToolProperty;
 import hudson.util.ArgumentListBuilder;
 import java.io.IOException;
 import java.util.List;
-import javax.annotation.CheckForNull;
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
+import edu.umd.cs.findbugs.annotations.CheckForNull;
+import edu.umd.cs.findbugs.annotations.NonNull;
+import edu.umd.cs.findbugs.annotations.Nullable;
 import jenkins.model.Jenkins;
 import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.DataBoundConstructor;
@@ -72,7 +72,7 @@ public class DockerTool extends ToolInstallation implements EnvironmentSpecific<
      * @param env optionally, environment variables to use when expanding the home directory
      * @return {@code docker} or an absolute path
      */
-    public static @Nonnull String getExecutable(@CheckForNull String name, @CheckForNull Node node, @Nullable TaskListener listener, @CheckForNull EnvVars env) throws IOException, InterruptedException {
+    public static @NonNull String getExecutable(@CheckForNull String name, @CheckForNull Node node, @Nullable TaskListener listener, @CheckForNull EnvVars env) throws IOException, InterruptedException {
         if (name != null) {
             for (DockerTool tool : Jenkins.get().getDescriptorByType(DescriptorImpl.class).getInstallations()) {
                 if (tool.getName().equals(name)) {

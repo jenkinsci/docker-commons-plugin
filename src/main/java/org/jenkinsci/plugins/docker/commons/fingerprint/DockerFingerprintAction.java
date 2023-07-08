@@ -31,7 +31,7 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
-import javax.annotation.CheckForNull;
+import edu.umd.cs.findbugs.annotations.CheckForNull;
 import jenkins.model.FingerprintFacet;
 import jenkins.model.RunAction2;
 import org.jenkins.ui.icon.IconSpec;

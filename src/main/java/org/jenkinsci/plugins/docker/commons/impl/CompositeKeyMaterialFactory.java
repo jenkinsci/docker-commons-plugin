@@ -30,7 +30,7 @@ import org.jenkinsci.plugins.docker.commons.credentials.KeyMaterialFactory;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
 
-import javax.annotation.Nonnull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import java.io.IOException;
 import java.io.Serializable;
 
@@ -50,7 +50,7 @@ public class CompositeKeyMaterialFactory extends KeyMaterialFactory {
     }
 
     @Override
-    public synchronized KeyMaterialFactory contextualize(@Nonnull KeyMaterialContext context) {
+    public synchronized KeyMaterialFactory contextualize(@NonNull KeyMaterialContext context) {
         KeyMaterialFactory contextualized = super.contextualize(context);
         assert contextualized == this;
         for (KeyMaterialFactory factory : factories) {
