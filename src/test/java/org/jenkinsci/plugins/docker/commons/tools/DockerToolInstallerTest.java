@@ -124,9 +124,14 @@ public class DockerToolInstallerTest {
         assertThat(baos.toString(), not(containsString(Messages.DockerToolInstaller_downloading_docker_client_(version))));
         // Version check:
         baos.reset();
-        assertEquals(0, slave.createLauncher(l).launch().cmds(exe.getRemote(), "version", "--format", "{{.Client.Version}}").quiet(true).stdout(tee).stderr(System.err).join());
-        if (!version.equals("latest")) {
-            assertEquals(version, baos.toString().trim());
+        if (slave.createLauncher(l).launch().cmds(exe.getRemote(), "version", "--format", "{{.Client.Version}}").quiet(true).stdout(tee).stderr(tee).join() != 0) {
+            /* Failure message should mention /var/run/docker.sock */
+            assertThat(baos.toString(), containsString("/var/run/docker.sock"));
+        } else {
+            /* Successful output should either be `latest` or include the docker version */
+            if (!version.equals("latest")) {
+                assertEquals(version, baos.toString().trim());
+            }
         }
         return exe;
     }
