@@ -111,6 +111,7 @@ public class DockerToolInstallerTest {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         TeeOutputStream tee = new TeeOutputStream(baos, new PlainTextConsoleOutputStream(System.err));
         TaskListener l = new StreamTaskListener(tee);
+        ByteArrayOutputStream errStream = new ByteArrayOutputStream();
 
         FilePath exe = toolDir.child(version+"/bin/docker");
         // Download for first time:
@@ -124,9 +125,9 @@ public class DockerToolInstallerTest {
         assertThat(baos.toString(), not(containsString(Messages.DockerToolInstaller_downloading_docker_client_(version))));
         // Version check:
         baos.reset();
-        if (slave.createLauncher(l).launch().cmds(exe.getRemote(), "version", "--format", "{{.Client.Version}}").quiet(true).stdout(tee).stderr(tee).join() != 0) {
+        if (slave.createLauncher(l).launch().cmds(exe.getRemote(), "version", "--format", "{{.Client.Version}}").quiet(true).stdout(tee).stderr(errStream).join() != 0) {
             /* Failure message should mention /var/run/docker.sock */
-            assertThat(baos.toString(), containsString("/var/run/docker.sock"));
+            assertThat(errStream.toString(), containsString("/var/run/docker.sock"));
         } else {
             /* Successful output should either be `latest` or include the docker version */
             if (!version.equals("latest")) {
