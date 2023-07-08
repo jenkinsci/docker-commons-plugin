@@ -35,6 +35,7 @@ import org.htmlunit.html.HtmlElement;
 import org.htmlunit.html.HtmlForm;
 import hudson.security.ACL;
 import hudson.util.Secret;
+import hudson.util.VersionNumber;
 import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
@@ -98,7 +99,13 @@ public class DockerServerCredentialsTest {
             button.click();
         }
 
-        form.getTextAreaByName("_.clientKeySecret").setText("new key");
+        if (j.jenkins.getVersion().isOlderThan(new VersionNumber("2.413"))) {
+            /* Jenkins 2.412 and earlier use a text area for the client key */
+            form.getTextAreaByName("_.clientKeySecret").setText("new key");
+        } else {
+            /* Jenkins 2.413 and newer use an input field for the client key */
+            form.getInputByName("_.clientKeySecret").setValue("new key");
+        }
         form.getTextAreaByName("_.clientCertificate").setText("new cert");
         form.getTextAreaByName("_.serverCaCertificate").setText("new ca cert");
         j.submit(form);
