@@ -94,9 +94,7 @@ public class DockerServerCredentialsTest {
         store.addDomain(domain, credentials);
 
         HtmlForm form = getUpdateForm(domain, credentials);
-        for (HtmlElement button : form.getElementsByAttribute("input", "class", "secret-update-btn")) {
-            button.click();
-        }
+        ((HtmlElement) form.querySelector(".secret-update-btn")).click();
 
         form.getTextAreaByName("_.clientKeySecret").setText("new key");
         form.getTextAreaByName("_.clientCertificate").setText("new cert");
