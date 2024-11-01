@@ -81,13 +81,13 @@ public class RegistryKeyMaterialFactory extends KeyMaterialFactory {
         if (configJsonPath.exists()) {
             String configJson = configJsonPath.readToString();
             if (StringUtils.isNotBlank(configJson)) {
-                launcher.getListener().getLogger().print("Using the existing docker config file.");
+                launcher.getListener().getLogger().println("Using the existing docker config file.");
 
                 JSONObject json = JSONObject.fromObject(configJson);
                 for (String property : BLACKLISTED_PROPERTIES) {
                     Object value = json.remove(property);
                     if (value != null) {
-                        launcher.getListener().getLogger().print("Removing blacklisted property: " + property);
+                        launcher.getListener().getLogger().println("Removing blacklisted property: " + property);
                     }
                 }
 
