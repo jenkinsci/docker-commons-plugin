@@ -395,11 +395,11 @@ public class DockerRegistryEndpoint extends AbstractDescribableImpl<DockerRegist
             return new StandardListBoxModel()
                     .withEmptySelection()
                     .withMatching(AuthenticationTokens.matcher(DockerRegistryToken.class),
-                            CredentialsProvider.lookupCredentials(
+                            CredentialsProvider.lookupCredentialsInItem(
                                     StandardCredentials.class,
                                     item,
                                     null,
-                                    Collections.<DomainRequirement>emptyList()
+                                    Collections.emptyList()
                             )
                     );
         }

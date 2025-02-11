@@ -65,8 +65,8 @@ public class DockerServerCredentialsTest {
         j.submit(j.createWebClient().goTo("credentials/store/system/domain/" + domain.getName() + "/credential/"+credentials.getId()+"/update")
                 .getFormByName("update"));
         
-        j.assertEqualDataBoundBeans(credentials, CredentialsMatchers.firstOrNull(CredentialsProvider.lookupCredentials(IdCredentials.class, j.getInstance(),
-                ACL.SYSTEM, new DockerServerDomainRequirement()), CredentialsMatchers.withId(credentials.getId())));
+        j.assertEqualDataBoundBeans(credentials, CredentialsMatchers.firstOrNull(CredentialsProvider.lookupCredentialsInItemGroup(IdCredentials.class, j.getInstance(),
+                ACL.SYSTEM2, Collections.singletonList(new DockerServerDomainRequirement())), CredentialsMatchers.withId(credentials.getId())));
     }
     
     @Test
@@ -81,8 +81,8 @@ public class DockerServerCredentialsTest {
         j.submit(j.createWebClient().goTo("credentials/store/system/domain/" + domain.getName() + "/credential/"+credentials.getId()+"/update")
                 .getFormByName("update"));
         
-        j.assertEqualDataBoundBeans(credentials, CredentialsMatchers.firstOrNull(CredentialsProvider.lookupCredentials(IdCredentials.class, j.getInstance(),
-                ACL.SYSTEM, new DockerServerDomainRequirement()), CredentialsMatchers.withId(credentials.getId())));
+        j.assertEqualDataBoundBeans(credentials, CredentialsMatchers.firstOrNull(CredentialsProvider.lookupCredentialsInItemGroup(IdCredentials.class, j.getInstance(),
+                ACL.SYSTEM2, Collections.singletonList(new DockerServerDomainRequirement())), CredentialsMatchers.withId(credentials.getId())));
     }
 
     @Test
@@ -114,7 +114,7 @@ public class DockerServerCredentialsTest {
 
     private IdCredentials findFirstWithId(String credentialsId) {
         return CredentialsMatchers.firstOrNull(
-                CredentialsProvider.lookupCredentials(IdCredentials.class, j.getInstance(), ACL.SYSTEM, new DockerServerDomainRequirement()),
+                CredentialsProvider.lookupCredentialsInItemGroup(IdCredentials.class, j.getInstance(), ACL.SYSTEM2, Collections.singletonList(new DockerServerDomainRequirement())),
                 CredentialsMatchers.withId(credentialsId));
     }
 }

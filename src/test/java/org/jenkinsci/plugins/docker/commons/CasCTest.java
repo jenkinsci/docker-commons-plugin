@@ -18,6 +18,8 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.jvnet.hudson.test.RestartableJenkinsRule;
 
+import java.util.Collections;
+
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.beans.HasPropertyWithValue.hasProperty;
 import static org.hamcrest.collection.ArrayMatching.arrayContaining;
@@ -48,8 +50,8 @@ public class CasCTest extends RoundTripAbstractTest {
     protected void assertConfiguredAsExpected(final RestartableJenkinsRule j, final String s) {
 
         //The credentials
-        final IdCredentials cred = CredentialsMatchers.firstOrNull(CredentialsProvider.lookupCredentials(IdCredentials.class, j.j.jenkins,
-                ACL.SYSTEM, new DockerServerDomainRequirement()), CredentialsMatchers.withId("dockerx509"));
+        final IdCredentials cred = CredentialsMatchers.firstOrNull(CredentialsProvider.lookupCredentialsInItemGroup(IdCredentials.class, j.j.jenkins,
+                ACL.SYSTEM2, Collections.singletonList(new DockerServerDomainRequirement())), CredentialsMatchers.withId("dockerx509"));
         assertNotNull(cred);
         assertThat(cred, instanceOf(DockerServerCredentials.class));
         DockerServerCredentials dCreds = (DockerServerCredentials) cred;
