@@ -220,7 +220,7 @@ public class DockerServerEndpoint extends AbstractDescribableImpl<DockerServerEn
                     .withMatching(
                             AuthenticationTokens.matcher(KeyMaterialFactory.class),
                             CredentialsProvider
-                                    .lookupCredentials(BASE_CREDENTIAL_TYPE, item, null, domainRequirements)
+                                    .lookupCredentialsInItem(BASE_CREDENTIAL_TYPE, item, null, domainRequirements)
                     );
         }
 

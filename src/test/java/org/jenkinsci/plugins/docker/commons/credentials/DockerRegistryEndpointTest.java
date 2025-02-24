@@ -41,11 +41,8 @@ import hudson.model.Item;
 import hudson.model.User;
 import hudson.security.ACL;
 import hudson.security.ACLContext;
-import java.util.HashMap;
-import java.util.Map;
 import jenkins.model.Jenkins;
 import jenkins.security.QueueItemAuthenticatorConfiguration;
-import org.acegisecurity.Authentication;
 import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;
@@ -138,10 +135,13 @@ public class DockerRegistryEndpointTest {
         FreeStyleProject p1 = j.createFreeStyleProject();
         FreeStyleProject p2 = j.createFreeStyleProject();
 
-        Map<String, Authentication> jobsToAuths = new HashMap<>();
-        jobsToAuths.put(p1.getFullName(), User.getById("alice", true).impersonate());
-        jobsToAuths.put(p2.getFullName(), User.getById("bob", true).impersonate());
-        QueueItemAuthenticatorConfiguration.get().getAuthenticators().replace(new MockQueueItemAuthenticator(jobsToAuths));
+        QueueItemAuthenticatorConfiguration.get()
+                .getAuthenticators()
+                .replace(new MockQueueItemAuthenticator()
+                        .authenticate(
+                                p1.getFullName(), User.getById("alice", true).impersonate2())
+                        .authenticate(
+                                p2.getFullName(), User.getById("bob", true).impersonate2()));
 
         FreeStyleBuild r1 = j.buildAndAssertSuccess(p1);
         try (ACLContext as = ACL.as(User.getById("alice", false))) {
