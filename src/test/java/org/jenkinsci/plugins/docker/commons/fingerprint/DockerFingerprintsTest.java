@@ -24,22 +24,25 @@
 
 package org.jenkinsci.plugins.docker.commons.fingerprint;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-public class DockerFingerprintsTest {
+class DockerFingerprintsTest {
 
     @Test
-    public void testGetFingerprintHashForId() {
-        assertEquals("598d0def97f180366008bcddbf0a4ed5", DockerFingerprints
-                .getFingerprintHash("598d0def97f180366008bcddbf0a4ed5267b35d0a876c0f867fc38c7adb041e3"));
+    void testGetFingerprintHashForId() {
+        assertEquals(
+                "598d0def97f180366008bcddbf0a4ed5",
+                DockerFingerprints.getFingerprintHash(
+                        "598d0def97f180366008bcddbf0a4ed5267b35d0a876c0f867fc38c7adb041e3"));
     }
 
     @Test
-    public void testGetFingerprintHashForSha256() {
-        assertEquals("598d0def97f180366008bcddbf0a4ed5", DockerFingerprints
-                .getFingerprintHash("sha256:598d0def97f180366008bcddbf0a4ed5267b35d0a876c0f867fc38c7adb041e3"));
+    void testGetFingerprintHashForSha256() {
+        assertEquals(
+                "598d0def97f180366008bcddbf0a4ed5",
+                DockerFingerprints.getFingerprintHash(
+                        "sha256:598d0def97f180366008bcddbf0a4ed5267b35d0a876c0f867fc38c7adb041e3"));
     }
-
 }
