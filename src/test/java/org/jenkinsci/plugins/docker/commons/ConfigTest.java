@@ -24,42 +24,53 @@
 
 package org.jenkinsci.plugins.docker.commons;
 
-import hudson.util.Secret;
-import org.jenkinsci.plugins.docker.commons.tools.DockerTool;
-import org.jenkinsci.plugins.docker.commons.util.SampleDockerBuilder;
-import org.jenkinsci.plugins.docker.commons.credentials.DockerServerCredentials;
-import org.jenkinsci.plugins.docker.commons.credentials.DockerServerEndpoint;
-import org.jenkinsci.plugins.docker.commons.credentials.DockerRegistryEndpoint;
 import com.cloudbees.plugins.credentials.CredentialsProvider;
 import com.cloudbees.plugins.credentials.CredentialsScope;
 import com.cloudbees.plugins.credentials.CredentialsStore;
 import com.cloudbees.plugins.credentials.common.IdCredentials;
 import com.cloudbees.plugins.credentials.domains.Domain;
 import com.cloudbees.plugins.credentials.impl.UsernamePasswordCredentialsImpl;
-import hudson.tools.ToolProperty;
+import hudson.util.Secret;
 import java.util.Collections;
-import org.junit.Test;
-import org.junit.Rule;
+import org.jenkinsci.plugins.docker.commons.credentials.DockerRegistryEndpoint;
+import org.jenkinsci.plugins.docker.commons.credentials.DockerServerCredentials;
+import org.jenkinsci.plugins.docker.commons.credentials.DockerServerEndpoint;
+import org.jenkinsci.plugins.docker.commons.tools.DockerTool;
+import org.jenkinsci.plugins.docker.commons.util.SampleDockerBuilder;
+import org.junit.jupiter.api.Test;
 import org.jvnet.hudson.test.JenkinsRule;
+import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 
+@WithJenkins
+class ConfigTest {
 
-public class ConfigTest {
-
-    @Rule public JenkinsRule r = new JenkinsRule();
-
-    @Test public void configRoundTrip() throws Exception {
-        CredentialsStore store = CredentialsProvider.lookupStores(r.jenkins).iterator().next();
-        IdCredentials serverCredentials = new DockerServerCredentials(CredentialsScope.GLOBAL, "serverCreds", null, Secret.fromString("clientKey"), "clientCertificate", "serverCaCertificate");
+    @Test
+    void configRoundTrip(JenkinsRule r) throws Exception {
+        CredentialsStore store =
+                CredentialsProvider.lookupStores(r.jenkins).iterator().next();
+        IdCredentials serverCredentials = new DockerServerCredentials(
+                CredentialsScope.GLOBAL,
+                "serverCreds",
+                null,
+                Secret.fromString("clientKey"),
+                "clientCertificate",
+                "serverCaCertificate");
         store.addCredentials(Domain.global(), serverCredentials);
-        IdCredentials registryCredentials = new UsernamePasswordCredentialsImpl(CredentialsScope.GLOBAL, "registryCreds", null, "me", "pass");
+        IdCredentials registryCredentials =
+                new UsernamePasswordCredentialsImpl(CredentialsScope.GLOBAL, "registryCreds", null, "me", "pass");
         store.addCredentials(Domain.global(), registryCredentials);
-        SampleDockerBuilder b1 = new SampleDockerBuilder(new DockerServerEndpoint("", ""), new DockerRegistryEndpoint("http://dhe.mycorp.com/", registryCredentials.getId()));
+        SampleDockerBuilder b1 = new SampleDockerBuilder(
+                new DockerServerEndpoint("", ""),
+                new DockerRegistryEndpoint("http://dhe.mycorp.com/", registryCredentials.getId()));
         r.assertEqualDataBoundBeans(b1, r.configRoundtrip(b1));
-        b1 = new SampleDockerBuilder(new DockerServerEndpoint("tcp://192.168.1.104:8333", serverCredentials.getId()), new DockerRegistryEndpoint("", ""));
+        b1 = new SampleDockerBuilder(
+                new DockerServerEndpoint("tcp://192.168.1.104:8333", serverCredentials.getId()),
+                new DockerRegistryEndpoint("", ""));
         r.assertEqualDataBoundBeans(b1, r.configRoundtrip(b1));
-        r.jenkins.getDescriptorByType(DockerTool.DescriptorImpl.class).setInstallations(new DockerTool("Docker 1.5", "/usr/local/docker15", Collections.<ToolProperty<?>>emptyList()));
+        r.jenkins
+                .getDescriptorByType(DockerTool.DescriptorImpl.class)
+                .setInstallations(new DockerTool("Docker 1.5", "/usr/local/docker15", Collections.emptyList()));
         b1.setToolName("Docker 1.5");
         r.assertEqualDataBoundBeans(b1, r.configRoundtrip(b1));
     }
-
 }

@@ -24,177 +24,161 @@
 
 package org.jenkinsci.plugins.docker.commons.impl;
 
-import static org.hamcrest.Matchers.arrayContaining;
-import static org.hamcrest.Matchers.emptyArray;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
-
-import java.io.File;
-import java.io.IOException;
-import java.net.URL;
-
-import org.apache.commons.io.FileUtils;
-import org.jenkinsci.plugins.docker.commons.credentials.DockerRegistryEndpoint;
-import org.jenkinsci.plugins.docker.commons.credentials.KeyMaterial;
-import org.jenkinsci.plugins.docker.commons.credentials.KeyMaterialContext;
-import org.jenkinsci.plugins.docker.commons.credentials.KeyMaterialFactory;
-import org.jenkinsci.plugins.docker.commons.tools.DockerTool;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
-import org.jvnet.hudson.test.FakeLauncher;
-import org.jvnet.hudson.test.JenkinsRule;
-import org.jvnet.hudson.test.PretendSlave;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import hudson.EnvVars;
 import hudson.FilePath;
 import hudson.Launcher;
-import hudson.Launcher.ProcStarter;
-import hudson.Proc;
 import hudson.model.TaskListener;
 import hudson.remoting.Callable;
 import hudson.remoting.LocalChannel;
 import hudson.remoting.VirtualChannel;
+import java.io.File;
+import java.io.IOException;
+import java.net.URL;
+import org.jenkinsci.plugins.docker.commons.credentials.DockerRegistryEndpoint;
+import org.jenkinsci.plugins.docker.commons.credentials.KeyMaterialContext;
+import org.jenkinsci.plugins.docker.commons.credentials.KeyMaterialFactory;
+import org.jenkinsci.plugins.docker.commons.tools.DockerTool;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
+import org.jvnet.hudson.test.FakeLauncher;
+import org.jvnet.hudson.test.JenkinsRule;
+import org.jvnet.hudson.test.PretendSlave;
+import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 
-public class HostOnlyRegistryKeyMaterialFactoryTest {
+@WithJenkins
+class HostOnlyRegistryKeyMaterialFactoryTest {
 
-    @Rule
-    public JenkinsRule j = new JenkinsRule();
-    @Rule
-    public TemporaryFolder tempFolder = new TemporaryFolder();
+    @TempDir
+    private File tempFolder;
 
     private KeyMaterialFactory factory;
 
     @Test
-    public void resolveRegistryDueToPodmanExecutable() throws Exception {
-    	
-	// fake launcher for the docker login invocation
-	FakeLauncher faker = new FakeLauncher() {
-	    @Override
-	    public Proc onLaunch(final ProcStarter p) throws IOException {
-		return new FinishedProc(0);
-	    }
-	};
+    void resolveRegistryDueToPodmanExecutable(JenkinsRule j) throws Exception {
 
-	PretendSlave slave = j.createPretendSlave(faker);
-	// VirtualChannel channel = slave.getChannel();
-	// FreeStyleProject project = j.createFreeStyleProject();
+        // fake launcher for the docker login invocation
+        FakeLauncher faker = p -> new FakeLauncher.FinishedProc(0);
 
-	TaskListener listener = TaskListener.NULL;
-	Launcher launcher = slave.createLauncher(listener);
-	launcher = new Launcher.DecoratedLauncher(launcher) {
-	    @Override
-	    public VirtualChannel getChannel() {
-		return new LocalChannel(null) {
-		    @Override
-		    public <V, T extends Throwable> V call(final Callable<V, T> callable) throws T {
-			// ugly as hell, but we need a way to mock fetching the home directory
-			return (V) new FilePath(tempFolder.getRoot());
-		    }
-		};
-	    }
-	};	
+        PretendSlave slave = j.createPretendSlave(faker);
+        // VirtualChannel channel = slave.getChannel();
+        // FreeStyleProject project = j.createFreeStyleProject();
 
-	URL endpoint = new DockerRegistryEndpoint(null, null).getEffectiveUrl();
-	EnvVars env = new EnvVars();
-	String dockerExecutable = "/usr/bin/podman";
+        TaskListener listener = TaskListener.NULL;
+        Launcher launcher = slave.createLauncher(listener);
+        launcher = new Launcher.DecoratedLauncher(launcher) {
+            @Override
+            public VirtualChannel getChannel() {
+                return new LocalChannel(null) {
+                    @Override
+                    public <V, T extends Throwable> V call(final Callable<V, T> callable) throws T {
+                        // ugly as hell, but we need a way to mock fetching the home directory
+                        return (V) new FilePath(tempFolder);
+                    }
+                };
+            }
+        };
 
-	factory = new RegistryKeyMaterialFactory("username", "password", endpoint, launcher, env, listener,
-		dockerExecutable).contextualize(new KeyMaterialContext(new FilePath(tempFolder.newFolder())));
-	// act
-	String registry = ((RegistryKeyMaterialFactory)factory).registry();
+        URL endpoint = new DockerRegistryEndpoint(null, null).getEffectiveUrl();
+        EnvVars env = new EnvVars();
+        String dockerExecutable = "/usr/bin/podman";
 
-	// assert
-	assertEquals(registry, "index.docker.io");
-    }
-    
-    @Test
-    public void resolveRegistryDueToENVSet() throws Exception {
-    	
-	// fake launcher for the docker login invocation
-	FakeLauncher faker = new FakeLauncher() {
-	    @Override
-	    public Proc onLaunch(final ProcStarter p) throws IOException {
-		return new FinishedProc(0);
-	    }
-	};
+        factory = new RegistryKeyMaterialFactory(
+                        "username", "password", endpoint, launcher, env, listener, dockerExecutable)
+                .contextualize(new KeyMaterialContext(new FilePath(newFolder(tempFolder, "junit"))));
+        // act
+        String registry = ((RegistryKeyMaterialFactory) factory).registry();
 
-	PretendSlave slave = j.createPretendSlave(faker);
-	// VirtualChannel channel = slave.getChannel();
-	// FreeStyleProject project = j.createFreeStyleProject();
-
-	TaskListener listener = TaskListener.NULL;
-	Launcher launcher = slave.createLauncher(listener);
-	launcher = new Launcher.DecoratedLauncher(launcher) {
-	    @Override
-	    public VirtualChannel getChannel() {
-		return new LocalChannel(null) {
-		    @Override
-		    public <V, T extends Throwable> V call(final Callable<V, T> callable) throws T {
-			// ugly as hell, but we need a way to mock fetching the home directory
-			return (V) new FilePath(tempFolder.getRoot());
-		    }
-		};
-	    }
-	};	
-
-	URL endpoint = new DockerRegistryEndpoint(null, null).getEffectiveUrl();
-	EnvVars env = new EnvVars();
-	env.put(RegistryKeyMaterialFactory.DOCKER_REGISTRY_HOST_ONLY, "true");
-	String dockerExecutable = DockerTool.getExecutable(null, null, listener, env);
-
-	factory = new RegistryKeyMaterialFactory("username", "password", endpoint, launcher, env, listener,
-		dockerExecutable).contextualize(new KeyMaterialContext(new FilePath(tempFolder.newFolder())));
-	// act
-	String registry = ((RegistryKeyMaterialFactory)factory).registry();
-
-	// assert
-	assertEquals(registry, "index.docker.io");
+        // assert
+        assertEquals("index.docker.io", registry);
     }
 
     @Test
-    public void resolveRegistryDefault() throws Exception {
-    	
-	// fake launcher for the docker login invocation
-	FakeLauncher faker = new FakeLauncher() {
-	    @Override
-	    public Proc onLaunch(final ProcStarter p) throws IOException {
-		return new FinishedProc(0);
-	    }
-	};
+    void resolveRegistryDueToENVSet(JenkinsRule j) throws Exception {
 
-	PretendSlave slave = j.createPretendSlave(faker);
-	// VirtualChannel channel = slave.getChannel();
-	// FreeStyleProject project = j.createFreeStyleProject();
+        // fake launcher for the docker login invocation
+        FakeLauncher faker = p -> new FakeLauncher.FinishedProc(0);
 
-	TaskListener listener = TaskListener.NULL;
-	Launcher launcher = slave.createLauncher(listener);
-	launcher = new Launcher.DecoratedLauncher(launcher) {
-	    @Override
-	    public VirtualChannel getChannel() {
-		return new LocalChannel(null) {
-		    @Override
-		    public <V, T extends Throwable> V call(final Callable<V, T> callable) throws T {
-			// ugly as hell, but we need a way to mock fetching the home directory
-			return (V) new FilePath(tempFolder.getRoot());
-		    }
-		};
-	    }
-	};	
+        PretendSlave slave = j.createPretendSlave(faker);
+        // VirtualChannel channel = slave.getChannel();
+        // FreeStyleProject project = j.createFreeStyleProject();
 
-	URL endpoint = new DockerRegistryEndpoint(null, null).getEffectiveUrl();
-	EnvVars env = new EnvVars();
-	String dockerExecutable = DockerTool.getExecutable(null, null, listener, env);
+        TaskListener listener = TaskListener.NULL;
+        Launcher launcher = slave.createLauncher(listener);
+        launcher = new Launcher.DecoratedLauncher(launcher) {
+            @Override
+            public VirtualChannel getChannel() {
+                return new LocalChannel(null) {
+                    @Override
+                    public <V, T extends Throwable> V call(final Callable<V, T> callable) throws T {
+                        // ugly as hell, but we need a way to mock fetching the home directory
+                        return (V) new FilePath(tempFolder);
+                    }
+                };
+            }
+        };
 
-	factory = new RegistryKeyMaterialFactory("username", "password", endpoint, launcher, env, listener,
-		dockerExecutable).contextualize(new KeyMaterialContext(new FilePath(tempFolder.newFolder())));
-	// act
-	String registry = ((RegistryKeyMaterialFactory)factory).registry();
+        URL endpoint = new DockerRegistryEndpoint(null, null).getEffectiveUrl();
+        EnvVars env = new EnvVars();
+        env.put(RegistryKeyMaterialFactory.DOCKER_REGISTRY_HOST_ONLY, "true");
+        String dockerExecutable = DockerTool.getExecutable(null, null, listener, env);
 
-	// assert
-	assertEquals(registry, "https://index.docker.io/v1/");
+        factory = new RegistryKeyMaterialFactory(
+                        "username", "password", endpoint, launcher, env, listener, dockerExecutable)
+                .contextualize(new KeyMaterialContext(new FilePath(newFolder(tempFolder, "junit"))));
+        // act
+        String registry = ((RegistryKeyMaterialFactory) factory).registry();
+
+        // assert
+        assertEquals("index.docker.io", registry);
+    }
+
+    @Test
+    void resolveRegistryDefault(JenkinsRule j) throws Exception {
+
+        // fake launcher for the docker login invocation
+        FakeLauncher faker = p -> new FakeLauncher.FinishedProc(0);
+
+        PretendSlave slave = j.createPretendSlave(faker);
+        // VirtualChannel channel = slave.getChannel();
+        // FreeStyleProject project = j.createFreeStyleProject();
+
+        TaskListener listener = TaskListener.NULL;
+        Launcher launcher = slave.createLauncher(listener);
+        launcher = new Launcher.DecoratedLauncher(launcher) {
+            @Override
+            public VirtualChannel getChannel() {
+                return new LocalChannel(null) {
+                    @Override
+                    public <V, T extends Throwable> V call(final Callable<V, T> callable) throws T {
+                        // ugly as hell, but we need a way to mock fetching the home directory
+                        return (V) new FilePath(tempFolder);
+                    }
+                };
+            }
+        };
+
+        URL endpoint = new DockerRegistryEndpoint(null, null).getEffectiveUrl();
+        EnvVars env = new EnvVars();
+        String dockerExecutable = DockerTool.getExecutable(null, null, listener, env);
+
+        factory = new RegistryKeyMaterialFactory(
+                        "username", "password", endpoint, launcher, env, listener, dockerExecutable)
+                .contextualize(new KeyMaterialContext(new FilePath(newFolder(tempFolder, "junit"))));
+        // act
+        String registry = ((RegistryKeyMaterialFactory) factory).registry();
+
+        // assert
+        assertEquals("https://index.docker.io/v1/", registry);
+    }
+
+    private static File newFolder(File root, String... subDirs) throws IOException {
+        String subFolder = String.join("/", subDirs);
+        File result = new File(root, subFolder);
+        if (!result.mkdirs()) {
+            throw new IOException("Couldn't create folders " + root);
+        }
+        return result;
     }
 }

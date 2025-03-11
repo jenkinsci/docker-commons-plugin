@@ -24,10 +24,15 @@
 
 package org.jenkinsci.plugins.docker.commons.credentials;
 
+import static org.junit.Assert.assertNotNull;
+
 import com.cloudbees.plugins.credentials.CredentialsProvider;
 import com.cloudbees.plugins.credentials.CredentialsScope;
 import com.cloudbees.plugins.credentials.domains.Domain;
 import hudson.FilePath;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import org.apache.commons.io.IOUtils;
 import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
@@ -36,56 +41,47 @@ import org.jenkinsci.plugins.workflow.test.steps.SemaphoreStep;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.runners.model.Statement;
 import org.jvnet.hudson.test.BuildWatcher;
-import org.jvnet.hudson.test.RestartableJenkinsRule;
-
-import java.io.IOException;
-import java.io.InputStream;
-
-import java.nio.charset.StandardCharsets;
-import java.util.Collections;
-
-
-import static org.junit.Assert.assertNotNull;
+import org.jvnet.hudson.test.JenkinsSessionRule;
 
 public class DockerServerCredentialsHandlerTest {
 
     @ClassRule
     public static BuildWatcher buildWatcher = new BuildWatcher();
+
     @Rule
-    public RestartableJenkinsRule story = new RestartableJenkinsRule();
+    public JenkinsSessionRule story = new JenkinsSessionRule();
 
     @Test
-    public void basics() throws Exception {
-        story.addStep(new Statement() {
-            @Override
-            public void evaluate() throws Throwable {
-                DockerServerCredentials c = new DockerServerCredentials(CredentialsScope.GLOBAL,
-                        "docker-client-cert", "desc", "clientKey", "clientCertificate", "serverCaCertificate");
-                CredentialsProvider.lookupStores(story.j.jenkins).iterator().next().addCredentials(Domain.global(), c);
-                WorkflowJob p = story.j.jenkins.createProject(WorkflowJob.class, "p");
-                String pipelineScript = IOUtils.toString(getTestResourceInputStream("basics-Jenkinsfile"), StandardCharsets.UTF_8);
-                p.setDefinition(new CpsFlowDefinition(pipelineScript, true));
-                WorkflowRun b = p.scheduleBuild2(0).waitForStart();
-                SemaphoreStep.waitForStart("basics/1", b);
-                // copy some test scripts into the workspace
-                FilePath workspace = story.j.jenkins.getWorkspaceFor(p);
-                copyTestResourceIntoWorkspace(workspace, "basics-step1.bat", 0755);
-                copyTestResourceIntoWorkspace(workspace, "basics-step1.sh", 0755);
-            }
+    public void basics() throws Throwable {
+        story.then(j -> {
+            DockerServerCredentials c = new DockerServerCredentials(
+                    CredentialsScope.GLOBAL,
+                    "docker-client-cert",
+                    "desc",
+                    "clientKey",
+                    "clientCertificate",
+                    "serverCaCertificate");
+            CredentialsProvider.lookupStores(j.jenkins).iterator().next().addCredentials(Domain.global(), c);
+            WorkflowJob p = j.jenkins.createProject(WorkflowJob.class, "p");
+            String pipelineScript =
+                    IOUtils.toString(getTestResourceInputStream("basics-Jenkinsfile"), StandardCharsets.UTF_8);
+            p.setDefinition(new CpsFlowDefinition(pipelineScript, true));
+            WorkflowRun b = p.scheduleBuild2(0).waitForStart();
+            SemaphoreStep.waitForStart("basics/1", b);
+            // copy some test scripts into the workspace
+            FilePath workspace = j.jenkins.getWorkspaceFor(p);
+            copyTestResourceIntoWorkspace(workspace, "basics-step1.bat", 0755);
+            copyTestResourceIntoWorkspace(workspace, "basics-step1.sh", 0755);
         });
-        story.addStep(new Statement() {
-            @Override
-            public void evaluate() throws Throwable {
-                WorkflowJob p = story.j.jenkins.getItemByFullName("p", WorkflowJob.class);
-                assertNotNull(p);
-                WorkflowRun b = p.getBuildByNumber(1);
-                assertNotNull(b);
-                SemaphoreStep.success("basics/1", null);
-                story.j.waitForCompletion(b);
-                story.j.assertBuildStatusSuccess(b);
-            }
+        story.then(j -> {
+            WorkflowJob p = j.jenkins.getItemByFullName("p", WorkflowJob.class);
+            assertNotNull(p);
+            WorkflowRun b = p.getBuildByNumber(1);
+            assertNotNull(b);
+            SemaphoreStep.success("basics/1", null);
+            j.waitForCompletion(b);
+            j.assertBuildStatusSuccess(b);
         });
     }
 
@@ -101,5 +97,4 @@ public class DockerServerCredentialsHandlerTest {
         f.chmod(mask);
         return f;
     }
-
 }
