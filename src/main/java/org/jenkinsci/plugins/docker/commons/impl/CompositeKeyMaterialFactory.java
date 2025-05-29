@@ -79,19 +79,16 @@ public class CompositeKeyMaterialFactory extends KeyMaterialFactory {
                     if (keyMaterials[index] != null) {
                         keyMaterials[index].close(getChannel());
                     }
-                } catch (IOException ioe) {
-                    // ignore as we want to try and close them all and we are reporting the original exception
                 } catch (Throwable t) {
-                    // ignore as we want to try and close them all and we are reporting the original exception
+                    e.addSuppressed(t);
                 }
             }
-            // TODO Java 7+ use chained exceptions
-            if (e instanceof IOException) {
-                throw (IOException) e;
-            } else if (e instanceof InterruptedException) {
-                throw (InterruptedException) e;
-            } else if (e instanceof RuntimeException) {
-                throw (RuntimeException) e;
+            if (e instanceof IOException ioe) {
+                throw ioe;
+            } else if (e instanceof InterruptedException ie) {
+                throw ie;
+            } else if (e instanceof RuntimeException re) {
+                throw re;
             } else {
                 throw new IOException("Error materializing credentials.", e);
             }
@@ -110,7 +107,7 @@ public class CompositeKeyMaterialFactory extends KeyMaterialFactory {
         }
 
         @Override
-        public void close(VirtualChannel channel) throws IOException {
+        public void close(VirtualChannel channel) throws IOException, InterruptedException {
             Throwable first = null;
             for (int index = keyMaterials.length - 1; index >= 0; index--) {
                 try {
@@ -118,14 +115,20 @@ public class CompositeKeyMaterialFactory extends KeyMaterialFactory {
                         keyMaterials[index].close(channel);
                     }
                 } catch (Throwable e) {
-                    first = first == null ? e : first;
+                    if (first == null) {
+                        first = e;
+                    } else {
+                        first.addSuppressed(e);
+                    }
                 }
             }
             if (first != null) {
-                if (first instanceof IOException) {
-                    throw (IOException) first;
-                } else if (first instanceof RuntimeException) {
-                    throw (RuntimeException) first;
+                if (first instanceof IOException ioe) {
+                    throw ioe;
+                } else if (first instanceof InterruptedException ie) {
+                    throw ie;
+                } else if (first instanceof RuntimeException re) {
+                    throw re;
                 } else {
                     throw new IOException("Error closing credentials.", first);
                 }
