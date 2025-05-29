@@ -23,8 +23,11 @@
  */
 package org.jenkinsci.plugins.docker.commons.impl;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.EnvVars;
+import hudson.remoting.VirtualChannel;
 import org.jenkinsci.plugins.docker.commons.credentials.KeyMaterial;
+import org.jenkinsci.plugins.docker.commons.credentials.KeyMaterial2;
 import org.jenkinsci.plugins.docker.commons.credentials.KeyMaterialContext;
 import org.jenkinsci.plugins.docker.commons.credentials.KeyMaterialFactory;
 import org.kohsuke.accmod.Restricted;
@@ -60,21 +63,21 @@ public class CompositeKeyMaterialFactory extends KeyMaterialFactory {
     }
 
     @Override
-    public KeyMaterial materialize() throws IOException, InterruptedException {
+    public KeyMaterial2 materialize2() throws IOException, InterruptedException {
 
-        KeyMaterial[] keyMaterials = new KeyMaterial[factories.length];
+        KeyMaterial2[] keyMaterials = new KeyMaterial2[factories.length];
         EnvVars env = new EnvVars();
         try {
             for (int index = 0; index < factories.length; index++) {
-                keyMaterials[index] = factories[index].materialize();
+                keyMaterials[index] = factories[index].materialize2();
                 env.putAll(keyMaterials[index].env());
             }
-            return new CompositeKeyMaterial(env, keyMaterials);
+            return new CompositeKeyMaterial2(env, keyMaterials);
         } catch (Throwable e) {
             for (int index = keyMaterials.length - 1; index >= 0; index--) {
                 try {
                     if (keyMaterials[index] != null) {
-                        keyMaterials[index].close();
+                        keyMaterials[index].close(getChannel());
                     }
                 } catch (IOException ioe) {
                     // ignore as we want to try and close them all and we are reporting the original exception
@@ -95,15 +98,52 @@ public class CompositeKeyMaterialFactory extends KeyMaterialFactory {
         }
     }
 
+    private static final class CompositeKeyMaterial2 extends KeyMaterial2 implements Serializable {
+
+        private static final long serialVersionUID = 1L;
+
+        private final KeyMaterial2[] keyMaterials;
+
+        CompositeKeyMaterial2(EnvVars envVars, KeyMaterial2... keyMaterials) {
+            super(envVars);
+            this.keyMaterials = keyMaterials;
+        }
+
+        @Override
+        public void close(VirtualChannel channel) throws IOException {
+            Throwable first = null;
+            for (int index = keyMaterials.length - 1; index >= 0; index--) {
+                try {
+                    if (keyMaterials[index] != null) {
+                        keyMaterials[index].close(channel);
+                    }
+                } catch (Throwable e) {
+                    first = first == null ? e : first;
+                }
+            }
+            if (first != null) {
+                if (first instanceof IOException) {
+                    throw (IOException) first;
+                } else if (first instanceof RuntimeException) {
+                    throw (RuntimeException) first;
+                } else {
+                    throw new IOException("Error closing credentials.", first);
+                }
+            }
+        }
+    }
+
+    @SuppressFBWarnings(value = {"NP_UNWRITTEN_FIELD", "UWF_NULL_FIELD"})
+    @Deprecated
     private static final class CompositeKeyMaterial extends KeyMaterial implements Serializable {
 
         private static final long serialVersionUID = 1L;
 
-        private final KeyMaterial[] keyMaterials;
+        private final KeyMaterial[] keyMaterials = null;
 
-        protected CompositeKeyMaterial(EnvVars envVars, KeyMaterial... keyMaterials) {
-            super(envVars);
-            this.keyMaterials = keyMaterials;
+        private CompositeKeyMaterial() {
+            super(null);
+            assert false : "only deserialized";
         }
 
         @Override

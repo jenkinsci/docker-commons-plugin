@@ -24,26 +24,26 @@
 package org.jenkinsci.plugins.docker.commons.impl;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
-import org.jenkinsci.plugins.docker.commons.credentials.KeyMaterial;
 import org.jenkinsci.plugins.docker.commons.credentials.KeyMaterialContext;
 import org.jenkinsci.plugins.docker.commons.credentials.KeyMaterialFactory;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
 
 import java.io.IOException;
+import org.jenkinsci.plugins.docker.commons.credentials.KeyMaterial2;
 
 /**
  * {@link org.jenkinsci.plugins.docker.commons.credentials.KeyMaterialFactory} that does nothing.
  *
- * @see org.jenkinsci.plugins.docker.commons.credentials.KeyMaterial#NULL
+ * @see org.jenkinsci.plugins.docker.commons.credentials.KeyMaterial2#NULL
  * @author Kohsuke Kawaguchi
  */
 @Restricted(NoExternalUse.class)
 public final class NullKeyMaterialFactory extends KeyMaterialFactory {
 
     @Override
-    public KeyMaterial materialize() throws IOException, InterruptedException {
-        return KeyMaterial.NULL;
+    public KeyMaterial2 materialize2() throws IOException, InterruptedException {
+        return KeyMaterial2.NULL;
     }
 
     @Override

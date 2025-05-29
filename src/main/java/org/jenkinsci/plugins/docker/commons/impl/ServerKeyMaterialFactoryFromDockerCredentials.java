@@ -38,6 +38,7 @@ import org.jenkinsci.plugins.docker.commons.credentials.KeyMaterialFactory;
 public class ServerKeyMaterialFactoryFromDockerCredentials extends AuthenticationTokenSource<KeyMaterialFactory, DockerServerCredentials> {
     
     public ServerKeyMaterialFactoryFromDockerCredentials() {
+        // TODO check this
         super(KeyMaterialFactory.class, DockerServerCredentials.class);
     }
 

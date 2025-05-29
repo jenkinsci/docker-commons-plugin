@@ -37,7 +37,6 @@ import java.net.URL;
 
 import org.apache.commons.io.FileUtils;
 import org.jenkinsci.plugins.docker.commons.credentials.DockerRegistryEndpoint;
-import org.jenkinsci.plugins.docker.commons.credentials.KeyMaterial;
 import org.jenkinsci.plugins.docker.commons.credentials.KeyMaterialContext;
 import org.jenkinsci.plugins.docker.commons.credentials.KeyMaterialFactory;
 import org.jenkinsci.plugins.docker.commons.tools.DockerTool;

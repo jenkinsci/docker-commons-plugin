@@ -27,7 +27,7 @@ import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.EnvVars;
 import org.jenkinsci.plugins.docker.commons.tools.DockerTool;
 import org.jenkinsci.plugins.docker.commons.credentials.KeyMaterialFactory;
-import org.jenkinsci.plugins.docker.commons.credentials.KeyMaterial;
+import org.jenkinsci.plugins.docker.commons.credentials.KeyMaterial2;
 import org.jenkinsci.plugins.docker.commons.credentials.DockerServerEndpoint;
 import org.jenkinsci.plugins.docker.commons.credentials.DockerRegistryEndpoint;
 import hudson.Extension;
@@ -41,6 +41,7 @@ import hudson.tasks.Builder;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 import java.io.IOException;
+import org.jenkinsci.plugins.docker.commons.credentials.KeyMaterialContext;
 import org.kohsuke.stapler.DataBoundSetter;
 
 public class SampleDockerBuilder extends Builder {
@@ -79,10 +80,15 @@ public class SampleDockerBuilder extends Builder {
         EnvVars env = build.getEnvironment(listener);
         // prepare the credentials to talk to this docker and make it available for docker you'll be forking
         String dockerExecutable = DockerTool.getExecutable(toolName, build.getBuiltOn(), listener, env);
-        KeyMaterialFactory keyMaterialFactory = server.newKeyMaterialFactory(build).plus(registry.newKeyMaterialFactory(build.getParent(), build.getWorkspace(), launcher, env, listener, dockerExecutable));
-        try (KeyMaterial key = keyMaterialFactory.materialize()) {
+        KeyMaterialFactory keyMaterialFactory = server.newKeyMaterialFactory(build, launcher.getChannel()).
+            plus(registry.newKeyMaterialFactory(build, build.getWorkspace(), launcher, env, listener, dockerExecutable)).
+            contextualize(new KeyMaterialContext(build.getWorkspace()));
+        KeyMaterial2 key = keyMaterialFactory.materialize2();
+        try {
             // fork docker with appropriate environment to interact with this docker daemon
             return launcher.launch().cmds(dockerExecutable, "info").envs(key.env()).join() == 0;
+        } finally {
+            key.close(launcher.getChannel());
         }
     }
 
