@@ -25,11 +25,6 @@ package org.jenkinsci.plugins.docker.commons.util;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.EnvVars;
-import org.jenkinsci.plugins.docker.commons.tools.DockerTool;
-import org.jenkinsci.plugins.docker.commons.credentials.KeyMaterialFactory;
-import org.jenkinsci.plugins.docker.commons.credentials.KeyMaterial2;
-import org.jenkinsci.plugins.docker.commons.credentials.DockerServerEndpoint;
-import org.jenkinsci.plugins.docker.commons.credentials.DockerRegistryEndpoint;
 import hudson.Extension;
 import hudson.Launcher;
 import hudson.Util;
@@ -38,10 +33,14 @@ import hudson.model.AbstractProject;
 import hudson.model.BuildListener;
 import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.Builder;
-import org.kohsuke.stapler.DataBoundConstructor;
-
 import java.io.IOException;
+import org.jenkinsci.plugins.docker.commons.credentials.DockerRegistryEndpoint;
+import org.jenkinsci.plugins.docker.commons.credentials.DockerServerEndpoint;
+import org.jenkinsci.plugins.docker.commons.credentials.KeyMaterial2;
 import org.jenkinsci.plugins.docker.commons.credentials.KeyMaterialContext;
+import org.jenkinsci.plugins.docker.commons.credentials.KeyMaterialFactory;
+import org.jenkinsci.plugins.docker.commons.tools.DockerTool;
+import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
 
 public class SampleDockerBuilder extends Builder {
@@ -71,18 +70,21 @@ public class SampleDockerBuilder extends Builder {
         return toolName;
     }
 
-    @DataBoundSetter public void setToolName(String toolName) {
+    @DataBoundSetter
+    public void setToolName(String toolName) {
         this.toolName = Util.fixEmpty(toolName);
     }
 
     @Override
-    public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws InterruptedException, IOException {
+    public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener)
+            throws InterruptedException, IOException {
         EnvVars env = build.getEnvironment(listener);
         // prepare the credentials to talk to this docker and make it available for docker you'll be forking
         String dockerExecutable = DockerTool.getExecutable(toolName, build.getBuiltOn(), listener, env);
-        KeyMaterialFactory keyMaterialFactory = server.newKeyMaterialFactory(build, launcher.getChannel()).
-            plus(registry.newKeyMaterialFactory(build, build.getWorkspace(), launcher, env, listener, dockerExecutable)).
-            contextualize(new KeyMaterialContext(build.getWorkspace()));
+        KeyMaterialFactory keyMaterialFactory = server.newKeyMaterialFactory(build, launcher.getChannel())
+                .plus(registry.newKeyMaterialFactory(
+                        build, build.getWorkspace(), launcher, env, listener, dockerExecutable))
+                .contextualize(new KeyMaterialContext(build.getWorkspace()));
         KeyMaterial2 key = keyMaterialFactory.materialize2();
         try {
             // fork docker with appropriate environment to interact with this docker daemon
@@ -92,17 +94,18 @@ public class SampleDockerBuilder extends Builder {
         }
     }
 
-    @Extension public static class DescriptorImpl extends BuildStepDescriptor<Builder> {
+    @Extension
+    public static class DescriptorImpl extends BuildStepDescriptor<Builder> {
 
         @NonNull
-        @Override public String getDisplayName() {
+        @Override
+        public String getDisplayName() {
             return "Get Docker Info";
         }
 
-        @Override public boolean isApplicable(Class<? extends AbstractProject> jobType) {
+        @Override
+        public boolean isApplicable(Class<? extends AbstractProject> jobType) {
             return true;
         }
-
     }
-
 }

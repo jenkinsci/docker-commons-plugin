@@ -23,6 +23,12 @@
  */
 package org.jenkinsci.plugins.docker.commons.tools;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
+
 import hudson.FilePath;
 import hudson.Functions;
 import hudson.console.PlainTextConsoleOutputStream;
@@ -34,65 +40,92 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import org.apache.commons.io.output.TeeOutputStream;
-
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-
-import org.junit.Test;
-import org.junit.Assume;
-import org.junit.Rule;
+import org.junit.jupiter.api.Assumptions;
+import org.junit.jupiter.api.Test;
 import org.jvnet.hudson.test.Issue;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.WithoutJenkins;
+import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 
-public class DockerToolInstallerTest {
-
-    @Rule
-    public JenkinsRule r = new JenkinsRule();
+@WithJenkins
+class DockerToolInstallerTest {
 
     @Issue({"JENKINS-48674"})
     @WithoutJenkins
     @Test
-    public void testImageUrl() throws MalformedURLException {
-        assertEquals(new URL("https://get.docker.com/builds/Linux/x86_64/docker-1.10.0"), DockerToolInstaller.getDockerImageUrl("linux/x86_64", "1.10.0"));
-        assertEquals(new URL("https://get.docker.com/builds/Windows/x86_64/docker-1.10.0"), DockerToolInstaller.getDockerImageUrl("win/x86_64","1.10.0"));
-        assertEquals(new URL("https://get.docker.com/builds/Darwin/x86_64/docker-1.10.0"), DockerToolInstaller.getDockerImageUrl("mac/x86_64","1.10.0"));
-        assertEquals(new URL("https://get.docker.com/builds/Linux/x86_64/docker-17.05.0-ce"), DockerToolInstaller.getDockerImageUrl("linux/x86_64", "17.05.0-ce"));
-        assertEquals(new URL("https://get.docker.com/builds/Windows/x86_64/docker-17.05.0-ce"), DockerToolInstaller.getDockerImageUrl("win/x86_64","17.05.0-ce"));
-        assertEquals(new URL("https://get.docker.com/builds/Darwin/x86_64/docker-17.05.0-ce"), DockerToolInstaller.getDockerImageUrl("mac/x86_64","17.05.0-ce"));
-        assertEquals(new URL("https://get.docker.com/builds/Linux/x86_64/docker-latest"), DockerToolInstaller.getDockerImageUrl("linux/x86_64", "latest"));
-        assertEquals(new URL("https://get.docker.com/builds/Windows/x86_64/docker-latest"), DockerToolInstaller.getDockerImageUrl("win/x86_64","latest"));
-        assertEquals(new URL("https://get.docker.com/builds/Darwin/x86_64/docker-latest"), DockerToolInstaller.getDockerImageUrl("mac/x86_64","latest"));
-        assertEquals(new URL("https://download.docker.com/linux/static/stable/x86_64/docker-17.09.0-ce"), DockerToolInstaller.getDockerImageUrl("linux/x86_64", "17.09.0-ce"));
-        assertEquals(new URL("https://download.docker.com/win/static/stable/x86_64/docker-17.09.0-ce"), DockerToolInstaller.getDockerImageUrl("win/x86_64","17.09.0-ce"));
-        assertEquals(new URL("https://download.docker.com/mac/static/stable/x86_64/docker-17.09.0-ce"), DockerToolInstaller.getDockerImageUrl("mac/x86_64","17.09.0-ce"));
-        assertEquals(new URL("https://download.docker.com/linux/static/stable/x86_64/docker-20.10.6"), DockerToolInstaller.getDockerImageUrl("linux/x86_64", "20.10.6"));
-        assertEquals(new URL("https://download.docker.com/win/static/stable/x86_64/docker-20.10.6"), DockerToolInstaller.getDockerImageUrl("win/x86_64","20.10.6"));
-        assertEquals(new URL("https://download.docker.com/mac/static/stable/x86_64/docker-20.10.6"), DockerToolInstaller.getDockerImageUrl("mac/x86_64","20.10.6"));
+    void testImageUrl() throws MalformedURLException {
+        assertEquals(
+                new URL("https://get.docker.com/builds/Linux/x86_64/docker-1.10.0"),
+                DockerToolInstaller.getDockerImageUrl("linux/x86_64", "1.10.0"));
+        assertEquals(
+                new URL("https://get.docker.com/builds/Windows/x86_64/docker-1.10.0"),
+                DockerToolInstaller.getDockerImageUrl("win/x86_64", "1.10.0"));
+        assertEquals(
+                new URL("https://get.docker.com/builds/Darwin/x86_64/docker-1.10.0"),
+                DockerToolInstaller.getDockerImageUrl("mac/x86_64", "1.10.0"));
+        assertEquals(
+                new URL("https://get.docker.com/builds/Linux/x86_64/docker-17.05.0-ce"),
+                DockerToolInstaller.getDockerImageUrl("linux/x86_64", "17.05.0-ce"));
+        assertEquals(
+                new URL("https://get.docker.com/builds/Windows/x86_64/docker-17.05.0-ce"),
+                DockerToolInstaller.getDockerImageUrl("win/x86_64", "17.05.0-ce"));
+        assertEquals(
+                new URL("https://get.docker.com/builds/Darwin/x86_64/docker-17.05.0-ce"),
+                DockerToolInstaller.getDockerImageUrl("mac/x86_64", "17.05.0-ce"));
+        assertEquals(
+                new URL("https://get.docker.com/builds/Linux/x86_64/docker-latest"),
+                DockerToolInstaller.getDockerImageUrl("linux/x86_64", "latest"));
+        assertEquals(
+                new URL("https://get.docker.com/builds/Windows/x86_64/docker-latest"),
+                DockerToolInstaller.getDockerImageUrl("win/x86_64", "latest"));
+        assertEquals(
+                new URL("https://get.docker.com/builds/Darwin/x86_64/docker-latest"),
+                DockerToolInstaller.getDockerImageUrl("mac/x86_64", "latest"));
+        assertEquals(
+                new URL("https://download.docker.com/linux/static/stable/x86_64/docker-17.09.0-ce"),
+                DockerToolInstaller.getDockerImageUrl("linux/x86_64", "17.09.0-ce"));
+        assertEquals(
+                new URL("https://download.docker.com/win/static/stable/x86_64/docker-17.09.0-ce"),
+                DockerToolInstaller.getDockerImageUrl("win/x86_64", "17.09.0-ce"));
+        assertEquals(
+                new URL("https://download.docker.com/mac/static/stable/x86_64/docker-17.09.0-ce"),
+                DockerToolInstaller.getDockerImageUrl("mac/x86_64", "17.09.0-ce"));
+        assertEquals(
+                new URL("https://download.docker.com/linux/static/stable/x86_64/docker-20.10.6"),
+                DockerToolInstaller.getDockerImageUrl("linux/x86_64", "20.10.6"));
+        assertEquals(
+                new URL("https://download.docker.com/win/static/stable/x86_64/docker-20.10.6"),
+                DockerToolInstaller.getDockerImageUrl("win/x86_64", "20.10.6"));
+        assertEquals(
+                new URL("https://download.docker.com/mac/static/stable/x86_64/docker-20.10.6"),
+                DockerToolInstaller.getDockerImageUrl("mac/x86_64", "20.10.6"));
     }
 
     @Issue({"JENKINS-36082", "JENKINS-32790", "JENKINS-48674"})
     @Test
-    public void smokes() throws Exception {
-        Assume.assumeFalse(Functions.isWindows());
+    void smokes(JenkinsRule r) throws Exception {
+        Assumptions.assumeFalse(Functions.isWindows());
         try {
             new URL("https://get.docker.com/").openStream().close();
             new URL("https://download.docker.com/").openStream().close();
         } catch (IOException x) {
-            Assume.assumeNoException("Cannot contact download sites, perhaps test machine is not online", x);
+            assumeTrue(false, "Cannot contact download sites, perhaps test machine is not online:" + x);
         }
 
         String[] testedVersions = {"20.10.6", "19.03.9"};
         DockerTool[] installations = new DockerTool[testedVersions.length];
         for (int i = 0; i < testedVersions.length; i++) {
             String v = testedVersions[i];
-            installations[i] = new DockerTool(v, "", Collections.singletonList(new InstallSourceProperty(Collections.singletonList(new DockerToolInstaller("", v)))));
+            installations[i] = new DockerTool(
+                    v,
+                    "",
+                    Collections.singletonList(
+                            new InstallSourceProperty(Collections.singletonList(new DockerToolInstaller("", v)))));
         }
         r.jenkins.getDescriptorByType(DockerTool.DescriptorImpl.class).setInstallations(installations);
         DumbSlave slave = r.createOnlineSlave();
@@ -104,16 +137,20 @@ public class DockerToolInstallerTest {
             files.add(exe);
             files.add(toolDir.child(v + "/.timestamp"));
         }
-        assertThat("we do not have any extra files in here", toolDir.list("**"), arrayContainingInAnyOrder(files.toArray(new FilePath[files.size()])));
+        assertThat(
+                "we do not have any extra files in here",
+                toolDir.list("**"),
+                arrayContainingInAnyOrder(files.toArray(new FilePath[0])));
     }
 
-    private FilePath downloadDocker(DumbSlave slave, FilePath toolDir, String version) throws IOException, InterruptedException {
+    private static FilePath downloadDocker(DumbSlave slave, FilePath toolDir, String version)
+            throws IOException, InterruptedException {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         TeeOutputStream tee = new TeeOutputStream(baos, new PlainTextConsoleOutputStream(System.err));
-        TaskListener l = new StreamTaskListener(tee);
+        TaskListener l = new StreamTaskListener(tee, StandardCharsets.UTF_8);
         ByteArrayOutputStream errStream = new ByteArrayOutputStream();
 
-        FilePath exe = toolDir.child(version+"/bin/docker");
+        FilePath exe = toolDir.child(version + "/bin/docker");
         // Download for first time:
         assertEquals(exe.getRemote(), DockerTool.getExecutable(version, slave, l, null));
         assertTrue(exe.exists());
@@ -122,10 +159,18 @@ public class DockerToolInstallerTest {
         baos.reset();
         assertEquals(exe.getRemote(), DockerTool.getExecutable(version, slave, l, null));
         assertTrue(exe.exists());
-        assertThat(baos.toString(), not(containsString(Messages.DockerToolInstaller_downloading_docker_client_(version))));
+        assertThat(
+                baos.toString(), not(containsString(Messages.DockerToolInstaller_downloading_docker_client_(version))));
         // Version check:
         baos.reset();
-        if (slave.createLauncher(l).launch().cmds(exe.getRemote(), "version", "--format", "{{.Client.Version}}").quiet(true).stdout(tee).stderr(errStream).join() != 0) {
+        if (slave.createLauncher(l)
+                        .launch()
+                        .cmds(exe.getRemote(), "version", "--format", "{{.Client.Version}}")
+                        .quiet(true)
+                        .stdout(tee)
+                        .stderr(errStream)
+                        .join()
+                != 0) {
             /* Failure message should mention /var/run/docker.sock */
             assertThat(errStream.toString(), containsString("/var/run/docker.sock"));
         } else {
@@ -136,5 +181,4 @@ public class DockerToolInstallerTest {
         }
         return exe;
     }
-
 }

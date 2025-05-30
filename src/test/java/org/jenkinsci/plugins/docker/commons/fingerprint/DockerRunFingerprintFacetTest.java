@@ -23,48 +23,47 @@
  */
 package org.jenkinsci.plugins.docker.commons.fingerprint;
 
+import static org.junit.jupiter.api.Assertions.*;
+
 import hudson.model.Fingerprint;
 import hudson.model.FreeStyleBuild;
 import hudson.model.FreeStyleProject;
-import org.junit.Assert;
-import org.junit.Rule;
-import org.junit.Test;
-import org.jvnet.hudson.test.JenkinsRule;
-
 import java.util.Collections;
+import org.junit.jupiter.api.Test;
+import org.jvnet.hudson.test.JenkinsRule;
+import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 
 /**
  * @author <a href="mailto:tom.fennelly@gmail.com">tom.fennelly@gmail.com</a>
  */
-public class DockerRunFingerprintFacetTest {
-       
-    private static String IMAGE_ID = "0409d3ebf4f571d7dd2cf4b00f9d897f8af1d6d8a0f1ff791d173ba9891fd72f";
-    
-    @Rule
-    public JenkinsRule rule = new JenkinsRule();
-    
+@WithJenkins
+class DockerRunFingerprintFacetTest {
+
+    private static final String IMAGE_ID = "0409d3ebf4f571d7dd2cf4b00f9d897f8af1d6d8a0f1ff791d173ba9891fd72f";
+
     @Test
-    public void test_readResolve() throws Exception {
+    void test_readResolve(JenkinsRule rule) throws Exception {
         FreeStyleProject p = rule.createFreeStyleProject("test");
         FreeStyleBuild b = rule.assertBuildStatusSuccess(p.scheduleBuild2(0));
-        
-        ContainerRecord r1 = new ContainerRecord("192.168.1.10", "cid", IMAGE_ID, "magic", System.currentTimeMillis(), Collections.<String, String>emptyMap());
+
+        ContainerRecord r1 = new ContainerRecord(
+                "192.168.1.10", "cid", IMAGE_ID, "magic", System.currentTimeMillis(), Collections.emptyMap());
         DockerFingerprints.addRunFacet(r1, b);
 
         Fingerprint fingerprint = DockerFingerprints.of(IMAGE_ID);
-        DockerRunFingerprintFacet facet = new DockerRunFingerprintFacet(fingerprint, System.currentTimeMillis(), IMAGE_ID);
-        ContainerRecord r2 = new ContainerRecord("192.168.1.10", "cid", null, "magic", System.currentTimeMillis(), Collections.<String, String>emptyMap());
+        DockerRunFingerprintFacet facet =
+                new DockerRunFingerprintFacet(fingerprint, System.currentTimeMillis(), IMAGE_ID);
+        ContainerRecord r2 = new ContainerRecord(
+                "192.168.1.10", "cid", null, "magic", System.currentTimeMillis(), Collections.emptyMap());
         facet.add(r2);
-        
-        Assert.assertNull(r2.getImageId());
+
+        assertNull(r2.getImageId());
         facet.readResolve();
-        Assert.assertEquals(IMAGE_ID, r2.getImageId());
-        
+        assertEquals(IMAGE_ID, r2.getImageId());
+
         // Check that actions have been automatically added
         DockerFingerprintAction fpAction = b.getAction(DockerFingerprintAction.class);
-        Assert.assertNotNull("DockerFingerprintAction should be added automatically", fpAction);
-        Assert.assertTrue("Docker image should be referred in the action", 
-                fpAction.getImageIDs().contains(IMAGE_ID));
+        assertNotNull(fpAction, "DockerFingerprintAction should be added automatically");
+        assertTrue(fpAction.getImageIDs().contains(IMAGE_ID), "Docker image should be referred in the action");
     }
-
 }

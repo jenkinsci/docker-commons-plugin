@@ -1,19 +1,17 @@
 package org.jenkinsci.plugins.docker.commons.credentials;
 
-import hudson.util.FormValidation;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
+import static org.junit.jupiter.api.Assertions.assertSame;
 
-import static org.junit.Assert.*;
+import hudson.util.FormValidation;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 
 /**
  * Tests various inputs to {@link ImageNameValidator#validateUserAndRepo(String)}.
  */
-@RunWith(Parameterized.class)
-public class ImageNameValidatorTest {
+class ImageNameValidatorTest {
 
-    @Parameterized.Parameters(name = "{index}:{0}") public static Object[][] data(){
+    static Object[][] data() {
         return new Object[][] {
                 {"jenkinsci/workflow-demo",                                                                                          FormValidation.Kind.OK},
                 {"docker:80/jenkinsci/workflow-demo",                                                                                FormValidation.Kind.OK},
@@ -32,8 +30,8 @@ public class ImageNameValidatorTest {
                 {"jenkinsci/workflow-demo@sha256:56930391cf0e1be83108422bbef43001650cfb75f64b3429928f0c5986fdb750",                  FormValidation.Kind.OK},
                 {"docker:80/jenkinsci/workflow-demo@sha256:56930391cf0e1be83108422bbef43001650cfb75f64b3429928f0c5986fdb750",        FormValidation.Kind.OK},
                 {"docker:80/jenkinsci/workflow-demo:latest@sha256:56930391cf0e1be83108422bbef43001650cfb75f64b3429928f0c5986fdb750", FormValidation.Kind.OK},
-                {"docker:80/jenkinsci/workflow-demo:latest@sha1:0123456789abcdef",                                                   FormValidation.Kind.OK},                                
-                {"docker:80/jenkinsci/workflow-demo:latest@sha1:",                                                                   FormValidation.Kind.ERROR}, 
+                {"docker:80/jenkinsci/workflow-demo:latest@sha1:0123456789abcdef",                                                   FormValidation.Kind.OK},
+                {"docker:80/jenkinsci/workflow-demo:latest@sha1:",                                                                   FormValidation.Kind.ERROR},
                 {"docker:80/jenkinsci/workflow-demo@",                                                                               FormValidation.Kind.ERROR},
                 {"docker:80/jenkinsci/workflow-demo:latest@",                                                                        FormValidation.Kind.ERROR},
                 {":tag",                                                                                                             FormValidation.Kind.ERROR},
@@ -62,17 +60,10 @@ public class ImageNameValidatorTest {
         };
     }
 
-    private final String userAndRepo;
-    private final FormValidation.Kind expected;
-
-    public ImageNameValidatorTest(final String userAndRepo, final FormValidation.Kind expected) {
-        this.userAndRepo = userAndRepo;
-        this.expected = expected;
-    }
-
-    @Test
-    public void test() {
+    @ParameterizedTest(name = "{index}:{0}")
+    @MethodSource("data")
+    void test(String userAndRepo, FormValidation.Kind expected) {
         FormValidation res = ImageNameValidator.validateUserAndRepo(userAndRepo);
-        assertSame(userAndRepo + " : " + res.getMessage(), expected, res.kind);
+        assertSame(expected, res.kind, userAndRepo + " : " + res.getMessage());
     }
 }
