@@ -71,7 +71,7 @@ class DockerServerEndpointTest {
         List<FilePath> dotDockerKids = dotDocker.list();
         int initialSize = dotDockerKids.size();
         KeyMaterialFactory factory = endpoint.newKeyMaterialFactory(item, channel);
-        KeyMaterial keyMaterial = factory.materialize();
+        KeyMaterial2 keyMaterial = factory.materialize2();
         FilePath path;
         try {
             assertThat(keyMaterial.env().get("DOCKER_HOST", "missing"), is("tcp://localhost:2736"));
@@ -85,7 +85,7 @@ class DockerServerEndpointTest {
             assertThat(path.child("cert.pem").readToString(), is("b"));
             assertThat(path.child("ca.pem").readToString(), is("c"));
         } finally {
-            keyMaterial.close();
+            keyMaterial.close(channel);
         }
         assertThat(path.child("key.pem").exists(), is(false));
         assertThat(path.child("cert.pem").exists(), is(false));

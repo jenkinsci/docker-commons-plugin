@@ -42,7 +42,7 @@ import java.net.URL;
 import java.nio.charset.Charset;
 import org.apache.commons.io.FileUtils;
 import org.jenkinsci.plugins.docker.commons.credentials.DockerRegistryEndpoint;
-import org.jenkinsci.plugins.docker.commons.credentials.KeyMaterial;
+import org.jenkinsci.plugins.docker.commons.credentials.KeyMaterial2;
 import org.jenkinsci.plugins.docker.commons.credentials.KeyMaterialContext;
 import org.jenkinsci.plugins.docker.commons.credentials.KeyMaterialFactory;
 import org.jenkinsci.plugins.docker.commons.tools.DockerTool;
@@ -98,7 +98,7 @@ class RegistryKeyMaterialFactoryTest {
     @Test
     void materialize_userConfigFileNotPresent_notCreated() throws Exception {
         // act
-        KeyMaterial material = factory.materialize();
+        KeyMaterial2 material = factory.materialize2();
 
         // assert
         String dockerCfgFolderPath = material.env().get("DOCKER_CONFIG", null);
@@ -116,7 +116,7 @@ class RegistryKeyMaterialFactoryTest {
         FileUtils.write(cfgFile, "    ", Charset.defaultCharset());
 
         // act
-        KeyMaterial material = factory.materialize();
+        KeyMaterial2 material = factory.materialize2();
 
         // assert
         String dockerCfgFolderPath = material.env().get("DOCKER_CONFIG", null);
@@ -134,7 +134,7 @@ class RegistryKeyMaterialFactoryTest {
         FileUtils.write(cfgFile, "{}", Charset.defaultCharset());
 
         // act
-        KeyMaterial material = factory.materialize();
+        KeyMaterial2 material = factory.materialize2();
 
         // assert
         String dockerCfgFolderPath = material.env().get("DOCKER_CONFIG", null);
@@ -160,7 +160,7 @@ class RegistryKeyMaterialFactoryTest {
                 Charset.defaultCharset());
 
         // act
-        KeyMaterial material = factory.materialize();
+        KeyMaterial2 material = factory.materialize2();
 
         // assert
         String dockerCfgFolderPath = material.env().get("DOCKER_CONFIG", null);
@@ -188,7 +188,7 @@ class RegistryKeyMaterialFactoryTest {
                 Charset.defaultCharset());
 
         // act
-        KeyMaterial material = factory.materialize();
+        KeyMaterial2 material = factory.materialize2();
 
         // assert
         String dockerCfgFolderPath = material.env().get("DOCKER_CONFIG", null);
@@ -217,7 +217,7 @@ class RegistryKeyMaterialFactoryTest {
                 Charset.defaultCharset());
 
         // act
-        KeyMaterial material = factory.materialize();
+        KeyMaterial2 material = factory.materialize2();
 
         // assert
         String dockerCfgFolderPath = material.env().get("DOCKER_CONFIG", null);

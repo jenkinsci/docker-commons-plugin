@@ -29,6 +29,7 @@ import java.net.URL;
 import java.nio.charset.StandardCharsets;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.apache.commons.lang.StringUtils;
 import org.jenkinsci.plugins.docker.commons.credentials.KeyMaterial;
 import org.jenkinsci.plugins.docker.commons.credentials.KeyMaterialFactory;
@@ -40,8 +41,10 @@ import hudson.EnvVars;
 import hudson.FilePath;
 import hudson.Launcher;
 import hudson.model.TaskListener;
+import hudson.remoting.VirtualChannel;
 import hudson.util.ArgumentListBuilder;
 import net.sf.json.JSONObject;
+import org.jenkinsci.plugins.docker.commons.credentials.KeyMaterial2;
 
 /**
  * Logs you in to a Docker registry.
@@ -73,7 +76,7 @@ public class RegistryKeyMaterialFactory extends KeyMaterialFactory {
     }
 
     @Override
-    public KeyMaterial materialize() throws IOException, InterruptedException {
+    public KeyMaterial2 materialize2() throws IOException, InterruptedException {
         FilePath dockerConfig = createSecretsDirectory();
 
         // read the existing docker config file, which might hold some important settings (e.b. proxies)
@@ -110,7 +113,7 @@ public class RegistryKeyMaterialFactory extends KeyMaterialFactory {
             }
             throw x;
         }
-        return new RegistryKeyMaterial(dockerConfig, new EnvVars("DOCKER_CONFIG", dockerConfig.getRemote()));
+        return new RegistryKeyMaterial2(dockerConfig, new EnvVars("DOCKER_CONFIG", dockerConfig.getRemote()));
     }
 
     protected String registry() {
@@ -121,13 +124,31 @@ public class RegistryKeyMaterialFactory extends KeyMaterialFactory {
     	return endpoint.toString();
     }
 
+    private static class RegistryKeyMaterial2 extends KeyMaterial2 {
+
+        private final String dockerConfig;
+
+        RegistryKeyMaterial2(FilePath dockerConfig, EnvVars envVars) {
+            super(envVars);
+            this.dockerConfig = dockerConfig.getRemote();
+        }
+
+        @Override
+        public void close(VirtualChannel channel) throws IOException, InterruptedException {
+            new FilePath(channel, dockerConfig).deleteRecursive();
+        }
+
+    }
+
+    @SuppressFBWarnings(value = {"NP_UNWRITTEN_FIELD", "UWF_NULL_FIELD"})
+    @Deprecated
     private static class RegistryKeyMaterial extends KeyMaterial {
 
-        private final FilePath dockerConfig;
+        private final FilePath dockerConfig = null;
 
-        RegistryKeyMaterial(FilePath dockerConfig, EnvVars envVars) {
-            super(envVars);
-            this.dockerConfig = dockerConfig;
+        private RegistryKeyMaterial() {
+            super(null);
+            assert false : "only deserialized";
         }
 
         @Override
@@ -135,7 +156,6 @@ public class RegistryKeyMaterialFactory extends KeyMaterialFactory {
             try {
                 dockerConfig.deleteRecursive();
             } catch (InterruptedException x) {
-                // TODO would better have been thrown from KeyMaterial.close to begin with
                 throw new IOException(x);
             }
         }
