@@ -34,6 +34,7 @@ import java.io.Serializable;
  *
  * @author Stephen Connolly
  */
+// TODO why is this marked Serializable? It does not in fact seem to be serialized.
 public class KeyMaterialContext implements Serializable {
     private static final long serialVersionUID = 1L;
 

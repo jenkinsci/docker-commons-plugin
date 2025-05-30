@@ -26,6 +26,7 @@ package org.jenkinsci.plugins.docker.commons.impl;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import hudson.EnvVars;
 import hudson.FilePath;
+import hudson.remoting.VirtualChannel;
 import hudson.util.Secret;
 import org.jenkinsci.plugins.docker.commons.credentials.DockerServerCredentials;
 import org.jenkinsci.plugins.docker.commons.credentials.KeyMaterial;
@@ -34,6 +35,7 @@ import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
 
 import java.io.IOException;
+import org.jenkinsci.plugins.docker.commons.credentials.KeyMaterial2;
 
 /**
  * {@link org.jenkinsci.plugins.docker.commons.credentials.KeyMaterialFactory} for talking to docker daemon.
@@ -54,8 +56,6 @@ public class ServerKeyMaterialFactory extends KeyMaterialFactory {
     @CheckForNull 
     private final String ca;
     
-    private static final long serialVersionUID = 1L;
-
     public ServerKeyMaterialFactory(@CheckForNull final DockerServerCredentials credentials) {
         if (credentials != null) {
             key = Secret.toString(credentials.getClientKeySecret());
@@ -75,7 +75,7 @@ public class ServerKeyMaterialFactory extends KeyMaterialFactory {
     }
 
     @Override
-    public KeyMaterial materialize() throws IOException, InterruptedException {
+    public KeyMaterial2 materialize2() throws IOException, InterruptedException {
         
         EnvVars e = new EnvVars();
 
@@ -89,10 +89,10 @@ public class ServerKeyMaterialFactory extends KeyMaterialFactory {
 
             e.put("DOCKER_TLS_VERIFY", "1");
             e.put("DOCKER_CERT_PATH", tempCredsDir.getRemote());
-            return new ServerKeyMaterial(e, tempCredsDir);
+            return new ServerKeyMaterial2(e, tempCredsDir);
         }
 
-        return new ServerKeyMaterial(e);
+        return new ServerKeyMaterial2(e, null);
     }
 
     private void copyInto(FilePath dir, String fileName, String content) throws IOException, InterruptedException {
@@ -100,13 +100,31 @@ public class ServerKeyMaterialFactory extends KeyMaterialFactory {
         dir.child(fileName).write(content,"UTF-8");
     }
 
+    private static final class ServerKeyMaterial2 extends KeyMaterial2 {
+
+        private final @CheckForNull String tempDir;
+
+        protected ServerKeyMaterial2(EnvVars envVars, FilePath tempDir) {
+            super(envVars);
+            this.tempDir = tempDir != null ? tempDir.getRemote() : null;
+        }
+
+        @Override
+        public void close(VirtualChannel channel) throws IOException, InterruptedException {
+            if (tempDir != null) {
+                new FilePath(channel, tempDir).deleteRecursive();
+            }
+        }
+    }
+
+    @Deprecated
     private static final class ServerKeyMaterial extends KeyMaterial {
 
-        private final FilePath[] tempDirs;
+        private final FilePath[] tempDirs = null;
 
-        protected ServerKeyMaterial(EnvVars envVars, FilePath... temporaryDirectories) {
-            super(envVars);
-            this.tempDirs = temporaryDirectories;
+        private ServerKeyMaterial() {
+            super(null);
+            assert false : "only deserialized";
         }
 
         @Override

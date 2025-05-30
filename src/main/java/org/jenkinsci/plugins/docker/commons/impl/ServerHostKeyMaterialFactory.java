@@ -25,12 +25,14 @@ package org.jenkinsci.plugins.docker.commons.impl;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.EnvVars;
+import hudson.remoting.VirtualChannel;
 import org.jenkinsci.plugins.docker.commons.credentials.KeyMaterial;
 import org.jenkinsci.plugins.docker.commons.credentials.KeyMaterialFactory;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
 
 import java.io.IOException;
+import org.jenkinsci.plugins.docker.commons.credentials.KeyMaterial2;
 
 /**
  * A {@link KeyMaterial} that maintains information about the host.
@@ -52,30 +54,51 @@ public class ServerHostKeyMaterialFactory extends KeyMaterialFactory{
 
     /** {@inheritDoc} */
     @Override
-    public KeyMaterial materialize() throws IOException, InterruptedException {
+    public KeyMaterial2 materialize2() throws IOException, InterruptedException {
         EnvVars env = new EnvVars();
         env.put("DOCKER_HOST", host);
-        return new KeyMaterialImpl(env);
+        return new KeyMaterialImpl2(env);
     }
 
     /**
      * Our implementation.
      */
+    private static class KeyMaterialImpl2 extends KeyMaterial2 {
+        /**
+         * Standardize serialization
+         */
+        private static final long serialVersionUID = 1L;
+
+        private KeyMaterialImpl2(EnvVars envVars) {
+            super(envVars);
+        }
+
+        /** {@inheritDoc} */
+        @Override
+        public void close(VirtualChannel channel) throws IOException {
+
+        }
+    }
+
+    /**
+     * Our implementation.
+     */
+    @Deprecated
     private static class KeyMaterialImpl extends KeyMaterial {
         /**
          * Standardize serialization
          */
         private static final long serialVersionUID = 1L;
 
-        /** {@inheritDoc} */
-        private KeyMaterialImpl(EnvVars envVars) {
-            super(envVars);
+        private KeyMaterialImpl() {
+            super(null);
+            assert false : "only deserialized";
         }
 
         /** {@inheritDoc} */
         @Override
         public void close() throws IOException {
-            
+
         }
     }
 }

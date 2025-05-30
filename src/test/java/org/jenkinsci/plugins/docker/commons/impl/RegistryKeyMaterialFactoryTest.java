@@ -38,7 +38,7 @@ import java.nio.charset.Charset;
 
 import org.apache.commons.io.FileUtils;
 import org.jenkinsci.plugins.docker.commons.credentials.DockerRegistryEndpoint;
-import org.jenkinsci.plugins.docker.commons.credentials.KeyMaterial;
+import org.jenkinsci.plugins.docker.commons.credentials.KeyMaterial2;
 import org.jenkinsci.plugins.docker.commons.credentials.KeyMaterialContext;
 import org.jenkinsci.plugins.docker.commons.credentials.KeyMaterialFactory;
 import org.jenkinsci.plugins.docker.commons.tools.DockerTool;
@@ -109,7 +109,7 @@ public class RegistryKeyMaterialFactoryTest {
     @Test
     public void materialize_userConfigFileNotPresent_notCreated() throws Exception {
 	// act
-	KeyMaterial material = factory.materialize();
+	KeyMaterial2 material = factory.materialize2();
 
 	// assert
 	String dockerCfgFolderPath = material.env().get("DOCKER_CONFIG", null);
@@ -127,7 +127,7 @@ public class RegistryKeyMaterialFactoryTest {
 	FileUtils.write(cfgFile, "    ", Charset.defaultCharset());
 
 	// act
-	KeyMaterial material = factory.materialize();
+	KeyMaterial2 material = factory.materialize2();
 
 	// assert
 	String dockerCfgFolderPath = material.env().get("DOCKER_CONFIG", null);
@@ -145,7 +145,7 @@ public class RegistryKeyMaterialFactoryTest {
 	FileUtils.write(cfgFile, "{}", Charset.defaultCharset());
 
 	// act
-	KeyMaterial material = factory.materialize();
+	KeyMaterial2 material = factory.materialize2();
 
 	// assert
 	String dockerCfgFolderPath = material.env().get("DOCKER_CONFIG", null);
@@ -168,7 +168,7 @@ public class RegistryKeyMaterialFactoryTest {
 	FileUtils.write(cfgFile, "{\"auths\": { \"localhost:5001\": { \"auth\": \"whatever\", \"email\": \"\"} }}", Charset.defaultCharset());
 
 	// act
-	KeyMaterial material = factory.materialize();
+	KeyMaterial2 material = factory.materialize2();
 
 	// assert
 	String dockerCfgFolderPath = material.env().get("DOCKER_CONFIG", null);
@@ -192,7 +192,7 @@ public class RegistryKeyMaterialFactoryTest {
 		+ "\"proxies\": { \"default\": { \"httpProxy\": \"proxy\", \"noProxy\": \"something\" } }" + "}", Charset.defaultCharset());
 
 	// act
-	KeyMaterial material = factory.materialize();
+	KeyMaterial2 material = factory.materialize2();
 
 	// assert
 	String dockerCfgFolderPath = material.env().get("DOCKER_CONFIG", null);
@@ -217,7 +217,7 @@ public class RegistryKeyMaterialFactoryTest {
 		+ "\"HttpHeaders\" : {\"User-Agent\" : \"Docker-Client\"}" + "}", Charset.defaultCharset());
 
 	// act
-	KeyMaterial material = factory.materialize();
+	KeyMaterial2 material = factory.materialize2();
 
 	// assert
 	String dockerCfgFolderPath = material.env().get("DOCKER_CONFIG", null);

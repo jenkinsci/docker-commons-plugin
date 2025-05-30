@@ -23,17 +23,19 @@
  */
 package org.jenkinsci.plugins.docker.commons.credentials;
 
+import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.Nullable;
 import hudson.FilePath;
+import hudson.Util;
 import hudson.model.AbstractBuild;
-import org.jenkinsci.plugins.docker.commons.impl.CompositeKeyMaterialFactory;
-import org.jenkinsci.plugins.docker.commons.impl.NullKeyMaterialFactory;
-
+import hudson.remoting.VirtualChannel;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import org.jenkinsci.plugins.docker.commons.impl.CompositeKeyMaterialFactory;
+import org.jenkinsci.plugins.docker.commons.impl.NullKeyMaterialFactory;
 
 /**
  * Represents a locally extracted credentials information.
@@ -78,15 +80,40 @@ public abstract class KeyMaterialFactory {
         return context;
     }
 
+    @NonNull
+    protected final synchronized VirtualChannel getChannel() {
+        return context != null ? context.getBaseDir().getChannel() : FilePath.localChannel;
+    }
+
+    /** @deprecated use {@link #materialize2} */
+    @Deprecated
+    public KeyMaterial materialize() throws IOException, InterruptedException {
+        if (Util.isOverridden(KeyMaterialFactory.class, getClass(), "materialize2")) {
+            FilePath baseDir;
+            synchronized (this) {
+                baseDir = context != null ? context.getBaseDir() : null;
+            }
+            return KeyMaterial.fromKeyMaterial2(materialize2(), baseDir);
+        } else {
+            throw new AbstractMethodError("Override KeyMaterialFactory.materialize2 from " + getClass());
+        }
+    }
+
     /**
      * Builds the key material environment variables needed to be passed when docker runs, to access
      * {@link DockerServerCredentials} that this object was created from.
-     * 
+     *
      * <p>
-     * When you are done using the credentials, call {@link KeyMaterial#close()} to allow sensitive 
+     * When you are done using the credentials, call {@link KeyMaterial2#close} to allow sensitive
      * information to be removed from the disk.
      */
-    public abstract KeyMaterial materialize() throws IOException, InterruptedException;
+    public KeyMaterial2 materialize2() throws IOException, InterruptedException {
+        if (Util.isOverridden(KeyMaterialFactory.class, getClass(), "materialize")) {
+            return materialize().toKeyMaterial2();
+        } else {
+            throw new AbstractMethodError("Override KeyMaterialFactory.materialize2 from " + getClass());
+        }
+    }
 
     /**
      * Creates a read-protected directory inside {@link KeyMaterialContext#getBaseDir} suitable for storing secret files.
