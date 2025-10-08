@@ -69,41 +69,41 @@ public class RegistryKeyMaterialFactoryTest {
 
     private KeyMaterialFactory factory;
 
+	private KeyMaterialFactory getFactory(EnvVars env) throws Exception {
+		// fake launcher for the docker login invocation
+		FakeLauncher faker = new FakeLauncher() {
+			@Override
+			public Proc onLaunch(final ProcStarter p) throws IOException {
+			return new FinishedProc(0);
+			}
+		};
+
+		PretendSlave slave = j.createPretendSlave(faker);
+		TaskListener listener = TaskListener.NULL;
+		Launcher launcher = slave.createLauncher(listener);
+		launcher = new Launcher.DecoratedLauncher(launcher) {
+			@Override
+			public VirtualChannel getChannel() {
+			return new LocalChannel(null) {
+				@Override
+				public <V, T extends Throwable> V call(final Callable<V, T> callable) throws T {
+				// ugly as hell, but we need a way to mock fetching the home directory
+				return (V) new FilePath(tempFolder.getRoot());
+				}
+			};
+			}
+		};
+	
+		URL endpoint = new DockerRegistryEndpoint(null, null).getEffectiveUrl();
+		String dockerExecutable = DockerTool.getExecutable(null, null, listener, env);
+	
+		return new RegistryKeyMaterialFactory("username", "password", endpoint, launcher, env, listener,
+			dockerExecutable).contextualize(new KeyMaterialContext(new FilePath(tempFolder.newFolder())));
+	}
+
     @Before
     public void setup() throws Exception {
-	// fake launcher for the docker login invocation
-	FakeLauncher faker = new FakeLauncher() {
-	    @Override
-	    public Proc onLaunch(final ProcStarter p) throws IOException {
-		return new FinishedProc(0);
-	    }
-	};
-
-	PretendSlave slave = j.createPretendSlave(faker);
-	// VirtualChannel channel = slave.getChannel();
-	// FreeStyleProject project = j.createFreeStyleProject();
-
-	TaskListener listener = TaskListener.NULL;
-	Launcher launcher = slave.createLauncher(listener);
-	launcher = new Launcher.DecoratedLauncher(launcher) {
-	    @Override
-	    public VirtualChannel getChannel() {
-		return new LocalChannel(null) {
-		    @Override
-		    public <V, T extends Throwable> V call(final Callable<V, T> callable) throws T {
-			// ugly as hell, but we need a way to mock fetching the home directory
-			return (V) new FilePath(tempFolder.getRoot());
-		    }
-		};
-	    }
-	};
-
-	URL endpoint = new DockerRegistryEndpoint(null, null).getEffectiveUrl();
-	EnvVars env = new EnvVars();
-	String dockerExecutable = DockerTool.getExecutable(null, null, listener, env);
-
-	factory = new RegistryKeyMaterialFactory("username", "password", endpoint, launcher, env, listener,
-		dockerExecutable).contextualize(new KeyMaterialContext(new FilePath(tempFolder.newFolder())));
+		factory = getFactory(new EnvVars());
     }
 
     @Test
@@ -232,5 +232,32 @@ public class RegistryKeyMaterialFactoryTest {
 	File jsonFile = new File(dockerCfgFolder, "config.json");
 	assertEquals("{\"HttpHeaders\":{\"User-Agent\":\"Docker-Client\"}}", FileUtils.readFileToString(jsonFile, Charset.defaultCharset()));
     }
+
+	@Test
+	public void materialize_envConfigFile() throws Exception {
+		EnvVars env = new EnvVars();
+		env.put("DOCKER_CONFIG", new File(tempFolder.getRoot(), ".custom-docker").getPath());
+		factory = getFactory(env);
+
+		// arrange
+		File cfgFile = new File(new File(tempFolder.getRoot(), ".custom-docker"), "config.json");
+		FileUtils.write(cfgFile, "{\"auths\": { \"localhost:5001\": { \"auth\": \"whatever\", \"email\": \"\"} }}", Charset.defaultCharset());
+
+		// act
+		KeyMaterial2 material = factory.materialize2();
+
+		// assert
+		String dockerCfgFolderPath = material.env().get("DOCKER_CONFIG");
+		assertNotNull(dockerCfgFolderPath);
+
+		File dockerCfgFolder = new File(dockerCfgFolderPath);
+		assertTrue(dockerCfgFolder.exists());
+
+		String[] files = dockerCfgFolder.list();
+		assertThat(files, arrayContaining("config.json"));
+
+		File jsonFile = new File(dockerCfgFolder, "config.json");
+		assertEquals("{\"auths\":{\"localhost:5001\":{\"auth\":\"whatever\",\"email\":\"\"}}}", FileUtils.readFileToString(jsonFile, Charset.defaultCharset()));
+	}
 
 }
