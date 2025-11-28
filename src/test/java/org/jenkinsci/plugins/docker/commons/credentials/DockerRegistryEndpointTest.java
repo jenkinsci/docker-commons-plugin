@@ -23,11 +23,7 @@
  */
 package org.jenkinsci.plugins.docker.commons.credentials;
 
-import static org.junit.Assert.*;
-
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.util.Base64;
+import static org.junit.jupiter.api.Assertions.*;
 
 import com.cloudbees.plugins.credentials.CredentialsProvider;
 import com.cloudbees.plugins.credentials.CredentialsScope;
@@ -41,28 +37,28 @@ import hudson.model.Item;
 import hudson.model.User;
 import hudson.security.ACL;
 import hudson.security.ACLContext;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.util.Base64;
 import jenkins.model.Jenkins;
 import jenkins.security.QueueItemAuthenticatorConfiguration;
-import org.junit.Assert;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.jvnet.hudson.test.Issue;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.MockAuthorizationStrategy;
 import org.jvnet.hudson.test.MockQueueItemAuthenticator;
 import org.jvnet.hudson.test.WithoutJenkins;
+import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 
 /**
  * @author Carlos Sanchez <carlos@apache.org>
  */
-public class DockerRegistryEndpointTest {
-
-    @Rule
-    public JenkinsRule j = new JenkinsRule();
+@WithJenkins
+class DockerRegistryEndpointTest {
 
     @Test
     @WithoutJenkins
-    public void testParse() throws Exception {
+    void testParse() throws Exception {
         assertRegistry("https://index.docker.io/v1/", "acme/test");
         assertRegistry("https://index.docker.io/v1/", "busybox");
         assertRegistry("https://docker.acme.com:8080", "docker.acme.com:8080/acme/test");
@@ -77,7 +73,7 @@ public class DockerRegistryEndpointTest {
 
     @Test
     @WithoutJenkins
-    public void testParseWithTags() throws Exception {
+    void testParseWithTags() throws Exception {
         assertRegistry("https://index.docker.io/v1/", "acme/test:tag");
         assertRegistry("https://index.docker.io/v1/", "busybox:tag");
         assertRegistry("https://docker.acme.com:8080", "docker.acme.com:8080/acme/test:tag");
@@ -94,42 +90,59 @@ public class DockerRegistryEndpointTest {
     @Issue("JENKINS-39181")
     @Test
     @WithoutJenkins
-    public void testParseFullyQualifiedImageName() throws Exception {
-        assertEquals("private-repo:5000/test-image", new DockerRegistryEndpoint("http://private-repo:5000/", null).imageName("private-repo:5000/test-image"));
-        assertEquals("private-repo:5000/test-image", new DockerRegistryEndpoint("http://private-repo:5000/", null).imageName("test-image"));
-        assertEquals("private-repo:5000/test-image:dev", new DockerRegistryEndpoint("http://private-repo:5000/", null).imageName("private-repo:5000/test-image:dev"));
-        assertEquals("private-repo:5000/test-image:dev", new DockerRegistryEndpoint("http://private-repo:5000/", null).imageName("test-image:dev"));
+    void testParseFullyQualifiedImageName() throws Exception {
+        assertEquals(
+                "private-repo:5000/test-image",
+                new DockerRegistryEndpoint("http://private-repo:5000/", null)
+                        .imageName("private-repo:5000/test-image"));
+        assertEquals(
+                "private-repo:5000/test-image",
+                new DockerRegistryEndpoint("http://private-repo:5000/", null).imageName("test-image"));
+        assertEquals(
+                "private-repo:5000/test-image:dev",
+                new DockerRegistryEndpoint("http://private-repo:5000/", null)
+                        .imageName("private-repo:5000/test-image:dev"));
+        assertEquals(
+                "private-repo:5000/test-image:dev",
+                new DockerRegistryEndpoint("http://private-repo:5000/", null).imageName("test-image:dev"));
     }
 
     @Issue("JENKINS-39181")
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     @WithoutJenkins
-    public void testParseNullImageName() throws Exception {
-        new DockerRegistryEndpoint("http://private-repo:5000/", null).imageName(null);
+    void testParseNullImageName() {
+        assertThrows(IllegalArgumentException.class, () -> new DockerRegistryEndpoint("http://private-repo:5000/", null)
+                .imageName(null));
     }
 
     @Issue("JENKINS-39181")
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     @WithoutJenkins
-    public void testParseNullUrlAndImageName() throws Exception {
-        new DockerRegistryEndpoint(null, null).imageName(null);
+    void testParseNullUrlAndImageName() {
+        assertThrows(IllegalArgumentException.class, () -> new DockerRegistryEndpoint(null, null).imageName(null));
     }
 
     @Issue("JENKINS-48437")
     @Test
-    public void testGetTokenForRun() throws Exception {
+    void testGetTokenForRun(JenkinsRule j) throws Exception {
         j.jenkins.setSecurityRealm(j.createDummySecurityRealm());
         MockAuthorizationStrategy auth = new MockAuthorizationStrategy()
-                .grant(Jenkins.READ).everywhere().to("alice", "bob")
-                .grant(Computer.BUILD).everywhere().to("alice", "bob")
+                .grant(Jenkins.READ)
+                .everywhere()
+                .to("alice", "bob")
+                .grant(Computer.BUILD)
+                .everywhere()
+                .to("alice", "bob")
                 // Item.CONFIGURE implies Credentials.USE_ITEM, which is what CredentialsProvider.findCredentialById
                 // uses when determining whether to include item-scope credentials in the search.
-                .grant(Item.CONFIGURE).everywhere().to("alice");
+                .grant(Item.CONFIGURE)
+                .everywhere()
+                .to("alice");
         j.jenkins.setAuthorizationStrategy(auth);
 
         String globalCredentialsId = "global-creds";
-        IdCredentials credentials = new UsernamePasswordCredentialsImpl(CredentialsScope.GLOBAL,
-                globalCredentialsId, "test-global-creds", "user", "password");
+        IdCredentials credentials = new UsernamePasswordCredentialsImpl(
+                CredentialsScope.GLOBAL, globalCredentialsId, "test-global-creds", "user", "password");
         CredentialsProvider.lookupStores(j.jenkins).iterator().next().addCredentials(Domain.global(), credentials);
 
         FreeStyleProject p1 = j.createFreeStyleProject();
@@ -145,21 +158,28 @@ public class DockerRegistryEndpointTest {
 
         FreeStyleBuild r1 = j.buildAndAssertSuccess(p1);
         try (ACLContext as = ACL.as(User.getById("alice", false))) {
-            DockerRegistryToken token = new DockerRegistryEndpoint("https://index.docker.io/v1/", globalCredentialsId).getToken(r1);
-            Assert.assertNotNull("Alice has Credentials.USE_ITEM and should be able to use the credential", token);
-            Assert.assertEquals("user", token.getEmail());
-            Assert.assertEquals(Base64.getEncoder().encodeToString("user:password".getBytes(StandardCharsets.UTF_8)), token.getToken());
+            DockerRegistryToken token =
+                    new DockerRegistryEndpoint("https://index.docker.io/v1/", globalCredentialsId).getToken(r1);
+            assertNotNull(token, "Alice has Credentials.USE_ITEM and should be able to use the credential");
+            assertEquals("user", token.getEmail());
+            assertEquals(
+                    Base64.getEncoder().encodeToString("user:password".getBytes(StandardCharsets.UTF_8)),
+                    token.getToken());
         }
 
         FreeStyleBuild r2 = j.buildAndAssertSuccess(p2);
         try (ACLContext as = ACL.as(User.getById("bob", false))) {
-            DockerRegistryToken token = new DockerRegistryEndpoint("https://index.docker.io/v1/", globalCredentialsId).getToken(r2);
-            Assert.assertNull("Bob does not have Credentials.USE_ITEM and should not be able to use the credential", token);
+            DockerRegistryToken token =
+                    new DockerRegistryEndpoint("https://index.docker.io/v1/", globalCredentialsId).getToken(r2);
+            assertNull(token, "Bob does not have Credentials.USE_ITEM and should not be able to use the credential");
         }
     }
 
-    private void assertRegistry(String url, String repo) throws IOException {
-        assertEquals(url, DockerRegistryEndpoint.fromImageName(repo, null).getEffectiveUrl().toString());
+    private static void assertRegistry(String url, String repo) throws IOException {
+        assertEquals(
+                url,
+                DockerRegistryEndpoint.fromImageName(repo, null)
+                        .getEffectiveUrl()
+                        .toString());
     }
-
 }
