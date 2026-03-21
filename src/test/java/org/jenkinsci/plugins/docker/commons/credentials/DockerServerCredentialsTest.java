@@ -35,6 +35,7 @@ import org.htmlunit.html.HtmlElement;
 import org.htmlunit.html.HtmlForm;
 import hudson.security.ACL;
 import hudson.util.Secret;
+import org.htmlunit.html.HtmlPage;
 import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
@@ -62,8 +63,7 @@ public class DockerServerCredentialsTest {
         DockerServerCredentials credentials = new DockerServerCredentials(CredentialsScope.GLOBAL, "foo", "desc", Secret.fromString(""), "", "");
         store.addDomain(domain, credentials);
 
-        j.submit(j.createWebClient().goTo("credentials/store/system/domain/" + domain.getName() + "/credential/"+credentials.getId()+"/update")
-                .getFormByName("update"));
+        j.submit(getUpdateForm(domain, credentials));
         
         j.assertEqualDataBoundBeans(credentials, CredentialsMatchers.firstOrNull(CredentialsProvider.lookupCredentialsInItemGroup(IdCredentials.class, j.getInstance(),
                 ACL.SYSTEM2, Collections.singletonList(new DockerServerDomainRequirement())), CredentialsMatchers.withId(credentials.getId())));
@@ -78,8 +78,7 @@ public class DockerServerCredentialsTest {
         DockerServerCredentials credentials = new DockerServerCredentials(CredentialsScope.GLOBAL, "foo", "desc", Secret.fromString("a"), "b", "c");
         store.addDomain(domain, credentials);
 
-        j.submit(j.createWebClient().goTo("credentials/store/system/domain/" + domain.getName() + "/credential/"+credentials.getId()+"/update")
-                .getFormByName("update"));
+        j.submit(getUpdateForm(domain, credentials));
         
         j.assertEqualDataBoundBeans(credentials, CredentialsMatchers.firstOrNull(CredentialsProvider.lookupCredentialsInItemGroup(IdCredentials.class, j.getInstance(),
                 ACL.SYSTEM2, Collections.singletonList(new DockerServerDomainRequirement())), CredentialsMatchers.withId(credentials.getId())));
@@ -108,8 +107,10 @@ public class DockerServerCredentialsTest {
     }
 
     private HtmlForm getUpdateForm(Domain domain, DockerServerCredentials credentials) throws IOException, SAXException {
-        return j.createWebClient().goTo("credentials/store/system/domain/" + domain.getName() + "/credential/" + credentials.getId() + "/update")
-                .getFormByName("update");
+        HtmlPage page = j.createWebClient().goTo("credentials/store/system/domain/" + domain.getName() + "/credential/"+credentials.getId());
+        HtmlElement button = page.getFirstByXPath("//button[normalize-space(.)='Update credential']");
+        page = button.click();
+        return page.getFormByName("update");
     }
 
     private IdCredentials findFirstWithId(String credentialsId) {
