@@ -46,6 +46,7 @@ import java.util.Collections;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.instanceOf;
+import static org.jvnet.hudson.test.QueryUtils.waitUntilElementIsPresent;
 
 /**
  * @author Stephen Connolly
@@ -110,6 +111,9 @@ public class DockerServerCredentialsTest {
         HtmlPage page = j.createWebClient().goTo("credentials/store/system/domain/" + domain.getName() + "/credential/"+credentials.getId());
         HtmlElement button = page.getFirstByXPath("//button[normalize-space(.)='Update credential']");
         page = button.click();
+
+        waitUntilElementIsPresent(page, "form[name=updateCredentials]");
+
         return page.getFormByName("updateCredentials");
     }
 
