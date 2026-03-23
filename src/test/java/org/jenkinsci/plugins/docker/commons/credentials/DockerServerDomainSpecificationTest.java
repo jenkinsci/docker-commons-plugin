@@ -28,6 +28,8 @@ import com.cloudbees.plugins.credentials.CredentialsStore;
 import com.cloudbees.plugins.credentials.SystemCredentialsProvider;
 import com.cloudbees.plugins.credentials.domains.Domain;
 import com.cloudbees.plugins.credentials.domains.DomainSpecification;
+import org.htmlunit.html.HtmlElement;
+import org.htmlunit.html.HtmlPage;
 import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
@@ -53,8 +55,10 @@ public class DockerServerDomainSpecificationTest {
                 Collections.<DomainSpecification>singletonList(new DockerServerDomainSpecification()));
         store.addDomain(domain);
 
-        j.submit(j.createWebClient().goTo("credentials/store/system/domain/" + domain.getName() + "/configure")
-                .getFormByName("config"));
+        HtmlPage page = j.createWebClient().goTo("credentials/store/system/domain/" + domain.getName());
+        HtmlElement button = page.getFirstByXPath("//button[normalize-space(.)='Update domain']");
+        page = button.click();
+        j.submit(page.getFormByName("update"));
         
         j.assertEqualDataBoundBeans(domain, byName(store.getDomains(),domain.getName()));
     }

@@ -110,7 +110,7 @@ public class DockerServerCredentialsTest {
         HtmlPage page = j.createWebClient().goTo("credentials/store/system/domain/" + domain.getName() + "/credential/"+credentials.getId());
         HtmlElement button = page.getFirstByXPath("//button[normalize-space(.)='Update credential']");
         page = button.click();
-        return page.getFormByName("update");
+        return page.getFormByName("updateCredentials");
     }
 
     private IdCredentials findFirstWithId(String credentialsId) {
