@@ -34,7 +34,7 @@
     <changelist>999999-SNAPSHOT</changelist>
     <gitHubRepo>jenkinsci/${project.artifactId}-plugin</gitHubRepo>
     <!-- https://www.jenkins.io/doc/developer/plugin-development/choosing-jenkins-baseline/ -->
-    <jenkins.baseline>2.541</jenkins.baseline>
+    <jenkins.baseline>2.528</jenkins.baseline>
     <jenkins.version>${jenkins.baseline}.3</jenkins.version>
   </properties>
 
@@ -56,7 +56,6 @@
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
       <artifactId>credentials</artifactId>
-      <version>1498.vd852f8831d79</version>
     </dependency>
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
@@ -161,6 +160,12 @@
         <version>6166.va_a_8b_5eda_8ef5</version>
         <scope>import</scope>
         <type>pom</type>
+      </dependency>
+      <dependency>
+        <!-- TODO Remove when this version or newer is in plugin BOM -->
+        <groupId>org.jenkins-ci.plugins</groupId>
+        <artifactId>credentials</artifactId>
+        <version>1496.vf6821f162d4e</version>
       </dependency>
     </dependencies>
   </dependencyManagement>
