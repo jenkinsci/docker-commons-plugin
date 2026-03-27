@@ -67,7 +67,7 @@ public class DockerServerCredentialsTest {
         j.assertEqualDataBoundBeans(credentials, CredentialsMatchers.firstOrNull(CredentialsProvider.lookupCredentialsInItemGroup(IdCredentials.class, j.getInstance(),
                 ACL.SYSTEM2, Collections.singletonList(new DockerServerDomainRequirement())), CredentialsMatchers.withId(credentials.getId())));
     }
-
+    
     @Test
     public void configRoundTripData() throws Exception {
         CredentialsStore store = CredentialsProvider.lookupStores(j.getInstance()).iterator().next();
@@ -103,29 +103,11 @@ public class DockerServerCredentialsTest {
         j.assertEqualDataBoundBeans(expected, findFirstWithId(credentials.getId()));
     }
 
-    // TODO: Remove this when credentials dependency is 1495 or newer
-    private int credentialsPluginBaseVersion = -1;
-
-    // TODO: Remove this when credentials dependency is 1495 or newer
-    private int getCredentialsPluginBaseVersion() {
-        if (credentialsPluginBaseVersion == -1) {
-            String version = j.jenkins.getPluginManager().getPlugin("credentials").getVersion();
-            credentialsPluginBaseVersion = Integer.parseInt(version.split("[.]")[0]);
-        }
-        return credentialsPluginBaseVersion;
-    }
-
     private HtmlForm getUpdateForm(Domain domain, DockerServerCredentials credentials) throws IOException, SAXException {
-        if (getCredentialsPluginBaseVersion() > 1494) {
-            HtmlPage page = j.createWebClient().goTo("credentials/store/system/domain/" + domain.getName() + "/credential/" + credentials.getId());
-            HtmlElement button = page.getFirstByXPath("//button[normalize-space(.)='Update credential']");
-            page = button.click();
-            return (HtmlForm) waitUntilElementIsPresent(page, "form[name=updateCredentials]");
-        } else {
-            // TODO delete this when credentials plugin dependency is greater than 1494
-            return j.createWebClient().goTo("credentials/store/system/domain/" + domain.getName() + "/credential/" + credentials.getId() + "/update")
-                   .getFormByName("update");
-        }
+        HtmlPage page = j.createWebClient().goTo("credentials/store/system/domain/" + domain.getName() + "/credential/" + credentials.getId());
+        HtmlElement button = page.getFirstByXPath("//button[normalize-space(.)='Update credential']");
+        page = button.click();
+        return (HtmlForm) waitUntilElementIsPresent(page, "form[name=updateCredentials]");
     }
 
     private IdCredentials findFirstWithId(String credentialsId) {

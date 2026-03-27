@@ -49,18 +49,6 @@ public class DockerServerDomainSpecificationTest {
     @Rule
     public JenkinsRule j = new JenkinsRule();
 
-    // TODO: Remove this when credentials dependency is 1495 or newer
-    private int credentialsPluginBaseVersion = -1;
-
-    // TODO: Remove this when credentials dependency is 1495 or newer
-    private int getCredentialsPluginBaseVersion() {
-        if (credentialsPluginBaseVersion == -1) {
-            String version = j.jenkins.getPluginManager().getPlugin("credentials").getVersion();
-            credentialsPluginBaseVersion = Integer.parseInt(version.split("[.]")[0]);
-        }
-        return credentialsPluginBaseVersion;
-    }
-
     @Test
     public void configRoundTrip() throws Exception {
         CredentialsStore store = CredentialsProvider.lookupStores(j.getInstance()).iterator().next();
@@ -69,17 +57,11 @@ public class DockerServerDomainSpecificationTest {
                 Collections.<DomainSpecification>singletonList(new DockerServerDomainSpecification()));
         store.addDomain(domain);
 
-        if (getCredentialsPluginBaseVersion() > 1494) {
-            HtmlPage page = j.createWebClient().goTo("credentials/store/system/domain/" + domain.getName());
-            HtmlElement button = page.getFirstByXPath("//button[normalize-space(.)='Update domain']");
-            page = button.click();
-            HtmlForm form = (HtmlForm) waitUntilElementIsPresent(page, "form[id=credentials-dialog-form]");
-            j.submit(form);
-        } else {
-            // TODO Delete when credentials plugin dependency is greater than 1494
-            j.submit(j.createWebClient().goTo("credentials/store/system/domain/" + domain.getName() + "/configure")
-                    .getFormByName("config"));
-        }
+        HtmlPage page = j.createWebClient().goTo("credentials/store/system/domain/" + domain.getName());
+        HtmlElement button = page.getFirstByXPath("//button[normalize-space(.)='Update domain']");
+        page = button.click();
+        HtmlForm form = (HtmlForm) waitUntilElementIsPresent(page, "form[id=credentials-dialog-form]");
+        j.submit(form);
 
         j.assertEqualDataBoundBeans(domain, byName(store.getDomains(),domain.getName()));
     }
