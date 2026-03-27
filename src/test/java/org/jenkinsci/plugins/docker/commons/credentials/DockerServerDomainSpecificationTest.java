@@ -28,6 +28,9 @@ import com.cloudbees.plugins.credentials.CredentialsStore;
 import com.cloudbees.plugins.credentials.SystemCredentialsProvider;
 import com.cloudbees.plugins.credentials.domains.Domain;
 import com.cloudbees.plugins.credentials.domains.DomainSpecification;
+import org.htmlunit.html.HtmlElement;
+import org.htmlunit.html.HtmlForm;
+import org.htmlunit.html.HtmlPage;
 import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
@@ -37,6 +40,7 @@ import java.util.List;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.instanceOf;
+import static org.jvnet.hudson.test.QueryUtils.waitUntilElementIsPresent;
 
 /**
  * @author Stephen Connolly
@@ -44,6 +48,18 @@ import static org.hamcrest.Matchers.instanceOf;
 public class DockerServerDomainSpecificationTest {
     @Rule
     public JenkinsRule j = new JenkinsRule();
+
+    // TODO: Remove this when credentials dependency is 1495 or newer
+    private int credentialsPluginBaseVersion = -1;
+
+    // TODO: Remove this when credentials dependency is 1495 or newer
+    private int getCredentialsPluginBaseVersion() {
+        if (credentialsPluginBaseVersion == -1) {
+            String version = j.jenkins.getPluginManager().getPlugin("credentials").getVersion();
+            credentialsPluginBaseVersion = Integer.parseInt(version.split("[.]")[0]);
+        }
+        return credentialsPluginBaseVersion;
+    }
 
     @Test
     public void configRoundTrip() throws Exception {
@@ -53,9 +69,18 @@ public class DockerServerDomainSpecificationTest {
                 Collections.<DomainSpecification>singletonList(new DockerServerDomainSpecification()));
         store.addDomain(domain);
 
-        j.submit(j.createWebClient().goTo("credentials/store/system/domain/" + domain.getName() + "/configure")
-                .getFormByName("config"));
-        
+        if (getCredentialsPluginBaseVersion() > 1494) {
+            HtmlPage page = j.createWebClient().goTo("credentials/store/system/domain/" + domain.getName());
+            HtmlElement button = page.getFirstByXPath("//button[normalize-space(.)='Update domain']");
+            page = button.click();
+            HtmlForm form = (HtmlForm) waitUntilElementIsPresent(page, "form[id=credentials-dialog-form]");
+            j.submit(form);
+        } else {
+            // TODO Delete when credentials plugin dependency is greater than 1494
+            j.submit(j.createWebClient().goTo("credentials/store/system/domain/" + domain.getName() + "/configure")
+                    .getFormByName("config"));
+        }
+
         j.assertEqualDataBoundBeans(domain, byName(store.getDomains(),domain.getName()));
     }
     
