@@ -33,6 +33,7 @@ import com.cloudbees.plugins.credentials.domains.Domain;
 import com.cloudbees.plugins.credentials.domains.DomainSpecification;
 import org.htmlunit.html.HtmlElement;
 import org.htmlunit.html.HtmlForm;
+import org.htmlunit.html.HtmlPage;
 import hudson.security.ACL;
 import hudson.util.Secret;
 import org.junit.Rule;
@@ -45,6 +46,7 @@ import java.util.Collections;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.instanceOf;
+import static org.jvnet.hudson.test.QueryUtils.waitUntilElementIsPresent;
 
 /**
  * @author Stephen Connolly
@@ -101,9 +103,29 @@ public class DockerServerCredentialsTest {
         j.assertEqualDataBoundBeans(expected, findFirstWithId(credentials.getId()));
     }
 
+    // TODO: Remove this when credentials dependency is 1495 or newer
+    private int credentialsPluginBaseVersion = -1;
+
+    // TODO: Remove this when credentials dependency is 1495 or newer
+    private int getCredentialsPluginBaseVersion() {
+        if (credentialsPluginBaseVersion == -1) {
+            String version = j.jenkins.getPluginManager().getPlugin("credentials").getVersion();
+            credentialsPluginBaseVersion = Integer.parseInt(version.split("[.]")[0]);
+        }
+        return credentialsPluginBaseVersion;
+    }
+
     private HtmlForm getUpdateForm(Domain domain, DockerServerCredentials credentials) throws IOException, SAXException {
-        return j.createWebClient().goTo("credentials/store/system/domain/" + domain.getName() + "/credential/" + credentials.getId() + "/update")
-                .getFormByName("update");
+        if (getCredentialsPluginBaseVersion() > 1494) {
+            HtmlPage page = j.createWebClient().goTo("credentials/store/system/domain/" + domain.getName() + "/credential/" + credentials.getId());
+            HtmlElement button = page.getFirstByXPath("//button[normalize-space(.)='Update credential']");
+            page = button.click();
+            return (HtmlForm) waitUntilElementIsPresent(page, "form[name=updateCredentials]");
+        } else {
+            // TODO delete this when credentials plugin dependency is greater than 1494
+            return j.createWebClient().goTo("credentials/store/system/domain/" + domain.getName() + "/credential/" + credentials.getId() + "/update")
+                   .getFormByName("update");
+        }
     }
 
     private IdCredentials findFirstWithId(String credentialsId) {
