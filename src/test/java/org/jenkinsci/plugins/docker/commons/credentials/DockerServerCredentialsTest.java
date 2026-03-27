@@ -64,6 +64,9 @@ public class DockerServerCredentialsTest {
         DockerServerCredentials credentials = new DockerServerCredentials(CredentialsScope.GLOBAL, "foo", "desc", Secret.fromString(""), "", "");
         store.addDomain(domain, credentials);
 
+        HtmlForm form = getUpdateForm(domain, credentials);
+        j.submit(form);
+
         j.assertEqualDataBoundBeans(credentials, CredentialsMatchers.firstOrNull(CredentialsProvider.lookupCredentialsInItemGroup(IdCredentials.class, j.getInstance(),
                 ACL.SYSTEM2, Collections.singletonList(new DockerServerDomainRequirement())), CredentialsMatchers.withId(credentials.getId())));
     }
@@ -76,6 +79,9 @@ public class DockerServerCredentialsTest {
                 Collections.<DomainSpecification>singletonList(new DockerServerDomainSpecification()));
         DockerServerCredentials credentials = new DockerServerCredentials(CredentialsScope.GLOBAL, "foo", "desc", Secret.fromString("a"), "b", "c");
         store.addDomain(domain, credentials);
+
+        HtmlForm form = getUpdateForm(domain, credentials);
+        j.submit(form);
 
         j.assertEqualDataBoundBeans(credentials, CredentialsMatchers.firstOrNull(CredentialsProvider.lookupCredentialsInItemGroup(IdCredentials.class, j.getInstance(),
                 ACL.SYSTEM2, Collections.singletonList(new DockerServerDomainRequirement())), CredentialsMatchers.withId(credentials.getId())));
