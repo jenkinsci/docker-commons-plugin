@@ -37,6 +37,7 @@ import org.jvnet.hudson.test.JenkinsRule;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.UUID;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.instanceOf;
@@ -49,11 +50,16 @@ public class DockerServerDomainSpecificationTest {
     @Rule
     public JenkinsRule j = new JenkinsRule();
 
+    private String getUniqueDomainName() {
+        return "docker-domain-" + UUID.randomUUID().toString();
+    }
+
     @Test
     public void configRoundTrip() throws Exception {
         CredentialsStore store = CredentialsProvider.lookupStores(j.getInstance()).iterator().next();
         assertThat(store, instanceOf(SystemCredentialsProvider.StoreImpl.class));
-        Domain domain = new Domain("docker", "A domain for docker credentials",
+        String name = getUniqueDomainName();
+        Domain domain = new Domain(name, "A domain for docker credentials",
                 Collections.<DomainSpecification>singletonList(new DockerServerDomainSpecification()));
         store.addDomain(domain);
 
