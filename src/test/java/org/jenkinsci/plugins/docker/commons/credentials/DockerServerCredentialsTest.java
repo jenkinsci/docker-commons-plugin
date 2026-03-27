@@ -62,13 +62,10 @@ public class DockerServerCredentialsTest {
         DockerServerCredentials credentials = new DockerServerCredentials(CredentialsScope.GLOBAL, "foo", "desc", Secret.fromString(""), "", "");
         store.addDomain(domain, credentials);
 
-        j.submit(j.createWebClient().goTo("credentials/store/system/domain/" + domain.getName() + "/credential/"+credentials.getId()+"/update")
-                .getFormByName("update"));
-        
         j.assertEqualDataBoundBeans(credentials, CredentialsMatchers.firstOrNull(CredentialsProvider.lookupCredentialsInItemGroup(IdCredentials.class, j.getInstance(),
                 ACL.SYSTEM2, Collections.singletonList(new DockerServerDomainRequirement())), CredentialsMatchers.withId(credentials.getId())));
     }
-    
+
     @Test
     public void configRoundTripData() throws Exception {
         CredentialsStore store = CredentialsProvider.lookupStores(j.getInstance()).iterator().next();
@@ -78,9 +75,6 @@ public class DockerServerCredentialsTest {
         DockerServerCredentials credentials = new DockerServerCredentials(CredentialsScope.GLOBAL, "foo", "desc", Secret.fromString("a"), "b", "c");
         store.addDomain(domain, credentials);
 
-        j.submit(j.createWebClient().goTo("credentials/store/system/domain/" + domain.getName() + "/credential/"+credentials.getId()+"/update")
-                .getFormByName("update"));
-        
         j.assertEqualDataBoundBeans(credentials, CredentialsMatchers.firstOrNull(CredentialsProvider.lookupCredentialsInItemGroup(IdCredentials.class, j.getInstance(),
                 ACL.SYSTEM2, Collections.singletonList(new DockerServerDomainRequirement())), CredentialsMatchers.withId(credentials.getId())));
     }
