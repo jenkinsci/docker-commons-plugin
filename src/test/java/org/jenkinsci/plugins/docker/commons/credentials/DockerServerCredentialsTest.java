@@ -57,11 +57,11 @@ public class DockerServerCredentialsTest {
     public JenkinsRule j = new JenkinsRule();
 
     private String getUniqueDomainName() {
-        return "docker-domain-" + UUID.randomUUID().toString();
+        return "docker-domain-" + UUID.randomUUID();
     }
 
     private String getUniqueCredentialID() {
-        return "credential-id-" + UUID.randomUUID().toString();
+        return "credential-id-" + UUID.randomUUID();
     }
 
     @Test
