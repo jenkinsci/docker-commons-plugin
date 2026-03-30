@@ -33,6 +33,7 @@ import com.cloudbees.plugins.credentials.domains.Domain;
 import com.cloudbees.plugins.credentials.domains.DomainSpecification;
 import org.htmlunit.html.HtmlElement;
 import org.htmlunit.html.HtmlForm;
+import org.htmlunit.html.HtmlPage;
 import hudson.security.ACL;
 import hudson.util.Secret;
 import org.junit.Rule;
@@ -42,9 +43,11 @@ import org.xml.sax.SAXException;
 
 import java.io.IOException;
 import java.util.Collections;
+import java.util.UUID;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.instanceOf;
+import static org.jvnet.hudson.test.QueryUtils.waitUntilElementIsPresent;
 
 /**
  * @author Stephen Connolly
@@ -53,18 +56,28 @@ public class DockerServerCredentialsTest {
     @Rule
     public JenkinsRule j = new JenkinsRule();
 
+    private String getUniqueDomainName() {
+        return "docker-domain-" + UUID.randomUUID();
+    }
+
+    private String getUniqueCredentialID() {
+        return "credential-id-" + UUID.randomUUID();
+    }
+
     @Test
     public void configRoundTripEmpty() throws Exception {
         CredentialsStore store = CredentialsProvider.lookupStores(j.getInstance()).iterator().next();
         assertThat(store, instanceOf(SystemCredentialsProvider.StoreImpl.class));
-        Domain domain = new Domain("docker", "A domain for docker credentials",
+        String name = getUniqueDomainName();
+        String id = getUniqueCredentialID();
+        Domain domain = new Domain(name, "A domain for docker credentials",
                 Collections.<DomainSpecification>singletonList(new DockerServerDomainSpecification()));
-        DockerServerCredentials credentials = new DockerServerCredentials(CredentialsScope.GLOBAL, "foo", "desc", Secret.fromString(""), "", "");
+        DockerServerCredentials credentials = new DockerServerCredentials(CredentialsScope.GLOBAL, id, "desc", Secret.fromString(""), "", "");
         store.addDomain(domain, credentials);
 
-        j.submit(j.createWebClient().goTo("credentials/store/system/domain/" + domain.getName() + "/credential/"+credentials.getId()+"/update")
-                .getFormByName("update"));
-        
+        HtmlForm form = getUpdateForm(domain, credentials);
+        j.submit(form);
+
         j.assertEqualDataBoundBeans(credentials, CredentialsMatchers.firstOrNull(CredentialsProvider.lookupCredentialsInItemGroup(IdCredentials.class, j.getInstance(),
                 ACL.SYSTEM2, Collections.singletonList(new DockerServerDomainRequirement())), CredentialsMatchers.withId(credentials.getId())));
     }
@@ -73,14 +86,16 @@ public class DockerServerCredentialsTest {
     public void configRoundTripData() throws Exception {
         CredentialsStore store = CredentialsProvider.lookupStores(j.getInstance()).iterator().next();
         assertThat(store, instanceOf(SystemCredentialsProvider.StoreImpl.class));
-        Domain domain = new Domain("docker", "A domain for docker credentials",
+        String name = getUniqueDomainName();
+        String id = getUniqueCredentialID();
+        Domain domain = new Domain(name, "A domain for docker credentials",
                 Collections.<DomainSpecification>singletonList(new DockerServerDomainSpecification()));
-        DockerServerCredentials credentials = new DockerServerCredentials(CredentialsScope.GLOBAL, "foo", "desc", Secret.fromString("a"), "b", "c");
+        DockerServerCredentials credentials = new DockerServerCredentials(CredentialsScope.GLOBAL, id, "desc", Secret.fromString("a"), "b", "c");
         store.addDomain(domain, credentials);
 
-        j.submit(j.createWebClient().goTo("credentials/store/system/domain/" + domain.getName() + "/credential/"+credentials.getId()+"/update")
-                .getFormByName("update"));
-        
+        HtmlForm form = getUpdateForm(domain, credentials);
+        j.submit(form);
+
         j.assertEqualDataBoundBeans(credentials, CredentialsMatchers.firstOrNull(CredentialsProvider.lookupCredentialsInItemGroup(IdCredentials.class, j.getInstance(),
                 ACL.SYSTEM2, Collections.singletonList(new DockerServerDomainRequirement())), CredentialsMatchers.withId(credentials.getId())));
     }
@@ -89,8 +104,10 @@ public class DockerServerCredentialsTest {
     public void configRoundTripUpdateCertificates() throws Exception {
         CredentialsStore store = CredentialsProvider.lookupStores(j.getInstance()).iterator().next();
         assertThat(store, instanceOf(SystemCredentialsProvider.StoreImpl.class));
-        Domain domain = new Domain("docker", "A domain for docker credentials", Collections.singletonList(new DockerServerDomainSpecification()));
-        DockerServerCredentials credentials = new DockerServerCredentials(CredentialsScope.GLOBAL, "foo", "desc", Secret.fromString("key"), "client-cert", "ca-cert");
+        String name = getUniqueDomainName();
+        String id = getUniqueCredentialID();
+        Domain domain = new Domain(name, "A domain for docker credentials", Collections.singletonList(new DockerServerDomainSpecification()));
+        DockerServerCredentials credentials = new DockerServerCredentials(CredentialsScope.GLOBAL, id, "desc", Secret.fromString("key"), "client-cert", "ca-cert");
         store.addDomain(domain, credentials);
 
         HtmlForm form = getUpdateForm(domain, credentials);
@@ -108,8 +125,10 @@ public class DockerServerCredentialsTest {
     }
 
     private HtmlForm getUpdateForm(Domain domain, DockerServerCredentials credentials) throws IOException, SAXException {
-        return j.createWebClient().goTo("credentials/store/system/domain/" + domain.getName() + "/credential/" + credentials.getId() + "/update")
-                .getFormByName("update");
+        HtmlPage page = j.createWebClient().goTo("credentials/store/system/domain/" + domain.getName() + "/credential/" + credentials.getId());
+        HtmlElement button = page.getFirstByXPath("//button[normalize-space(.)='Update credential']");
+        page = button.click();
+        return (HtmlForm) waitUntilElementIsPresent(page, "form[name=updateCredentials]");
     }
 
     private IdCredentials findFirstWithId(String credentialsId) {

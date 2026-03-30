@@ -28,15 +28,20 @@ import com.cloudbees.plugins.credentials.CredentialsStore;
 import com.cloudbees.plugins.credentials.SystemCredentialsProvider;
 import com.cloudbees.plugins.credentials.domains.Domain;
 import com.cloudbees.plugins.credentials.domains.DomainSpecification;
+import org.htmlunit.html.HtmlElement;
+import org.htmlunit.html.HtmlForm;
+import org.htmlunit.html.HtmlPage;
 import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.UUID;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.instanceOf;
+import static org.jvnet.hudson.test.QueryUtils.waitUntilElementIsPresent;
 
 /**
  * @author Stephen Connolly
@@ -45,17 +50,25 @@ public class DockerServerDomainSpecificationTest {
     @Rule
     public JenkinsRule j = new JenkinsRule();
 
+    private String getUniqueDomainName() {
+        return "docker-domain-" + UUID.randomUUID().toString();
+    }
+
     @Test
     public void configRoundTrip() throws Exception {
         CredentialsStore store = CredentialsProvider.lookupStores(j.getInstance()).iterator().next();
         assertThat(store, instanceOf(SystemCredentialsProvider.StoreImpl.class));
-        Domain domain = new Domain("docker", "A domain for docker credentials",
+        String name = getUniqueDomainName();
+        Domain domain = new Domain(name, "A domain for docker credentials",
                 Collections.<DomainSpecification>singletonList(new DockerServerDomainSpecification()));
         store.addDomain(domain);
 
-        j.submit(j.createWebClient().goTo("credentials/store/system/domain/" + domain.getName() + "/configure")
-                .getFormByName("config"));
-        
+        HtmlPage page = j.createWebClient().goTo("credentials/store/system/domain/" + domain.getName());
+        HtmlElement button = page.getFirstByXPath("//button[normalize-space(.)='Update domain']");
+        page = button.click();
+        HtmlForm form = (HtmlForm) waitUntilElementIsPresent(page, "form[id=credentials-dialog-form]");
+        j.submit(form);
+
         j.assertEqualDataBoundBeans(domain, byName(store.getDomains(),domain.getName()));
     }
     
