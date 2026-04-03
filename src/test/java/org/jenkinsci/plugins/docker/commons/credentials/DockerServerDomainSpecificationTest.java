@@ -38,9 +38,11 @@ import org.jvnet.hudson.test.JenkinsRule;
 import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
+import static org.awaitility.Awaitility.await;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.instanceOf;
+import static org.hamcrest.Matchers.is;
 import static org.jvnet.hudson.test.QueryUtils.waitUntilElementIsPresent;
 
 /**
@@ -65,8 +67,9 @@ public class DockerServerDomainSpecificationTest {
 
         HtmlPage page = j.createWebClient().goTo("credentials/store/system/domain/" + domain.getName());
         HtmlElement button = page.getFirstByXPath("//button[normalize-space(.)='Update domain']");
-        page = button.click();
+        HtmlPage page2 = button.click();
         HtmlForm form = (HtmlForm) waitUntilElementIsPresent(page, "form[id=credentials-dialog-form]");
+        await().logging().until(() -> page2.getWebClient().waitForBackgroundJavaScript(1), is(0));
         j.submit(form);
 
         j.assertEqualDataBoundBeans(domain, byName(store.getDomains(),domain.getName()));
