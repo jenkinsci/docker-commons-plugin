@@ -75,26 +75,40 @@ public class RegistryKeyMaterialFactory extends KeyMaterialFactory {
         this.dockerExecutable = dockerExecutable;
     }
 
+    private void generateConfig(String configJson, FilePath destination, Boolean ignoreBlacklist) throws IOException, InterruptedException {
+        JSONObject json = JSONObject.fromObject(configJson);
+        if(!ignoreBlacklist) {
+            for (String property : BLACKLISTED_PROPERTIES) {
+                Object value = json.remove(property);
+                if (value != null) {
+                    launcher.getListener().getLogger().println("Removing blacklisted property: " + property);
+                }
+            }
+        }
+
+        destination.write(json.toString(), StandardCharsets.UTF_8.name());
+    }
+
     @Override
     public KeyMaterial2 materialize2() throws IOException, InterruptedException {
         FilePath dockerConfig = createSecretsDirectory();
 
-        // read the existing docker config file, which might hold some important settings (e.b. proxies)
+        String envConfig = this.env.get("DOCKER_CONFIG", null);
         FilePath configJsonPath = FilePath.getHomeDirectory(this.launcher.getChannel()).child(".docker").child(DOCKER_CONFIG_FILENAME);
+        Boolean isHomeConfig = true;
+        if (envConfig != null) {
+            launcher.getListener().getLogger().println("Using the existing docker config file from environment.");
+            configJsonPath = new FilePath(this.launcher.getChannel(), envConfig).child(DOCKER_CONFIG_FILENAME);
+            isHomeConfig = false;
+        }
+
         if (configJsonPath.exists()) {
             String configJson = configJsonPath.readToString();
             if (StringUtils.isNotBlank(configJson)) {
-                launcher.getListener().getLogger().println("Using the existing docker config file.");
-
-                JSONObject json = JSONObject.fromObject(configJson);
-                for (String property : BLACKLISTED_PROPERTIES) {
-                    Object value = json.remove(property);
-                    if (value != null) {
-                        launcher.getListener().getLogger().println("Removing blacklisted property: " + property);
-                    }
+                if (isHomeConfig) {
+                    launcher.getListener().getLogger().println("Using the existing docker config file from home directory.");
                 }
-
-                dockerConfig.child(DOCKER_CONFIG_FILENAME).write(json.toString(), StandardCharsets.UTF_8.name());
+                this.generateConfig(configJson, dockerConfig.child(DOCKER_CONFIG_FILENAME), !isHomeConfig);
             }
         }
 
