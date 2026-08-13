@@ -24,6 +24,8 @@
 
 package org.jenkinsci.plugins.docker.commons.impl;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
@@ -98,10 +100,24 @@ public class RegistryKeyMaterialFactory extends KeyMaterialFactory {
         }
 
         try {
-            // TODO on Docker 17.07+ use --password-stdin
             EnvVars envWithConfig = new EnvVars(env);
             envWithConfig.put("DOCKER_CONFIG", dockerConfig.getRemote());
-            if (launcher.launch().cmds(new ArgumentListBuilder(dockerExecutable, "login", "-u", username, "-p").add(password, true).add(registry())).envs(envWithConfig).stdout(listener).join() != 0) {
+            // Capture stderr so that Docker's "credentials stored unencrypted" warning, which is a
+            // false alarm here since the config lives in a secrets directory that is deleted afterwards,
+            // is not shown on a successful login. It is only surfaced if the login fails.
+            ByteArrayOutputStream stderr = new ByteArrayOutputStream();
+            int status = launcher.launch()
+                    .cmds(new ArgumentListBuilder(dockerExecutable, "login", "-u", username, "--password-stdin").add(registry()))
+                    .envs(envWithConfig)
+                    .stdin(new ByteArrayInputStream((password + "\n").getBytes(StandardCharsets.UTF_8)))
+                    .stdout(listener)
+                    .stderr(stderr)
+                    .join();
+            if (status != 0) {
+                String err = new String(stderr.toByteArray(), StandardCharsets.UTF_8).trim();
+                if (!err.isEmpty()) {
+                    listener.getLogger().println(err);
+                }
                 throw new AbortException("docker login failed");
             }
         } catch (IOException | InterruptedException x) {
