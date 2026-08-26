@@ -82,13 +82,13 @@ public class ImageNameValidator {
                 tagIdx = name.lastIndexOf(':');
                 if (tagIdx > 0) {
                     args[1] = name.substring(0, tagIdx);
-                    args[2] = name.substring(tagIdx);
+                    args[2] = name.substring(tagIdx + 1);
                 }
                 args[3] = userAndRepo.substring(digestIdx);
             } else if (tagIdx > 0) {
                 int start = slashIdx > 0 ? slashIdx + 1 : 0;
                 args[1] = userAndRepo.substring(start, tagIdx);
-                args[2] = userAndRepo.substring(tagIdx);
+                args[2] = userAndRepo.substring(tagIdx + 1);
             }
         }
         return args;
@@ -105,6 +105,9 @@ public class ImageNameValidator {
     public static @NonNull FormValidation validateUserAndRepo(@NonNull String userAndRepo) {
         if (SKIP) {
             return FormValidation.ok();
+        }
+        if (hasEmptyExplicitTag(userAndRepo)) {
+            return FormValidation.error("Tag must not be empty");
         }
         final String[] args = splitUserAndRepo(userAndRepo);
         if ((args[0] == null || args[0].isBlank())
@@ -130,6 +133,14 @@ public class ImageNameValidator {
             return digest;
         }
         return FormValidation.aggregate(Arrays.asList(name, tag, digest));
+    }
+
+    /**
+     * Returns true when a tag separator is explicitly provided but no tag value follows it.
+     * Examples: "name:" and "name:@sha256:...".
+     */
+    private static boolean hasEmptyExplicitTag(@NonNull String userAndRepo) {
+        return userAndRepo.endsWith(":") || userAndRepo.contains(":@");
     }
 
     /**
@@ -217,7 +228,7 @@ public class ImageNameValidator {
      *
      * @see <a href="https://docs.docker.com/engine/reference/commandline/tag/">docker tag</a>
      */
-    public static final Pattern VALID_TAG = Pattern.compile("^:[a-zA-Z0-9_]([a-zA-Z0-9_.-]){0,127}");
+    public static final Pattern VALID_TAG = Pattern.compile("^[a-zA-Z0-9_][a-zA-Z0-9_.-]{0,127}$");
 
 
     /**
