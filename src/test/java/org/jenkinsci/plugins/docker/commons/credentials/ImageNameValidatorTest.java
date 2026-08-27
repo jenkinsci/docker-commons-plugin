@@ -4,6 +4,7 @@ import hudson.util.FormValidation;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
+import org.jvnet.hudson.test.Issue;
 
 import static org.junit.Assert.*;
 
@@ -27,6 +28,7 @@ public class ImageNameValidatorTest {
                 {"workflow-demo@sha256:56930391cf0e1be83108422bbef43001650cfb75f64b3429928f0c5986fdb750",                            FormValidation.Kind.OK},
                 {"workflow-demo@sha256:56930391cf0e1be83108422bbef43001650cfb75f64b3429928f0c5986fdB750",                            FormValidation.Kind.ERROR},
                 {"workflow-demo:",                                                                                                   FormValidation.Kind.ERROR},
+                {"workflow-demo:@sha256:abc",                                                                                        FormValidation.Kind.ERROR},
                 {"workflow-demo:latest@",                                                                                            FormValidation.Kind.ERROR},
                 {"workflow-demo@",                                                                                                   FormValidation.Kind.ERROR},
                 {"jenkinsci/workflow-demo@sha256:56930391cf0e1be83108422bbef43001650cfb75f64b3429928f0c5986fdb750",                  FormValidation.Kind.OK},
@@ -70,8 +72,26 @@ public class ImageNameValidatorTest {
     }
 
     @Test
-    public void test() {
+    public void testValidateUserAndRepo() {
         FormValidation res = ImageNameValidator.validateUserAndRepo(userAndRepo);
         assertSame(userAndRepo + " : " + res.getMessage(), expected, res.kind);
+    }
+
+    @Issue("JENKINS-71060")
+    @Test
+    public void testSplitUserAndRepo() {
+        // Test that tag is extracted without the colon
+        String[] result = ImageNameValidator.splitUserAndRepo("jenkinsci/workflow-demo:latest");
+        assertEquals("jenkinsci", result[0]);
+        assertEquals("workflow-demo", result[1]);
+        assertEquals("latest", result[2]);  // Should be "latest", not ":latest"
+        assertNull(result[3]);
+        
+        // Test with digest
+        result = ImageNameValidator.splitUserAndRepo("workflow-demo:v1.0@sha256:abc123");
+        assertNull(result[0]);
+        assertEquals("workflow-demo", result[1]);
+        assertEquals("v1.0", result[2]);  // Should be "v1.0", not ":v1.0"
+        assertEquals("@sha256:abc123", result[3]);
     }
 }
