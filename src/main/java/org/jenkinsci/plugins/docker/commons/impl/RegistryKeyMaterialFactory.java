@@ -53,6 +53,10 @@ public class RegistryKeyMaterialFactory extends KeyMaterialFactory {
 
     private static final String DOCKER_CONFIG_FILENAME = "config.json";
     private static final String[] BLACKLISTED_PROPERTIES = { "auths", "credsStore" };
+    private static final String PASSWORD_FILENAME = "password";
+    private static final String LOGIN_SCRIPT_FILENAME = "login.sh";
+    // A file, not "sh -c": the Kubernetes container step passes each argument through a shell, which expands "$".
+    private static final String LOGIN_SCRIPT = "f=\"$1\"\nshift\nexec \"$@\" < \"$f\"\n";
 
     protected static final String DOCKER_REGISTRY_HOST_ONLY = "DOCKER_REGISTRY_HOST_ONLY";
 
@@ -98,10 +102,9 @@ public class RegistryKeyMaterialFactory extends KeyMaterialFactory {
         }
 
         try {
-            // TODO on Docker 17.07+ use --password-stdin
             EnvVars envWithConfig = new EnvVars(env);
             envWithConfig.put("DOCKER_CONFIG", dockerConfig.getRemote());
-            if (launcher.launch().cmds(new ArgumentListBuilder(dockerExecutable, "login", "-u", username, "-p").add(password, true).add(registry())).envs(envWithConfig).stdout(listener).join() != 0) {
+            if (login(dockerConfig, envWithConfig) != 0) {
                 throw new AbortException("docker login failed");
             }
         } catch (IOException | InterruptedException x) {
@@ -113,6 +116,25 @@ public class RegistryKeyMaterialFactory extends KeyMaterialFactory {
             throw x;
         }
         return new RegistryKeyMaterial2(dockerConfig, new EnvVars("DOCKER_CONFIG", dockerConfig.getRemote()));
+    }
+
+    // Not ProcStarter.stdin: withDockerContainer and the Kubernetes container step do not forward it (JENKINS-69436, JENKINS-69432).
+    private int login(FilePath dockerConfig, EnvVars envWithConfig) throws IOException, InterruptedException {
+        if (!launcher.isUnix()) {
+            // TODO use --password-stdin on Windows too
+            return launcher.launch().cmds(new ArgumentListBuilder(dockerExecutable, "login", "-u", username, "-p").add(password, true).add(registry())).envs(envWithConfig).stdout(listener).join();
+        }
+        FilePath script = dockerConfig.child(LOGIN_SCRIPT_FILENAME);
+        FilePath passwordFile = dockerConfig.child(PASSWORD_FILENAME);
+        try {
+            script.write(LOGIN_SCRIPT, StandardCharsets.UTF_8.name());
+            passwordFile.write(password, StandardCharsets.UTF_8.name());
+            passwordFile.chmod(0600);
+            return launcher.launch().cmds(new ArgumentListBuilder("sh", script.getRemote(), passwordFile.getRemote(), dockerExecutable, "login", "-u", username, "--password-stdin", registry())).envs(envWithConfig).stdout(listener).join();
+        } finally {
+            passwordFile.delete();
+            script.delete();
+        }
     }
 
     protected String registry() {
