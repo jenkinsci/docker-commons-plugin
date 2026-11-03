@@ -30,11 +30,13 @@ import static org.hamcrest.Matchers.emptyArray;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assume.assumeFalse;
 
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 
 import org.apache.commons.io.FileUtils;
 import org.jenkinsci.plugins.docker.commons.credentials.DockerRegistryEndpoint;
@@ -52,6 +54,7 @@ import org.jvnet.hudson.test.PretendSlave;
 
 import hudson.EnvVars;
 import hudson.FilePath;
+import hudson.Functions;
 import hudson.Launcher;
 import hudson.Launcher.ProcStarter;
 import hudson.Proc;
@@ -231,6 +234,38 @@ public class RegistryKeyMaterialFactoryTest {
 
 	File jsonFile = new File(dockerCfgFolder, "config.json");
 	assertEquals("{\"HttpHeaders\":{\"User-Agent\":\"Docker-Client\"}}", FileUtils.readFileToString(jsonFile, Charset.defaultCharset()));
+    }
+
+    @Test
+    public void materialize_passwordOnStdinNotInArguments() throws Exception {
+	assumeFalse(Functions.isWindows());
+
+	// fake docker that records its arguments and stdin
+	File out = tempFolder.newFolder();
+	File fakeDocker = new File(out, "docker");
+	FileUtils.write(fakeDocker, "#!/bin/sh\necho \"$@\" > '" + out + "/args'\ncat > '" + out + "/stdin'\n", StandardCharsets.UTF_8);
+	assertTrue(fakeDocker.setExecutable(true));
+
+	Launcher launcher = new Launcher.DecoratedLauncher(new Launcher.LocalLauncher(TaskListener.NULL)) {
+	    @Override
+	    public VirtualChannel getChannel() {
+		return new LocalChannel(null) {
+		    @Override
+		    public <V, T extends Throwable> V call(final Callable<V, T> callable) throws T {
+			return (V) new FilePath(tempFolder.getRoot());
+		    }
+		};
+	    }
+	};
+	String password = "pa$$word $HOME \"x\" 'y'";
+	KeyMaterialFactory realFactory = new RegistryKeyMaterialFactory("username", password, new URL("https://registry.example/"), launcher,
+		new EnvVars(), TaskListener.NULL, fakeDocker.getAbsolutePath()).contextualize(new KeyMaterialContext(new FilePath(tempFolder.newFolder())));
+
+	KeyMaterial2 material = realFactory.materialize2();
+
+	assertEquals("login -u username --password-stdin https://registry.example/", FileUtils.readFileToString(new File(out, "args"), StandardCharsets.UTF_8).trim());
+	assertEquals(password, FileUtils.readFileToString(new File(out, "stdin"), StandardCharsets.UTF_8));
+	assertThat(new File(material.env().get("DOCKER_CONFIG", null)).list(), emptyArray());
     }
 
 }
